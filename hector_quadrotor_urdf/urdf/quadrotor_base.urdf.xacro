@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+
+<robot
+xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
+xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+  xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface">
+  
+    <macro name="quadrotor_base_macro">
+      
+      <link name="quadrotor_base">
+	<inertial>
+	  <mass value="1.316" />
+	  <origin xyz="0 0 0" />
+	  <inertia ixx="0.0128" ixy="0.0" ixz="0.0"
+	  iyy="0.0128" iyz="0.0" 
+	    izz="0.0218" />
+	  </inertial>
+	  
+	  <visual>
+	    <origin xyz="0 0 0" rpy="0 0 0" />
+	    <geometry>
+	      <mesh filename="package://quadrotor_urdf/meshes/quadrotor/quadrotor_base.stl"/>
+	    </geometry>
+	    <material name="DarkGrey" >
+	      <color rgba="0.3 0.3 0.3 1"/>
+	    </material>
+	  </visual>
+	  
+	  <collision>
+	    <origin xyz="0 0 0" rpy="0 0 0" />
+	    <geometry>
+	      <mesh filename="package://quadrotor_urdf/meshes/quadrotor/quadrotor_base.stl"/>
+	    </geometry>
+	  </collision>
+	  
+	</link>
+	
+	<gazebo reference="quadrotor_base">
+	  <material>Gazebo/Red</material>
+	  <turnGravityOff>false</turnGravityOff>
+	</gazebo>
+	
+	
+	<gazebo>
+	  
+	  <canonicalBody>quadrotor_base</canonicalBody>
+	  
+	  <controller:gazebo_ros_force name="gazebo_ros_force" plugin="libgazebo_ros_force.so">
+	    <alwaysOn>true</alwaysOn>
+	    <update>1000</update>
+	    <updateRate>1000.0</updateRate>
+	    <bodyName>quadrotor_base</bodyName>
+	    <topicName>force</topicName>
+	  </controller:gazebo_ros_force>
+	  
+	  <controller:gazebo_ros_imu name="quadro_imu_sim" plugin="libgazebo_ros_imu.so">
+	    <alwaysOn>true</alwaysOn>
+	    <updateRate>50</updateRate>
+	    <bodyName>quadrotor_base</bodyName>
+	    <topicName>raw_imu</topicName>
+	    <gaussianNoise>0.01</gaussianNoise>
+	    <xyzOffsets>0 0 0</xyzOffsets> 
+	    <rpyOffsets>0 0 0</rpyOffsets>
+	    <interface:position name="imu_position"/>
+	  </controller:gazebo_ros_imu>
+	  
+	  <controller:gazebo_ros_p3d name="quadro_groundtruth_sim" plugin="libgazebo_ros_p3d.so">
+	    <alwaysOn>true</alwaysOn>
+	    <updateRate>100.0</updateRate>
+	    <bodyName>quadrotor_base</bodyName>
+	    <topicName>ground_truth_pose</topicName>
+	    <gaussianNoise>0.0</gaussianNoise>
+	    <frameName>map</frameName>
+	    <interface:position name="my_box_p3d_position_iface" />
+	  </controller:gazebo_ros_p3d>
+	  
+	</gazebo>
+	
+      </macro>
+    </robot>
+    
