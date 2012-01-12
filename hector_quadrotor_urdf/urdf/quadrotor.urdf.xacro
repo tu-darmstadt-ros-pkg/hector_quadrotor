@@ -6,7 +6,7 @@
     xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface">
     
     <!-- Included URDF Files -->
-    <include filename="$(find quadrotor_urdf)/urdf/quadrotor_base.urdf.xacro" />
+    <include filename="$(find hector_quadrotor_urdf)/urdf/quadrotor_base.urdf.xacro" />
     
     <!-- Instantiate quadrotor_base_macro once (has no parameters atm) -->
     <quadrotor_base_macro />
