@@ -19,7 +19,7 @@ xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controlle
 	  <visual>
 	    <origin xyz="0 0 0" rpy="0 0 0" />
 	    <geometry>
-	      <mesh filename="package://quadrotor_urdf/meshes/quadrotor/quadrotor_base.stl"/>
+	      <mesh filename="package://hector_quadrotor_urdf/meshes/quadrotor/quadrotor_base.stl"/>
 	    </geometry>
 	    <material name="DarkGrey" >
 	      <color rgba="0.3 0.3 0.3 1"/>
@@ -29,7 +29,7 @@ xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controlle
 	  <collision>
 	    <origin xyz="0 0 0" rpy="0 0 0" />
 	    <geometry>
-	      <mesh filename="package://quadrotor_urdf/meshes/quadrotor/quadrotor_base.stl"/>
+	      <mesh filename="package://hector_quadrotor_urdf/meshes/quadrotor/quadrotor_base.stl"/>
 	    </geometry>
 	  </collision>
 	  
