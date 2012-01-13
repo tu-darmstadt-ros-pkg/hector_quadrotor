@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+ich ä<?xml version="1.0"?>
 
 <robot
 xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
@@ -57,7 +57,7 @@ xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controlle
 	    <alwaysOn>true</alwaysOn>
 	    <updateRate>50</updateRate>
 	    <bodyName>quadrotor_base</bodyName>
-	    <topicName>raw_imu</topicName>
+	    <topicName>imu</topicName>
 	    <gaussianNoise>0.01</gaussianNoise>
 	    <xyzOffsets>0 0 0</xyzOffsets> 
 	    <rpyOffsets>0 0 0</rpyOffsets>
@@ -68,7 +68,7 @@ xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controlle
 	    <alwaysOn>true</alwaysOn>
 	    <updateRate>100.0</updateRate>
 	    <bodyName>quadrotor_base</bodyName>
-	    <topicName>ground_truth_pose</topicName>
+	    <topicName>pose</topicName>
 	    <gaussianNoise>0.0</gaussianNoise>
 	    <frameName>map</frameName>
 	    <interface:position name="my_box_p3d_position_iface" />
