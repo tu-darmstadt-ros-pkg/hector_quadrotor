@@ -52,23 +52,36 @@ xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controlle
 	    <bodyName>quadrotor_base</bodyName>
 	    <topicName>force</topicName>
 	  </controller:gazebo_ros_force>
-	  
-	  <controller:gazebo_ros_imu name="quadro_imu_sim" plugin="libgazebo_ros_imu.so">
-	    <alwaysOn>true</alwaysOn>
-	    <updateRate>50</updateRate>
-	    <bodyName>quadrotor_base</bodyName>
-	    <topicName>imu</topicName>
-	    <gaussianNoise>0.01</gaussianNoise>
-	    <xyzOffsets>0 0 0</xyzOffsets> 
-	    <rpyOffsets>0 0 0</rpyOffsets>
-	    <interface:position name="imu_position"/>
-	  </controller:gazebo_ros_imu>
-	  
+
+    <controller:hector_gazebo_ros_imu name="quadro_imu_sim" plugin="libhector_gazebo_ros_imu.so">
+      <alwaysOn>true</alwaysOn>
+      <updateRate>100.0</updateRate>
+      <bodyName>quadrotor_base</bodyName>
+      <topicName>imu</topicName>
+      <rpyOffsets>0 0 0</rpyOffsets> <!-- deprecated -->
+      <gaussianNoise>0</gaussianNoise> <!-- deprecated -->
+      <!-- default values:
+        <accelOffset>0 0 0</accelOffset>
+        <accelDrift>0 0 0</accelDrift>
+        <accelTimeConstant>3600 3600 3600</accelTimeConstant>
+        <accelGaussianNoise>0 0 0</accelGaussianNoise>
+        <rateOffset>0 0 0</rateOffset>
+        <rateDrift>0 0 0</rateDrift>
+        <rateTimeConstant>3600 3600 3600</rateTimeConstant>
+        <rateGaussianNoise>0 0 0</rateGaussianNoise>
+        <headingOffset>0</headingOffset>
+        <headingDrift>0</headingDrift>
+        <headingTimeConstant>3600</headingTimeConstant>
+        <headingGaussianNoise>0</headingGaussianNoise>
+      -->
+      <interface:position name="imu_position"/>
+    </controller:hector_gazebo_ros_imu> -->
+
 	  <controller:gazebo_ros_p3d name="quadro_groundtruth_sim" plugin="libgazebo_ros_p3d.so">
 	    <alwaysOn>true</alwaysOn>
 	    <updateRate>100.0</updateRate>
 	    <bodyName>quadrotor_base</bodyName>
-	    <topicName>pose</topicName>
+			<topicName>state</topicName>
 	    <gaussianNoise>0.0</gaussianNoise>
 	    <frameName>map</frameName>
 	    <interface:position name="my_box_p3d_position_iface" />

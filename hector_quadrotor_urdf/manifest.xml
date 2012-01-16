@@ -1,10 +1,10 @@
 <package>
   <description brief="hector_quadrotor_urdf">
 
-     hector_quadrotor_urdf provides a urdf model of a quadrotor uav
+     hector_quadrotor_urdf provides an URDF model of a quadrotor UAV.
 
   </description>
-  <author>Stefan Kohlbrecher</author>
+  <author>Stefan Kohlbrecher and Johannes Meyer</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/hector_quadrotor_urdf</url>
