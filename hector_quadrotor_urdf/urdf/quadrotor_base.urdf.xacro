@@ -60,21 +60,27 @@ xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controlle
       <topicName>imu</topicName>
       <rpyOffsets>0 0 0</rpyOffsets> <!-- deprecated -->
       <gaussianNoise>0</gaussianNoise> <!-- deprecated -->
+      <accelDrift>0.5 0.5 0.5</accelDrift>
+      <accelGaussianNoise>0.1 0.1 0.1</accelGaussianNoise>
+      <rateDrift>0.5 0.5 0.5</rateDrift>
+      <rateGaussianNoise>0.1 0.1 0.1</rateGaussianNoise>
+      <headingDrift>0.05</headingDrift>
+      <headingGaussianNoise>0.01</headingGaussianNoise>
+
       <!-- default values:
         <accelOffset>0 0 0</accelOffset>
         <accelDrift>0 0 0</accelDrift>
-        <accelTimeConstant>3600 3600 3600</accelTimeConstant>
+        <accelDriftFrequency>0.0003 0.0003 0.0003</accelDriftFrequency>
         <accelGaussianNoise>0 0 0</accelGaussianNoise>
         <rateOffset>0 0 0</rateOffset>
         <rateDrift>0 0 0</rateDrift>
-        <rateTimeConstant>3600 3600 3600</rateTimeConstant>
+        <rateDriftFrequency>0.0003 0.0003 0.0003</rateDriftFrequency>
         <rateGaussianNoise>0 0 0</rateGaussianNoise>
         <headingOffset>0</headingOffset>
         <headingDrift>0</headingDrift>
-        <headingTimeConstant>3600</headingTimeConstant>
+        <headingDriftFrequency>0.0003</headingDriftFrequency>
         <headingGaussianNoise>0</headingGaussianNoise>
       -->
-      <interface:position name="imu_position"/>
     </controller:hector_gazebo_ros_imu> -->
 
 	  <controller:gazebo_ros_p3d name="quadro_groundtruth_sim" plugin="libgazebo_ros_p3d.so">
@@ -84,7 +90,6 @@ xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controlle
 			<topicName>state</topicName>
 	    <gaussianNoise>0.0</gaussianNoise>
 	    <frameName>map</frameName>
-	    <interface:position name="my_box_p3d_position_iface" />
 	  </controller:gazebo_ros_p3d>
 	  
 	</gazebo>
