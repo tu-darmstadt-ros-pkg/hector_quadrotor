@@ -102,16 +102,16 @@ public:
     velocity_publisher_.publish(velocity_);
   }
 
-  double getAxis(const sensor_msgs::JoyConstPtr& joy, int axis)
+  sensor_msgs::Joy::_axes_type::value_type getAxis(const sensor_msgs::JoyConstPtr& joy, int axis)
   {
-    if (axis == 0) return 0.0;
-    double sign = 1.0;
+    if (axis == 0) return 0;
+    sensor_msgs::Joy::_axes_type::value_type sign = 1.0;
     if (axis < 0) { sign = -1.0; axis = -axis; }
-    if ((size_t)axis > joy->axes.size()) return 0.0;
+    if ((size_t)axis > joy->axes.size()) return 0;
     return sign * joy->axes[axis - 1];
   }
 
-  int32_t getButton(const sensor_msgs::JoyConstPtr& joy, int button)
+  sensor_msgs::Joy::_buttons_type::value_type getButton(const sensor_msgs::JoyConstPtr& joy, int button)
   {
     if (button <= 0) return 0;
     if ((size_t)button > joy->axes.size()) return 0;
