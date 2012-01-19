@@ -11,6 +11,7 @@
 
   <depend package="gazebo_plugins"/>
   <depend package="hector_gazebo_plugins"/>
+  <depend package="hector_quadrotor_gazebo_plugins"/>
 
 </package>
 
