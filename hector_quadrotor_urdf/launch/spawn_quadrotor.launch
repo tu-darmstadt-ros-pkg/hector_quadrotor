@@ -2,8 +2,6 @@
 
 
 <launch>
-    <param name="use_sim_time" value="true" />
-
     <!-- send the robot XML to param server -->
     <param name="robot_description" command="$(find xacro)/xacro.py '$(find hector_quadrotor_urdf)/urdf/quadrotor.urdf.xacro'" />
 
@@ -12,13 +10,6 @@
       args="-param robot_description
             -urdf
             -z 0.5
-            -model robot_description"
+            -model quadrotor"
       respawn="false" output="screen" />
-
-    <!-- start robot state publisher -->
-    <node pkg="robot_state_publisher" type="state_publisher" name="robot_state_publisher" output="screen" >
-      <param name="publish_frequency" type="double" value="50.0" />
-      <param name="tf_prefix" type="string" value="" />
-    </node>
-
 </launch>

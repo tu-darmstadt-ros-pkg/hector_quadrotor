@@ -3,9 +3,9 @@
 <robot
 xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
 xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
-  xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface">
+xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface">
   
-    <macro name="quadrotor_base_macro">
+  <macro name="quadrotor_base_macro">
       
       <link name="quadrotor_base">
 	<inertial>
@@ -38,22 +38,48 @@ xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controlle
 	<gazebo reference="quadrotor_base">
 	  <material>Gazebo/Red</material>
 	  <turnGravityOff>false</turnGravityOff>
-	</gazebo>
+	</gazebo>	
 	
-	
-	<gazebo>
-	  
+	<gazebo>	  
 	  <canonicalBody>quadrotor_base</canonicalBody>
-	  
-	  <controller:gazebo_ros_force name="gazebo_ros_force" plugin="libgazebo_ros_force.so">
-	    <alwaysOn>true</alwaysOn>
-	    <update>1000</update>
-	    <updateRate>1000.0</updateRate>
-	    <bodyName>quadrotor_base</bodyName>
-	    <topicName>force</topicName>
-	  </controller:gazebo_ros_force>
 
-    <controller:hector_gazebo_ros_imu name="quadro_imu_sim" plugin="libhector_gazebo_ros_imu.so">
+		<!-- <controller:gazebo_ros_force name="gazebo_ros_force" plugin="libgazebo_ros_force.so">
+			<alwaysOn>true</alwaysOn>
+			<updateRate>0.0</updateRate>
+			<bodyName>quadrotor_base</bodyName>
+			<topicName>force</topicName>
+		</controller:gazebo_ros_force> -->
+
+		<controller:hector_gazebo_quadrotor_simple_controller name="quadrotor_simple_controller" plugin="libhector_gazebo_quadrotor_simple_controller.so">
+			<alwaysOn>true</alwaysOn>
+			<updateRate>0.0</updateRate>
+			<bodyName>quadrotor_base</bodyName>
+			<velocityTopicName>cmd_vel</velocityTopicName>
+			<forceTopicName>force</forceTopicName>
+			<rollpitch>
+				<proportionalGain>10.0</proportionalGain>
+				<differentialGain>10.0</differentialGain>
+				<limit>0.5</limit>
+			</rollpitch>
+			<yaw>
+				<proportionalGain>1.0</proportionalGain>
+				<differentialGain>1.0</differentialGain>
+				<limit>1.5</limit>
+			</yaw>
+			<velocity_xy>
+				<proportionalGain>3.0</proportionalGain>
+				<differentialGain>3.0</differentialGain>
+				<limit>2</limit>
+			</velocity_xy>
+			<velocity_z>
+				<proportionalGain>5.0</proportionalGain>
+				<differentialGain>1.0</differentialGain>
+				<limit>2</limit>
+			</velocity_z>
+			<maxForce>30</maxForce>
+		</controller:hector_gazebo_quadrotor_simple_controller>
+
+    <controller:hector_gazebo_ros_imu name="quadrotor_imu_sim" plugin="libhector_gazebo_ros_imu.so">
       <alwaysOn>true</alwaysOn>
       <updateRate>100.0</updateRate>
       <bodyName>quadrotor_base</bodyName>
@@ -81,9 +107,20 @@ xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controlle
         <headingDriftFrequency>0.0003</headingDriftFrequency>
         <headingGaussianNoise>0</headingGaussianNoise>
       -->
-    </controller:hector_gazebo_ros_imu> -->
+    </controller:hector_gazebo_ros_imu>
 
-	  <controller:gazebo_ros_p3d name="quadro_groundtruth_sim" plugin="libgazebo_ros_p3d.so">
+    <controller:hector_gazebo_ros_baro name="quadrotor_baro_sim" plugin="libhector_gazebo_ros_baro.so">
+      <alwaysOn>true</alwaysOn>
+      <updateRate>10.0</updateRate>
+      <bodyName>quadrotor_base</bodyName>
+      <topicName>pressure_height</topicName>
+      <offset>0</offset>
+      <drift>0.1</drift>
+      <driftFrequency>0.0003</driftFrequency>
+      <gaussianNoise>0.1</gaussianNoise>
+    </controller:hector_gazebo_ros_baro>
+
+		<controller:gazebo_ros_p3d name="quadrotor_groundtruth_sim" plugin="libgazebo_ros_p3d.so">
 	    <alwaysOn>true</alwaysOn>
 	    <updateRate>100.0</updateRate>
 	    <bodyName>quadrotor_base</bodyName>
@@ -94,6 +131,5 @@ xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controlle
 	  
 	</gazebo>
 	
-      </macro>
-    </robot>
-    
+	</macro>
+</robot>
