@@ -1,10 +1,10 @@
 <launch>
   <node name="joy" pkg="joy" type="joy_node" output="screen" />
   <node name="quadrotor_teleop" pkg="hector_quadrotor_teleop" type="quadrotor_teleop">
-    <param name="x_axis" value="3"/>
-    <param name="y_axis" value="2"/>
-    <param name="z_axis" value="1"/>
-    <param name="yaw_axis" value="0"/>
+    <param name="x_axis" value="4"/>
+    <param name="y_axis" value="3"/>
+    <param name="z_axis" value="2"/>
+    <param name="yaw_axis" value="1"/>
   </node>
 </launch>
 

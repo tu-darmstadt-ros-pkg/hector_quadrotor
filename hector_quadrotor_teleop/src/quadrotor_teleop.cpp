@@ -67,13 +67,13 @@ public:
   Teleop()
   {
     ros::NodeHandle params("~");
-    axes_.x.axis = 999;
+    axes_.x.axis = 0;
     axes_.x.max = 2.0;
-    axes_.y.axis = 999;
+    axes_.y.axis = 0;
     axes_.y.max = 2.0;
-    axes_.z.axis = 999;
+    axes_.z.axis = 0;
     axes_.z.max = 2.0;
-    axes_.yaw.axis = 999;
+    axes_.yaw.axis = 0;
     axes_.yaw.max = 90.0*M_PI/180.0;
     params.getParam("x_axis", axes_.x.axis);
     params.getParam("y_axis", axes_.y.axis);
@@ -95,11 +95,27 @@ public:
 
   void joyCallback(const sensor_msgs::JoyConstPtr& joy)
   {
-    velocity_.linear.x  = (joy->axes.size() > (size_t)axes_.x.axis)   ? joy->axes[axes_.x.axis]   * axes_.x.max   : 0.0;
-    velocity_.linear.y  = (joy->axes.size() > (size_t)axes_.y.axis)   ? joy->axes[axes_.y.axis]   * axes_.y.max   : 0.0;
-    velocity_.linear.z  = (joy->axes.size() > (size_t)axes_.z.axis)   ? joy->axes[axes_.z.axis]   * axes_.z.max   : 0.0;
-    velocity_.angular.z = (joy->axes.size() > (size_t)axes_.yaw.axis) ? joy->axes[axes_.yaw.axis] * axes_.yaw.max : 0.0;
+    velocity_.linear.x  = getAxis(joy, axes_.x.axis)   * axes_.x.max;
+    velocity_.linear.y  = getAxis(joy, axes_.y.axis)   * axes_.y.max;
+    velocity_.linear.z  = getAxis(joy, axes_.z.axis)   * axes_.z.max;
+    velocity_.angular.z = getAxis(joy, axes_.yaw.axis) * axes_.yaw.max;
     velocity_publisher_.publish(velocity_);
+  }
+
+  double getAxis(const sensor_msgs::JoyConstPtr& joy, int axis)
+  {
+    if (axis == 0) return 0.0;
+    double sign = 1.0;
+    if (axis < 0) { sign = -1.0; axis = -axis; }
+    if ((size_t)axis > joy->axes.size()) return 0.0;
+    return sign * joy->axes[axis - 1];
+  }
+
+  int32_t getButton(const sensor_msgs::JoyConstPtr& joy, int button)
+  {
+    if (button <= 0) return 0;
+    if ((size_t)button > joy->axes.size()) return 0;
+    return joy->buttons[button - 1];
   }
 
   void stop()
