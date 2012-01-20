@@ -101,7 +101,7 @@ void GazeboRosBaro::LoadChild(XMLConfigNode *node)
   qnh_param_->Load(node);
   qnh_ = elevation_param_->GetValue();
 
-  sensor_model_.LoadChild(node);
+  sensor_model_.Load(node);
 }
 
 ///////////////////////////////////////////////////////
