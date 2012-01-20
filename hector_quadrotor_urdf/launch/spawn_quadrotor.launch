@@ -1,15 +1,16 @@
 <?xml version="1.0"?>
 
 
-<launch>
-    <!-- send the robot XML to param server -->
-    <param name="robot_description" command="$(find xacro)/xacro.py '$(find hector_quadrotor_urdf)/urdf/quadrotor.urdf.xacro'" />
-
-    <!-- push robot_description to factory and spawn robot in gazebo -->
-    <node name="spawn_robot" pkg="gazebo" type="spawn_model"
-      args="-param robot_description
-            -urdf
-            -z 0.5
-            -model quadrotor"
-      respawn="false" output="screen" />
-</launch>
+ <launch>
+   <!-- send the robot XML to param server -->
+   <param name="robot_description" command="$(find xacro)/xacro.py '$(find hector_quadrotor_urdf)/urdf/quadrotor.urdf.xacro'" />
+   
+   <!-- push robot_description to factory and spawn robot in gazebo -->
+   <node name="spawn_robot" pkg="gazebo" type="spawn_model"
+   args="-param robot_description
+   -urdf
+   -z 0.5
+   -model quadrotor"
+     respawn="false" output="screen"/>
+ </launch>
+   
