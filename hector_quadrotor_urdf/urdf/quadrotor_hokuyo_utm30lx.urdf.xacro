@@ -18,5 +18,11 @@ xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controlle
     <hokuyo_utm30lx name="laser0" parent="base_link" ros_topic="scan" update_rate="40" min_angle="135" max_angle="-135">
       <origin xyz="0.0 0.0 -0.08" rpy="0 0 0"/>
     </hokuyo_utm30lx>
+    
+    <include filename="$(find hector_quadrotor_urdf)/urdf/generic_camera.urdf.xacro" />
+    <generic_camera name="front_cam" parent="base_link" ros_topic="scan" update_rate="40" min_angle="135" max_angle="-135">
+      <origin xyz="0.1 0.0 -0.08" rpy="0 0 0"/>
+    </generic_camera>
+    
   </robot>
   
