@@ -1,0 +1,17 @@
+<package>
+  <description brief="hector_quadrotor_tf">
+
+     hector_quadrotor_tf
+
+  </description>
+  <author>Johannes Meyer</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/hector_quadrotor_tf</url>
+
+  <depend package="nav_msgs"/>
+  <depend package="tf"/>
+
+</package>
+
+

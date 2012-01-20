@@ -12,5 +12,7 @@
    -z 0.5
    -model quadrotor"
      respawn="false" output="screen"/>
+
+   <node name="quadrotor_tf" pkg="hector_quadrotor_tf" type="quadrotor_tf" output="screen"/>
  </launch>
    
