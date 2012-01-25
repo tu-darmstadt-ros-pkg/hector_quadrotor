@@ -72,9 +72,9 @@ private:
   // boost::thread callback_queue_thread_;
 
   geometry_msgs::Twist velocity_command_;
-  geometry_msgs::Wrench wrench_command_;
+  // geometry_msgs::Wrench wrench_command_;
   void VelocityCallback(const geometry_msgs::TwistConstPtr&);
-  void WrenchCallback(const geometry_msgs::WrenchConstPtr&);
+  // void WrenchCallback(const geometry_msgs::WrenchConstPtr&);
 
   ParamT<std::string> *body_name_param_;
   std::string body_name_;
@@ -82,8 +82,8 @@ private:
   std::string namespace_;
   ParamT<std::string> *velocity_topic_param_;
   std::string velocity_topic_;
-  ParamT<std::string> *wrench_topic_param_;
-  std::string wrench_topic_;
+  // ParamT<std::string> *wrench_topic_param_;
+  // std::string wrench_topic_;
   ParamT<double> *max_force_param_;
   double max_force_;
 

@@ -61,8 +61,8 @@ GazeboQuadrotorSimpleController::GazeboQuadrotorSimpleController(Entity *parent)
   Param::Begin(&parameters);
   namespace_param_ = new ParamT<std::string>("robotNamespace", "", false);
   body_name_param_ = new ParamT<std::string>("bodyName", "", true);
-  velocity_topic_param_ = new ParamT<std::string>("velocityTopicName", "cmd_vel", false);
-  wrench_topic_param_ = new ParamT<std::string>("forceTopicName", "force", false);
+  velocity_topic_param_ = new ParamT<std::string>("topicName", "cmd_vel", false);
+  // wrench_topic_param_ = new ParamT<std::string>("forceTopicName", "force", false);
   max_force_param_ = new ParamT<double>("maxForce", -1.0, false);
   Param::End();
 }
@@ -74,7 +74,7 @@ GazeboQuadrotorSimpleController::~GazeboQuadrotorSimpleController()
   delete namespace_param_;
   delete body_name_param_;
   delete velocity_topic_param_;
-  delete wrench_topic_param_;
+  // delete wrench_topic_param_;
   delete max_force_param_;
 }
 
@@ -100,8 +100,8 @@ void GazeboQuadrotorSimpleController::LoadChild(XMLConfigNode *node)
 
   velocity_topic_param_->Load(node);
   velocity_topic_ = velocity_topic_param_->GetValue();
-  wrench_topic_param_->Load(node);
-  wrench_topic_ = wrench_topic_param_->GetValue();
+  // wrench_topic_param_->Load(node);
+  // wrench_topic_ = wrench_topic_param_->GetValue();
 
   controllers_.roll.LoadChild(node->GetChild("rollpitch"));
   controllers_.pitch.LoadChild(node->GetChild("rollpitch"));
@@ -188,10 +188,10 @@ void GazeboQuadrotorSimpleController::VelocityCallback(const geometry_msgs::Twis
   velocity_command_ = *velocity;
 }
 
-void GazeboQuadrotorSimpleController::WrenchCallback(const geometry_msgs::WrenchConstPtr& wrench)
-{
-  wrench_command_ = *wrench;
-}
+//void GazeboQuadrotorSimpleController::WrenchCallback(const geometry_msgs::WrenchConstPtr& wrench)
+//{
+//  wrench_command_ = *wrench;
+//}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Initialize the controller
@@ -208,14 +208,14 @@ void GazeboQuadrotorSimpleController::InitChild()
     velocity_subscriber_ = node_handle_->subscribe(ops);
   }
 
-  if (wrench_topic_ != "")
-  {
-    ros::SubscribeOptions ops = ros::SubscribeOptions::create<geometry_msgs::Wrench>(
-      wrench_topic_, 1,
-      boost::bind(&GazeboQuadrotorSimpleController::WrenchCallback, this, _1),
-      ros::VoidPtr(), &callback_queue_);
-    wrench_subscriber_ = node_handle_->subscribe(ops);
-  }
+//  if (wrench_topic_ != "")
+//  {
+//    ros::SubscribeOptions ops = ros::SubscribeOptions::create<geometry_msgs::Wrench>(
+//      wrench_topic_, 1,
+//      boost::bind(&GazeboQuadrotorSimpleController::WrenchCallback, this, _1),
+//      ros::VoidPtr(), &callback_queue_);
+//    wrench_subscriber_ = node_handle_->subscribe(ops);
+//  }
 
   // callback_queue_thread_ = boost::thread( boost::bind( &GazeboQuadrotorSimpleController::CallbackQueueThread,this ) );
 }
@@ -231,10 +231,10 @@ void GazeboQuadrotorSimpleController::UpdateChild()
   callback_queue_.callAvailable();
 
   // Apply external force/torque
-  force.Set(wrench_command_.force.x,wrench_command_.force.y,wrench_command_.force.z);
-  torque.Set(wrench_command_.torque.x,wrench_command_.torque.y,wrench_command_.torque.z);
-  this->body_->SetForce(force);
-  this->body_->SetTorque(torque);
+//  force.Set(wrench_command_.force.x,wrench_command_.force.y,wrench_command_.force.z);
+//  torque.Set(wrench_command_.torque.x,wrench_command_.torque.y,wrench_command_.torque.z);
+//  this->body_->SetForce(force);
+//  this->body_->SetTorque(torque);
 
   // Get Pose/Orientation
   Pose3d pose = body_->GetWorldPose();
@@ -264,6 +264,7 @@ void GazeboQuadrotorSimpleController::UpdateChild()
   torque.z = inertia.z *  controllers_.yaw.update(velocity_command_.angular.z, angular_velocity.z, 0, dt);
   force.z  = mass      * (controllers_.velocity_z.update(velocity_command_.linear.z,  velocity.z, acceleration.z, dt) + load_factor * gravity_body.GetLength());
   if (max_force_ > 0.0 && force.z > max_force_) force.z = max_force_;
+  if (force.z < 0.0) force.z = 0.0;
 
 //  static double lastDebugOutput = 0.0;
 //  if (lastUpdate.Double() - lastDebugOutput > 0.1) {
