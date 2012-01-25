@@ -6,18 +6,17 @@ xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
   xmlns:xacro="http://ros.org/wiki/xacro"
   >  
   
-    <xacro:macro name="generic_camera" params="name parent *origin ros_topic update_rate min_angle max_angle">
+    <xacro:macro name="generic_camera" params="name parent *origin ros_topic update_rate">
       <joint name="${name}_joint" type="fixed">
-        <axis xyz="0 1 0" />
         <insert_block name="origin" />
         <parent link="${parent}"/>
         <child link="${name}_link"/>
       </joint>
-      <link name="${name}_link" type="laser">
+      <link name="${name}_link">
         <inertial>
           <mass value="0.001" />
           <origin xyz="0 0 0" rpy="0 0 0" />
-          <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.0001" />
+          <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001" />
         </inertial>
         <visual>
           <origin xyz="0 0 0" rpy="0 0 0" />
@@ -31,7 +30,7 @@ xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
         <collision>
           <origin xyz="0 0 0" rpy="0 0 0" />
           <geometry>
-            <box size=".05 .05 .05" />
+            <box size="0.05 0.05 0.05" />
           </geometry>
         </collision>
       </link>  
@@ -43,11 +42,11 @@ xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
         <hfov>90</hfov>
         <nearClip>0.01</nearClip>
         <farClip>100</farClip>
-        <updateRate>15.0</updateRate>
+        <updateRate>${update_rate}</updateRate>
         <controller:gazebo_ros_camera name="${name}_camera_controller" plugin="libgazebo_ros_camera.so">
           <alwaysOn>true</alwaysOn>
-          <updateRate>15.0</updateRate>
-          <imageTopicName>finger_tip_cam/image</imageTopicName>
+          <updateRate>${update_rate}</updateRate>
+          <imageTopicName>${ros_topic}</imageTopicName>
           <frameName>${name}_link</frameName>
           <interface:camera name="${name}_camera_iface" />
         </controller:gazebo_ros_camera>

@@ -5,18 +5,17 @@ xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controlle
 xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
   xmlns:xacro="http://ros.org/wiki/xacro"
   >  
-    <xacro:macro name="hokuyo_utm30lx" params="name parent *origin ros_topic update_rate min_angle max_angle">
+    <xacro:macro name="hokuyo_utm30lx" params="name parent *origin ros_topic update_rate ray_count min_angle max_angle">
       <joint name="${name}_joint" type="fixed">
-	<axis xyz="0 1 0" />
 	<insert_block name="origin" />
 	<parent link="${parent}"/>
 	<child link="${name}_link"/>
       </joint>
-      <link name="${name}_link" type="laser">
+      <link name="${name}_link">
 	<inertial>
 	  <mass value="0.001" />
 	  <origin xyz="0 0 0" rpy="0 0 0" />
-	  <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.0001" />
+		<inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001" />
 	</inertial>
 	<visual>
 	  <origin xyz="0 0 0" rpy="0 0 0" />
@@ -30,19 +29,17 @@ xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
 	<collision>
 	  <origin xyz="0 0 0" rpy="0 0 0" />
 	  <geometry>
-	    <box size=".05 .05 .05" />
+			<box size="0.05 0.05 0.05" />
 	  </geometry>
 	</collision>
       </link>
       
       <gazebo reference="${name}_link">
 	<sensor:ray name="${name}">
-	  <rayCount>640</rayCount>
-	  <rangeCount>640</rangeCount>
-	  <laserCount>1</laserCount>
+		<rayCount>${ray_count}</rayCount>
+		<rangeCount>${ray_count}</rangeCount>
 	  
-	  <origin>0.0 0.0 0.0</origin>
-	  <displayRays>false</displayRays>
+		<displayRays>false</displayRays>
 	  
 	  <minAngle>${min_angle}</minAngle>
 	  <maxAngle>${max_angle}</maxAngle>

@@ -36,11 +36,8 @@
 #include <gazebo/Param.hh>
 #include <gazebo/Time.hh>
 
-#include <ros/callback_queue.h>
 #include <ros/ros.h>
-
 #include <mav_msgs/Height.h>
-
 #include <hector_gazebo_plugins/sensor_model.h>
 
 namespace gazebo
@@ -63,12 +60,7 @@ private:
   Body *body_;
 
   ros::NodeHandle* node_handle_;
-  ros::CallbackQueue callback_queue_;
   ros::Publisher publisher_;
-
-  // void CallbackQueueThread();
-  // boost::mutex lock_;
-  // boost::thread callback_queue_thread_;
 
   mav_msgs::Height height_;
 

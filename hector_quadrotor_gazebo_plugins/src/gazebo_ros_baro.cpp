@@ -109,14 +109,7 @@ void GazeboRosBaro::LoadChild(XMLConfigNode *node)
 void GazeboRosBaro::InitChild()
 {
   node_handle_ = new ros::NodeHandle(namespace_);
-
-  ros::AdvertiseOptions aso = ros::AdvertiseOptions::create<mav_msgs::Height>(
-    topic_, 1,
-    ros::SubscriberStatusCallback(), ros::SubscriberStatusCallback(),
-    ros::VoidPtr(), &this->callback_queue_);
-  publisher_ = node_handle_->advertise(aso);
-
-  // callback_queue_thread_ = boost::thread( boost::bind( &GazeboRosBaro::CallbackQueueThread,this ) );
+  publisher_ = node_handle_->advertise<mav_msgs::Height>(topic_, 10);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,8 +118,6 @@ void GazeboRosBaro::UpdateChild()
 {
   Time sim_time = Simulator::Instance()->GetSimTime();
   double dt = (sim_time - lastUpdate).Double();
-
-  callback_queue_.callAvailable();
 
   Pose3d pose = body_->GetWorldPose();
 
