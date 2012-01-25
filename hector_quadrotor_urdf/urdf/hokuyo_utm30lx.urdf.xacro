@@ -23,7 +23,9 @@ xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
 	  <geometry>
 	    <box size="0.05 0.05 0.05" />
 	  </geometry>
-	  <material name="DarkGrey" />
+	  <material name="Blue">
+      <color rgba="0.0 0.0 0.8 1"/>
+    </material>
 	</visual>
 	<collision>
 	  <origin xyz="0 0 0" rpy="0 0 0" />
