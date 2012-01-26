@@ -52,7 +52,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <topicName>force</topicName>
       </controller:gazebo_ros_force>
 
-      <!-- controller:hector_gazebo_quadrotor_simple_controller name="quadrotor_simple_controller" plugin="libhector_gazebo_quadrotor_simple_controller.so">
+      <controller:hector_gazebo_quadrotor_simple_controller name="quadrotor_simple_controller" plugin="libhector_gazebo_quadrotor_simple_controller.so">
         <alwaysOn>true</alwaysOn>
         <updateRate>0.0</updateRate>
         <bodyName>base_link</bodyName>
@@ -78,7 +78,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
           <limit>2</limit>
         </velocity_z>
         <maxForce>30</maxForce>
-      </controller:hector_gazebo_quadrotor_simple_controller -->
+      </controller:hector_gazebo_quadrotor_simple_controller>
 
       <controller:hector_gazebo_ros_imu name="quadrotor_imu_sim" plugin="libhector_gazebo_ros_imu.so">
         <alwaysOn>true</alwaysOn>
