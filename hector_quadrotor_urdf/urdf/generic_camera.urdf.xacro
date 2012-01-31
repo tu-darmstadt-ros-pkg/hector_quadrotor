@@ -6,12 +6,15 @@ xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
   xmlns:xacro="http://ros.org/wiki/xacro"
   >  
   
-    <xacro:macro name="generic_camera" params="name parent *origin ros_topic update_rate">
+    <property name="M_PI" value="3.1415926535897931" />
+  
+    <xacro:macro name="generic_camera" params="name parent *origin ros_topic cam_info_topic update_rate">
       <joint name="${name}_joint" type="fixed">
         <insert_block name="origin" />
         <parent link="${parent}"/>
         <child link="${name}_link"/>
       </joint>
+      
       <link name="${name}_link">
         <inertial>
           <mass value="0.001" />
@@ -21,7 +24,7 @@ xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
         <visual>
           <origin xyz="0 0 0" rpy="0 0 0" />
           <geometry>
-            <box size="0.05 0.05 0.05" />
+            <box size="0.01 0.01 0.01" />
           </geometry>
 	  <material name="Blue">
       <color rgba="0.0 0.0 0.8 1"/>
@@ -30,10 +33,39 @@ xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
         <collision>
           <origin xyz="0 0 0" rpy="0 0 0" />
           <geometry>
-            <box size="0.05 0.05 0.05" />
+            <box size="0.01 0.01 0.01" />
           </geometry>
         </collision>
-      </link>  
+      </link>
+      
+      
+    <joint name="${name}_optical_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="${-M_PI/2} 0.0 ${-M_PI/2}" />
+      <parent link="${name}_link" />
+      <child link="${name}_optical_frame"/>
+    </joint>
+    
+    <link name="${name}_optical_frame">
+      <inertial>
+        <mass value="0.01" />
+        <origin xyz="0 0 0" />
+        <inertia ixx="0.001"  ixy="0.0"  ixz="0.0"
+                 iyy="0.001"  iyz="0.0"
+                 izz="0.001" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.001 0.001 0.001" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.001 0.001 0.001" />
+        </geometry>
+      </collision>
+    </link>
       
     <gazebo reference="${name}_link">
       <sensor:camera name="${name}_camera_sensor">
@@ -47,7 +79,8 @@ xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
           <alwaysOn>true</alwaysOn>
           <updateRate>${update_rate}</updateRate>
           <imageTopicName>${ros_topic}</imageTopicName>
-          <frameName>${name}_link</frameName>
+          <cameraInfoTopicName>${cam_info_topic}</cameraInfoTopicName>
+          <frameName>${name}_optical_frame</frameName>
           <interface:camera name="${name}_camera_iface" />
         </controller:gazebo_ros_camera>
       </sensor:camera>
