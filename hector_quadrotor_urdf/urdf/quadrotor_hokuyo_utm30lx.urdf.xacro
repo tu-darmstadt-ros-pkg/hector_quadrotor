@@ -6,15 +6,17 @@ xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controlle
 xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
 xmlns:xacro="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface">
    
+    <property name="M_PI" value="3.1415926535897931" />
+    
     <!-- Included URDF Files -->
     <include filename="$(find hector_quadrotor_urdf)/urdf/quadrotor_base.urdf.xacro" />
     
     <!-- Instantiate quadrotor_base_macro once (has no parameters atm) -->
     <quadrotor_base_macro />
     
-    <include filename="$(find hector_quadrotor_urdf)/urdf/hokuyo_utm30lx.urdf.xacro" />
+    <include filename="$(find hector_sensors_description)/urdf/hokuyo_utm30lx.urdf.xacro" />
     <xacro:hokuyo_utm30lx name="laser0" parent="base_link" ros_topic="scan" update_rate="40" ray_count="1081" min_angle="135" max_angle="-135">
-      <origin xyz="0.0 0.0 -0.08" rpy="0 0 0"/>
+      <origin xyz="0.0 0.0 -0.097" rpy="${M_PI} 0 0"/>
     </xacro:hokuyo_utm30lx>
     
     <include filename="$(find hector_quadrotor_urdf)/urdf/generic_camera.urdf.xacro" />
