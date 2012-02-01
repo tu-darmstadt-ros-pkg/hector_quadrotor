@@ -13,6 +13,7 @@
   <depend package="hector_gazebo_plugins"/>
   <depend package="hector_quadrotor_gazebo_plugins"/>
   <depend package="hector_quadrotor_tf"/>
+  <depend package="hector_sensors_description"/>
 
 </package>
 
