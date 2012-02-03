@@ -6,5 +6,6 @@
      <arg name="model" value="$(find hector_quadrotor_urdf)/urdf/quadrotor_hokuyo_utm30lx.urdf.xacro"/> 
    </include>
    
-      <include file="$(find hector_slam_launch)/launch/tutorial.launch" />
+   <include file="$(find hector_slam_launch)/launch/tutorial.launch" />
+   <param name="quadrotor_tf/frame_id" value="nav" />
  </launch>

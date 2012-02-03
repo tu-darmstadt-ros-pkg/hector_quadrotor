@@ -55,9 +55,9 @@ public:
 
     transforms_[0].header.frame_id = frame_id_;
     transforms_[0].child_frame_id  = "base_footprint";
-    transforms_[1].header.frame_id = frame_id_;
+    transforms_[1].header.frame_id = "base_footprint";
     transforms_[1].child_frame_id  = "base_stabilized";
-    transforms_[2].header.frame_id = frame_id_;
+    transforms_[2].header.frame_id = "base_stabilized";
     transforms_[2].child_frame_id  = child_frame_id_;
 
     subscriber_ = node_handle_.subscribe<nav_msgs::Odometry>(topic_, 10, boost::bind(&quadrotor_tf::stateCallback, this, _1));
@@ -66,26 +66,27 @@ public:
 
   void stateCallback(const nav_msgs::OdometryConstPtr& state)
   {
-    double yaw = tf::getYaw(state->pose.pose.orientation);
+    double yaw, pitch, roll;
+    btMatrix3x3(btQuaternion(state->pose.pose.orientation.x, state->pose.pose.orientation.y, state->pose.pose.orientation.z, state->pose.pose.orientation.w)).getRPY(roll, pitch, yaw);
 
     transforms_[0].transform.translation.x = state->pose.pose.position.x;
     transforms_[0].transform.translation.y = state->pose.pose.position.y;
     transforms_[0].transform.rotation = tf::createQuaternionMsgFromRollPitchYaw(0.0, 0.0, yaw);
-    transforms_[1].transform.translation.x = state->pose.pose.position.x;
-    transforms_[1].transform.translation.y = state->pose.pose.position.y;
+    transforms_[1].transform.translation.x = 0.0;
+    transforms_[1].transform.translation.y = 0.0;
     transforms_[1].transform.translation.z = state->pose.pose.position.z;
-    transforms_[1].transform.rotation = transforms_[0].transform.rotation;
-    transforms_[2].transform.translation.x = state->pose.pose.position.x;
-    transforms_[2].transform.translation.y = state->pose.pose.position.y;
-    transforms_[2].transform.translation.z = state->pose.pose.position.z;
-    transforms_[2].transform.rotation = state->pose.pose.orientation;
+    transforms_[1].transform.rotation.w = 1.0;
+    transforms_[2].transform.translation.x = 0.0;
+    transforms_[2].transform.translation.y = 0.0;
+    transforms_[2].transform.translation.z = 0.0;
+    transforms_[2].transform.rotation = tf::createQuaternionMsgFromRollPitchYaw(roll, pitch, 0.0);
 
     transforms_[0].header.stamp = state->header.stamp;
     transforms_[1].header.stamp = state->header.stamp;
     transforms_[2].header.stamp = state->header.stamp;
 
     if (frame_id_.empty()) {
-      transforms_[0].header.frame_id = transforms_[1].header.frame_id = transforms_[2].header.frame_id = state->header.frame_id;
+      transforms_[0].header.frame_id = state->header.frame_id;
     }
     if (child_frame_id_.empty()) {
       transforms_[2].child_frame_id = (!state->child_frame_id.empty() ? state->child_frame_id : "base_link");
