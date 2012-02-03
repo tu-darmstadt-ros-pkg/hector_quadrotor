@@ -20,13 +20,8 @@ xmlns:xacro="http://ros.org/wiki/xacro"
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <!--<mesh filename="package://hector_quadrotor_urdf/meshes/quadrotor/quadrotor_dae_from_stl.dae" scale="0.1 0.1 0.1"/>-->
                 <mesh filename="package://hector_quadrotor_urdf/meshes/quadrotor/quadrotor_base.dae"/>
-                 <!--<cylinder radius="0.4" length="0.2"/>-->
         </geometry>
-        <material name="DarkGrey" >
-          <color rgba="0.3 0.3 0.3 1"/>
-        </material>
       </visual>
 
       <collision>
@@ -38,7 +33,6 @@ xmlns:xacro="http://ros.org/wiki/xacro"
     </link>
 
     <gazebo reference="base_link">
-<!--      <material>Gazebo/White</material>-->
       <turnGravityOff>false</turnGravityOff>
     </gazebo>
 
