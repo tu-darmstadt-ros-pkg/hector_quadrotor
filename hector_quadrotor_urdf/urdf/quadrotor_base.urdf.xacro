@@ -115,6 +115,28 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <gaussianNoise>0.1</gaussianNoise>
       </controller:hector_gazebo_ros_baro>
 
+      <controller:hector_gazebo_ros_magnetic name="quadrotor_magnetic_sim" plugin="libhector_gazebo_ros_magnetic.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>10.0</updateRate>
+        <bodyName>base_link</bodyName>
+        <topicName>magnetic</topicName>
+        <offset>0 0 0</offset>
+        <drift>0.1 0.1 0.1</drift>
+        <driftFrequency>0.0003 0.0003 0.0003</driftFrequency>
+        <gaussianNoise>0.1 0.1 0.1</gaussianNoise>
+      </controller:hector_gazebo_ros_magnetic>
+
+      <controller:hector_gazebo_ros_gps name="quadrotor_gps_sim" plugin="libhector_gazebo_ros_gps.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>4.0</updateRate>
+        <bodyName>base_link</bodyName>
+        <topicName>fix</topicName>
+        <velocityTopicName>gps_velocity</velocityTopicName>
+        <velocityDrift>0.1 0.1 0.5</velocityDrift>
+        <gaussianNoise>0.1 0.1 0.1</gaussianNoise>
+        <velocityGaussianNoise>0.1 0.1 0.1</velocityGaussianNoise>
+      </controller:hector_gazebo_ros_gps>
+
       <controller:gazebo_ros_p3d name="quadrotor_groundtruth_sim" plugin="libgazebo_ros_p3d.so">
         <alwaysOn>true</alwaysOn>
         <updateRate>100.0</updateRate>
@@ -126,8 +148,8 @@ xmlns:xacro="http://ros.org/wiki/xacro"
     </gazebo>
 
     <!-- Sonar height sensor -->
-    <sonar_sensor name="sonar" parent="base_link" ros_topic="sonar_height" update_rate="10" min_range="0.03" max_range="6.0" field_of_view="40" ray_count="10">
-      <origin xyz="0.12 0.0 -0.01" rpy="0 ${90*pi/180} 0"/>
+    <sonar_sensor name="sonar" parent="base_link" ros_topic="sonar_height" update_rate="10" min_range="0.03" max_range="3.0" field_of_view="40" ray_count="3">
+      <origin xyz="0.12 0.0 -0.02" rpy="0 ${90*pi/180} 0"/>
     </sonar_sensor>
   </xacro:macro>
 </robot>

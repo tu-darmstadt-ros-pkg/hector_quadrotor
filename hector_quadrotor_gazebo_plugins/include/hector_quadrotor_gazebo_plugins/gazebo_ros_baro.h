@@ -64,17 +64,13 @@ private:
 
   mav_msgs::Height height_;
 
-  ParamT<std::string> *body_name_param_;
-  std::string body_name_;
-  ParamT<std::string> *namespace_param_;
-  std::string namespace_;
-  ParamT<std::string> *topic_param_;
-  std::string topic_;
+  ParamT<std::string> *body_name_;
+  ParamT<std::string> *namespace_;
+  ParamT<std::string> *frame_id_;
+  ParamT<std::string> *topic_;
 
-  ParamT<double> *elevation_param_;
-  double elevation_;
-  ParamT<double> *qnh_param_;
-  double qnh_;
+  ParamT<double> *elevation_;
+  ParamT<double> *qnh_;
 
   SensorModel sensor_model_;
 };

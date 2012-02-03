@@ -57,11 +57,12 @@ GazeboRosBaro::GazeboRosBaro(Entity *parent)
   }
 
   Param::Begin(&parameters);
-  namespace_param_ = new ParamT<std::string>("robotNamespace", "", false);
-  body_name_param_ = new ParamT<std::string>("bodyName", "", true);
-  topic_param_ = new ParamT<std::string>("topicName", "", true);
-  elevation_param_ = new ParamT<double>("elevation", 0.0, false);;
-  qnh_param_ = new ParamT<double>("qnh", 1013.25, false);
+  namespace_ = new ParamT<std::string>("robotNamespace", "", false);
+  body_name_ = new ParamT<std::string>("bodyName", "", true);
+  frame_id_ = new ParamT<std::string>("frameId", "", false);
+  topic_ = new ParamT<std::string>("topicName", "", true);
+  elevation_ = new ParamT<double>("elevation", 0.0, false);;
+  qnh_ = new ParamT<double>("qnh", 1013.25, false);
 
   Param::End();
 }
@@ -70,46 +71,40 @@ GazeboRosBaro::GazeboRosBaro(Entity *parent)
 // Destructor
 GazeboRosBaro::~GazeboRosBaro()
 {
-  delete namespace_param_;
-  delete body_name_param_;
-  delete topic_param_;
-  delete elevation_param_;
-  delete qnh_param_;
+  delete namespace_;
+  delete body_name_;
+  delete frame_id_;
+  delete topic_;
+  delete elevation_;
+  delete qnh_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Load the controller
 void GazeboRosBaro::LoadChild(XMLConfigNode *node)
 {
-  namespace_param_->Load(node);
-  namespace_ = namespace_param_->GetValue();
-
-  body_name_param_->Load(node);
-  body_name_ = body_name_param_->GetValue();
+  namespace_->Load(node);
+  body_name_->Load(node);
+  frame_id_->Load(node);
+  topic_->Load(node);
 
   // assert that the body by body_name_ exists
-  body_ = dynamic_cast<Body*>(parent_->GetBody(body_name_));
-  if (!body_) gzthrow("gazebo_quadrotor_simple_controller plugin error: body_name_: " << body_name_ << "does not exist\n");
+  body_ = dynamic_cast<Body*>(parent_->GetBody(**body_name_));
+  if (!body_) gzthrow("gazebo_quadrotor_simple_controller plugin error: body_name_: " << **body_name_ << "does not exist\n");
 
-  height_.header.frame_id = body_->GetName();
-
-  topic_param_->Load(node);
-  topic_ = topic_param_->GetValue();
-
-  elevation_param_->Load(node);
-  elevation_ = elevation_param_->GetValue();
-  qnh_param_->Load(node);
-  qnh_ = elevation_param_->GetValue();
+  elevation_->Load(node);
+  qnh_->Load(node);
 
   sensor_model_.Load(node);
+  height_.header.frame_id = **frame_id_;
 }
 
 ///////////////////////////////////////////////////////
 // Initialize the controller
 void GazeboRosBaro::InitChild()
 {
-  node_handle_ = new ros::NodeHandle(namespace_);
-  publisher_ = node_handle_->advertise<mav_msgs::Height>(topic_, 10);
+  node_handle_ = new ros::NodeHandle(**namespace_);
+  publisher_ = node_handle_->advertise<mav_msgs::Height>(**topic_, 10);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -123,7 +118,7 @@ void GazeboRosBaro::UpdateChild()
 
   double previous_height = height_.height;
   height_.header.stamp = ros::Time(sim_time.sec, sim_time.nsec);
-  height_.height = sensor_model_(pose.pos.z, dt) + elevation_;
+  height_.height = sensor_model_(pose.pos.z, dt) + **elevation_;
   height_.height_variance = sensor_model_.gaussian_noise*sensor_model_.gaussian_noise + sensor_model_.drift*sensor_model_.drift;
   height_.climb = (height_.height - previous_height) / dt;
   height_.climb_variance = sensor_model_.gaussian_noise*sensor_model_.gaussian_noise;
