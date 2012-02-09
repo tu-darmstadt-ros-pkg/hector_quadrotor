@@ -20,14 +20,14 @@ xmlns:xacro="http://ros.org/wiki/xacro"
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-                <mesh filename="package://hector_quadrotor_urdf/meshes/quadrotor/quadrotor_base.dae"/>
+          <mesh filename="package://hector_quadrotor_urdf/meshes/quadrotor/quadrotor_base.dae"/>
         </geometry>
       </visual>
 
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://hector_quadrotor_urdf/meshes/quadrotor/quadrotor_base.dae"/>
+          <mesh filename="package://hector_quadrotor_urdf/meshes/quadrotor/quadrotor_base.stl"/>
         </geometry>
       </collision>
     </link>
