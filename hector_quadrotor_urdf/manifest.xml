@@ -9,10 +9,6 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/hector_quadrotor_urdf</url>
 
-  <depend package="gazebo_plugins"/>
-  <depend package="hector_gazebo_plugins"/>
-  <depend package="hector_quadrotor_gazebo_plugins"/>
-  <depend package="hector_quadrotor_tf"/>
   <depend package="hector_sensors_description"/>
 
 </package>
