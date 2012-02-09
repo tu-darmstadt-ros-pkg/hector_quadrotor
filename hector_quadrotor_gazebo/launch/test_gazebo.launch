@@ -3,5 +3,5 @@
 
 <launch>
     <include file="$(find hector_gazebo_worlds)/launch/empty_world_realtime.launch" />
-    <include file="$(find hector_quadrotor_urdf)/launch/spawn_quadrotor.launch" />
+    <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor.launch" />
 </launch>
