@@ -1,0 +1,20 @@
+<package>
+  <description brief="hector_quadrotor_gazebo">
+
+     hector_quadrotor_gazebo
+
+  </description>
+  <author>stefan</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/hector_quadrotor_gazebo</url>
+  
+  <depend package="gazebo_plugins"/>
+  <depend package="hector_gazebo_plugins"/>
+  <depend package="hector_sensors_gazebo"/>
+  <depend package="hector_quadrotor_gazebo_plugins"/>
+  <depend package="hector_quadrotor_tf"/>
+
+</package>
+
+
