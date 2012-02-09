@@ -6,7 +6,7 @@ xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
 xmlns:xacro="http://ros.org/wiki/xacro"
 >
 
-  <include filename="$(find hector_quadrotor_urdf)/urdf/sonar_sensor.urdf.xacro" />
+  <include filename="$(find hector_sensors_description)/urdf/sonar_sensor.urdf.xacro" />
   <property name="pi" value="3.1415926535897931" />
 
   <xacro:macro name="quadrotor_base_macro">
@@ -149,7 +149,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
 
     <!-- Sonar height sensor -->
     <sonar_sensor name="sonar" parent="base_link" ros_topic="sonar_height" update_rate="10" min_range="0.03" max_range="3.0" field_of_view="40" ray_count="3">
-      <origin xyz="0.12 0.0 -0.02" rpy="0 ${90*pi/180} 0"/>
+      <origin xyz="0.12 0.0 -0.012" rpy="0 ${90*pi/180} 0"/>
     </sonar_sensor>
   </xacro:macro>
 </robot>
