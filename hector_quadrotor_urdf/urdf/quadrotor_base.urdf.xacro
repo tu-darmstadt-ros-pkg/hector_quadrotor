@@ -78,13 +78,13 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <alwaysOn>true</alwaysOn>
         <updateRate>100.0</updateRate>
         <bodyName>base_link</bodyName>
-        <topicName>imu</topicName>
+        <topicName>raw_imu</topicName>
         <rpyOffsets>0 0 0</rpyOffsets> <!-- deprecated -->
         <gaussianNoise>0</gaussianNoise>  <!-- deprecated -->
         <accelDrift>0.5 0.5 0.5</accelDrift>
         <accelGaussianNoise>0.1 0.1 0.1</accelGaussianNoise>
-        <rateDrift>0.5 0.5 0.5</rateDrift>
-        <rateGaussianNoise>0.1 0.1 0.1</rateGaussianNoise>
+        <rateDrift>0.01 0.1 0.1</rateDrift>
+        <rateGaussianNoise>0.01 0.01 0.01</rateGaussianNoise>
         <headingDrift>0.05</headingDrift>
         <headingGaussianNoise>0.01</headingGaussianNoise>
 
@@ -141,7 +141,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <alwaysOn>true</alwaysOn>
         <updateRate>100.0</updateRate>
         <bodyName>base_link</bodyName>
-        <topicName>state</topicName>
+        <topicName>ground_truth/state</topicName>
         <gaussianNoise>0.0</gaussianNoise>
         <frameName>map</frameName>
       </controller:gazebo_ros_p3d>

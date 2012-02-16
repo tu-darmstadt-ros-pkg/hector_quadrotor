@@ -20,6 +20,10 @@
      <param name="tf_prefix" type="string" value="" />
    </node>
 
-   <node name="quadrotor_tf" pkg="hector_quadrotor_tf" type="quadrotor_tf" output="screen"/>
+   <node name="ground_truth_to_tf" pkg="odometry_to_tf" type="odometry_to_tf" output="screen">
+     <param name="odometry_topic" value="ground_truth/state" />
+     <param name="frame_id" value="nav" />
+   </node>
+   <!-- node name="hector_pose_estimation" pkg="hector_pose_estimation" type="hector_pose_estimation_node" output="screen"/-->
  </launch>
    
