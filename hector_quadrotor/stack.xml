@@ -1,9 +1,0 @@
-<stack>
-  <description brief="hector_quadrotor">hector_quadrotor contains packages related to modeling, control and simulation of a quadrotor uav </description>
-  <author>Maintained by Johannes Meyer and Stefan Kohlbrecher</author>
-  <license>BSD</license>  
-  <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/hector_quadrotor</url>
-  <depend stack="ros" />
-
-</stack>

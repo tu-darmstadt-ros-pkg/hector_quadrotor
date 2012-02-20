@@ -50,20 +50,22 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <alwaysOn>true</alwaysOn>
         <updateRate>0.0</updateRate>
         <bodyName>base_link</bodyName>
+        <!-- <stateTopic>gazebo/state</stateTopic> -->
+        <imuTopic>imu</imuTopic>
         <topicName>cmd_vel</topicName>
         <rollpitch>
           <proportionalGain>10.0</proportionalGain>
-          <differentialGain>10.0</differentialGain>
+          <differentialGain>5.0</differentialGain>
           <limit>0.5</limit>
         </rollpitch>
         <yaw>
-          <proportionalGain>1.0</proportionalGain>
+          <proportionalGain>2.0</proportionalGain>
           <differentialGain>1.0</differentialGain>
           <limit>1.5</limit>
         </yaw>
         <velocity_xy>
-          <proportionalGain>3.0</proportionalGain>
-          <differentialGain>3.0</differentialGain>
+          <proportionalGain>5.0</proportionalGain>
+          <differentialGain>1.0</differentialGain>
           <limit>2</limit>
         </velocity_xy>
         <velocity_z>
@@ -78,15 +80,15 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <alwaysOn>true</alwaysOn>
         <updateRate>100.0</updateRate>
         <bodyName>base_link</bodyName>
-        <topicName>raw_imu</topicName>
+        <topicName>imu</topicName>
         <rpyOffsets>0 0 0</rpyOffsets> <!-- deprecated -->
         <gaussianNoise>0</gaussianNoise>  <!-- deprecated -->
         <accelDrift>0.5 0.5 0.5</accelDrift>
         <accelGaussianNoise>0.1 0.1 0.1</accelGaussianNoise>
-        <rateDrift>0.01 0.1 0.1</rateDrift>
-        <rateGaussianNoise>0.01 0.01 0.01</rateGaussianNoise>
-        <headingDrift>0.05</headingDrift>
-        <headingGaussianNoise>0.01</headingGaussianNoise>
+        <rateDrift>0.1 0.1 0.1</rateDrift>
+        <rateGaussianNoise>0.05 0.05 0.05</rateGaussianNoise>
+        <headingDrift>0.1</headingDrift>
+        <headingGaussianNoise>0.05</headingGaussianNoise>
 
         <!-- default values:
           <accelOffset>0 0 0</accelOffset>
@@ -141,7 +143,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <alwaysOn>true</alwaysOn>
         <updateRate>100.0</updateRate>
         <bodyName>base_link</bodyName>
-        <topicName>ground_truth/state</topicName>
+        <topicName>gazebo/state</topicName>
         <gaussianNoise>0.0</gaussianNoise>
         <frameName>map</frameName>
       </controller:gazebo_ros_p3d>
