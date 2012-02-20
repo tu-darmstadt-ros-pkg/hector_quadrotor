@@ -1,0 +1,29 @@
+<package>
+  <description brief="hector_quadrotor_gazebo_plugins">
+
+     hector_quadrotor_gazebo_plugins provides gazebo plugins for using quadrotors in gazebo.
+     The main plugin is a simple controller allowing to command the quadrotor's velocity
+     using a geometry_msgs/Twist message for teleoperation. The hector_gazebo_ros_baro
+     sensor plugin simulates an altimeter based on barometric pressure.
+
+  </description>
+  <author>Johannes Meyer</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/hector_quadrotor_gazebo_plugins</url>
+
+  <depend package="roscpp"/>
+  <depend package="gazebo"/>
+  <depend package="hector_gazebo_plugins"/>
+
+  <depend package="geometry_msgs"/>
+  <depend package="sensor_msgs"/>
+  <depend package="nav_msgs"/>
+  <depend package="mav_msgs"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib" />
+    <gazebo plugin_path="${prefix}/lib" />
+  </export>
+
+</package>
