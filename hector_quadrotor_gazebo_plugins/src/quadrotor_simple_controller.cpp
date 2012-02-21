@@ -235,8 +235,9 @@ void GazeboQuadrotorSimpleController::UpdateChild()
 //  }
 
   // Get gravity
-  double gravity = World::Instance()->GetPhysicsEngine()->GetGravity().GetLength();
-  double load_factor = gravity / fabs(World::Instance()->GetPhysicsEngine()->GetGravity().z);
+  Vector3 gravity_body = pose.rot.RotateVector(World::Instance()->GetPhysicsEngine()->GetGravity());
+  double gravity = gravity_body.GetLength();
+  double load_factor = gravity * gravity / World::Instance()->GetPhysicsEngine()->GetGravity().GetDotProd(gravity_body);  // Get gravity
 
   // Rotate vectors to coordinate frames relevant for control
   Quatern heading_quaternion(cos(euler.z/2),0,0,sin(euler.z/2));
