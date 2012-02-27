@@ -37,7 +37,11 @@
 #include <gazebo/Time.hh>
 
 #include <ros/ros.h>
-#include <mav_msgs/Height.h>
+#ifdef USE_MAV_MSGS
+  #include <mav_msgs/Height.h>
+#else
+  #include <geometry_msgs/PointStamped.h>
+#endif
 #include <hector_gazebo_plugins/sensor_model.h>
 
 namespace gazebo
@@ -62,7 +66,11 @@ private:
   ros::NodeHandle* node_handle_;
   ros::Publisher publisher_;
 
+#ifdef USE_MAV_MSGS
   mav_msgs::Height height_;
+#else
+  geometry_msgs::PointStamped height_;
+#endif
 
   ParamT<std::string> *body_name_;
   ParamT<std::string> *namespace_;

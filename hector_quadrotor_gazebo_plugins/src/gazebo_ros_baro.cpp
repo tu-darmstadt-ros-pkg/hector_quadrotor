@@ -104,7 +104,11 @@ void GazeboRosBaro::LoadChild(XMLConfigNode *node)
 void GazeboRosBaro::InitChild()
 {
   node_handle_ = new ros::NodeHandle(**namespace_);
+#ifdef USE_MAV_MSGS
   publisher_ = node_handle_->advertise<mav_msgs::Height>(**topic_, 10);
+#else
+  publisher_ = node_handle_->advertise<geometry_msgs::PointStamped>(**topic_, 10);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,12 +120,17 @@ void GazeboRosBaro::UpdateChild()
 
   Pose3d pose = body_->GetWorldPose();
 
+#ifdef USE_MAV_MSGS
   double previous_height = height_.height;
   height_.header.stamp = ros::Time(sim_time.sec, sim_time.nsec);
   height_.height = sensor_model_(pose.pos.z, dt) + **elevation_;
   height_.height_variance = sensor_model_.gaussian_noise*sensor_model_.gaussian_noise + sensor_model_.drift*sensor_model_.drift;
   height_.climb = (height_.height - previous_height) / dt;
   height_.climb_variance = sensor_model_.gaussian_noise*sensor_model_.gaussian_noise;
+#else
+  height_.header.stamp = ros::Time(sim_time.sec, sim_time.nsec);
+  height_.point.z = sensor_model_(pose.pos.z, dt) + **elevation_;
+#endif
 
   publisher_.publish(height_);
 }
