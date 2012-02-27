@@ -50,8 +50,8 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <alwaysOn>true</alwaysOn>
         <updateRate>0.0</updateRate>
         <bodyName>base_link</bodyName>
-        <!-- <stateTopic>gazebo/state</stateTopic> -->
-        <imuTopic>imu</imuTopic>
+        <!-- stateTopic>gazebo/state</stateTopic -->
+        <!-- imuTopic>imu</imuTopic -->
         <topicName>cmd_vel</topicName>
         <rollpitch>
           <proportionalGain>10.0</proportionalGain>
@@ -80,7 +80,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <alwaysOn>true</alwaysOn>
         <updateRate>100.0</updateRate>
         <bodyName>base_link</bodyName>
-        <topicName>imu</topicName>
+        <topicName>raw_imu</topicName>
         <rpyOffsets>0 0 0</rpyOffsets> <!-- deprecated -->
         <gaussianNoise>0</gaussianNoise>  <!-- deprecated -->
         <accelDrift>0.5 0.5 0.5</accelDrift>
@@ -134,8 +134,9 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <bodyName>base_link</bodyName>
         <topicName>fix</topicName>
         <velocityTopicName>gps_velocity</velocityTopicName>
-        <velocityDrift>0.1 0.1 0.5</velocityDrift>
+        <drift>5.0 5.0 5.0</drift>
         <gaussianNoise>0.1 0.1 0.1</gaussianNoise>
+        <velocityDrift>0 0 0</velocityDrift>
         <velocityGaussianNoise>0.1 0.1 0.1</velocityGaussianNoise>
       </controller:hector_gazebo_ros_gps>
 
