@@ -9,6 +9,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
   <include filename="$(find hector_sensors_description)/urdf/sonar_sensor.urdf.xacro" />
   <property name="pi" value="3.1415926535897931" />
 
+  <!-- Main quadrotor link -->
   <xacro:macro name="quadrotor_base_macro">
     <link name="base_link">
       <inertial>
@@ -31,11 +32,17 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         </geometry>
       </collision>
     </link>
+    
+    <!-- Sonar height sensor -->
+    <sonar_sensor name="sonar" parent="base_link" ros_topic="sonar_height" update_rate="10" min_range="0.03" max_range="3.0" field_of_view="40" ray_count="3">
+      <origin xyz="0.12 0.0 -0.012" rpy="0 ${90*pi/180} 0"/>
+    </sonar_sensor>
 
     <gazebo reference="base_link">
       <turnGravityOff>false</turnGravityOff>
     </gazebo>
 
+    <!-- Gazebo Plugins -->
     <gazebo>
       <canonicalBody>base_link</canonicalBody>
 
@@ -150,9 +157,5 @@ xmlns:xacro="http://ros.org/wiki/xacro"
       </controller:gazebo_ros_p3d>
     </gazebo>
 
-    <!-- Sonar height sensor -->
-    <sonar_sensor name="sonar" parent="base_link" ros_topic="sonar_height" update_rate="10" min_range="0.03" max_range="3.0" field_of_view="40" ray_count="3">
-      <origin xyz="0.12 0.0 -0.012" rpy="0 ${90*pi/180} 0"/>
-    </sonar_sensor>
   </xacro:macro>
 </robot>
