@@ -1,17 +1,16 @@
 <?xml version="1.0"?>
 
-
- <launch>
-   <!-- Start Gazebo with wg world running in (max) realtime -->
-   <include file="$(find hector_gazebo_worlds)/launch/wg_collada_realtime.launch"/>
+<launch>
    
-   <!-- Spawn simulated quadrotor uav -->
-   <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor.launch" >
-     <arg name="model" value="$(find hector_quadrotor_urdf)/urdf/quadrotor_hokuyo_utm30lx.urdf.xacro"/> 
-   </include>
+  <!-- Start Gazebo with wg world running in (max) realtime -->
+  <include file="$(find hector_gazebo_worlds)/launch/wg_collada_realtime.launch"/>
    
-   <!-- Start SLAM system -->
-   <include file="$(find hector_slam_launch)/launch/quadrotor_uav.launch"/>
+  <!-- Spawn simulated quadrotor uav -->
+  <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor.launch" >
+    <arg name="model" value="$(find hector_quadrotor_urdf)/urdf/quadrotor_hokuyo_utm30lx.urdf.xacro"/> 
+  </include>
    
-   <param name="quadrotor_tf/frame_id" value="nav"/>
- </launch>
+  <!-- Start SLAM system -->
+  <include file="$(find hector_slam_launch)/launch/quadrotor_uav.launch"/>
+   
+</launch>
