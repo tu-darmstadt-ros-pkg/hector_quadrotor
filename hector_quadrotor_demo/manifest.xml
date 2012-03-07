@@ -10,6 +10,7 @@
   <url>http://ros.org/wiki/hector_quadrotor_demo</url>
   
   <depend package="hector_quadrotor_gazebo"/>
+  <depend package="hector_gazebo_worlds" />
   <depend package="hector_mapping"/>
   <depend package="hector_geotiff"/>
   <depend package="hector_trajectory_server"/>
