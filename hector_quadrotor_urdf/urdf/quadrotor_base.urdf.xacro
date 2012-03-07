@@ -151,7 +151,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <alwaysOn>true</alwaysOn>
         <updateRate>100.0</updateRate>
         <bodyName>base_link</bodyName>
-        <topicName>gazebo/state</topicName>
+        <topicName>ground_truth/state</topicName>
         <gaussianNoise>0.0</gaussianNoise>
         <frameName>map</frameName>
       </controller:gazebo_ros_p3d>
