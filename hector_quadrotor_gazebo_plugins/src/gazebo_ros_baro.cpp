@@ -123,13 +123,13 @@ void GazeboRosBaro::UpdateChild()
 #ifdef USE_MAV_MSGS
   double previous_height = height_.height;
   height_.header.stamp = ros::Time(sim_time.sec, sim_time.nsec);
-  height_.height = sensor_model_(pose.pos.z, dt) + **elevation_;
+  height_.height = sensor_model_(pose.pos.z, dt) - **elevation_;
   height_.height_variance = sensor_model_.gaussian_noise*sensor_model_.gaussian_noise + sensor_model_.drift*sensor_model_.drift;
   height_.climb = (height_.height - previous_height) / dt;
   height_.climb_variance = sensor_model_.gaussian_noise*sensor_model_.gaussian_noise;
 #else
   height_.header.stamp = ros::Time(sim_time.sec, sim_time.nsec);
-  height_.point.z = sensor_model_(pose.pos.z, dt) + **elevation_;
+  height_.point.z = sensor_model_(pose.pos.z, dt) - **elevation_;
 #endif
 
   publisher_.publish(height_);
