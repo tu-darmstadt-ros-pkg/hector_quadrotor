@@ -12,5 +12,8 @@
    
   <!-- Start SLAM system -->
   <include file="$(find hector_slam_launch)/launch/quadrotor_uav.launch"/>
+  
+  <!-- Start rviz visualization with preset config -->
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find hector_quadrotor_demo)/rviz_cfg/indoor_slam.vcg"/>
    
 </launch>
