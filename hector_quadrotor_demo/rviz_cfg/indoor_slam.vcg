@@ -14,7 +14,7 @@ Grid.Cell\ Size=1
 Grid.ColorR=1
 Grid.ColorG=0
 Grid.ColorB=0
-Grid.Enabled=1
+Grid.Enabled=0
 Grid.Line\ Style=0
 Grid.Line\ Width=0.03
 Grid.Normal\ Cell\ Count=0
@@ -35,8 +35,8 @@ Laser\ Scan.Style=0
 Laser\ Scan.Topic=/scan
 Laser\ Scan..AxisAutocompute\ Value\ Bounds=0
 Laser\ Scan..AxisAxis=2
-Laser\ Scan..AxisMax\ Value=1.5
-Laser\ Scan..AxisMin\ Value=-0.5
+Laser\ Scan..AxisMax\ Value=2
+Laser\ Scan..AxisMin\ Value=0
 Laser\ Scan..AxisUse\ Fixed\ Frame=1
 Laser\ Scan..Flat\ ColorColorR=1
 Laser\ Scan..Flat\ ColorColorG=1
@@ -95,8 +95,8 @@ TF.Update\ Interval=0
 Tool\ 2D\ Nav\ GoalTopic=goal
 Tool\ 2D\ Pose\ EstimateTopic=initialpose
 Camera\ Type=rviz::FPSViewController
-Camera\ Config=-0.5448 6.27819 -0.414015 9.87995 12.2063
-Property\ Grid\ State=selection=Pose.Enabled;expanded=.Global Options,TF./base_link/base_link,TF./front_cam_link/front_cam_link,TF./front_cam_optical_frame/front_cam_optical_frame,TF./laser0_frame/laser0_frame,TF./sonar_link/sonar_link,TF./base_footprint/base_footprint,TF./base_stabilized/base_stabilized,TF./nav/nav,TF./map/map,TF./scanmatcher_frame/scanmatcher_frame,TF.Enabled.TF.Tree,TF./base_linkTree/base_link,TF./front_cam_linkTree/front_cam_link,TF./front_cam_optical_frameTree/front_cam_optical_frame,TF./laser0_frameTree/laser0_frame,TF./sonar_linkTree/sonar_link,TF./mapTree/map,TF./navTree/nav,TF./base_footprintTree/base_footprint,TF./base_stabilizedTree/base_stabilized,TF./scanmatcher_frameTree/scanmatcher_frame,Laser Scan.Enabled,Camera.Enabled;scrollpos=0,0;splitterpos=179,359;ispageselected=1
+Camera\ Config=-0.5448 6.27819 -0.419141 10.5018 13.2326
+Property\ Grid\ State=selection=Grid.Enabled;expanded=.Global Options,TF./base_link/base_link,TF./front_cam_link/front_cam_link,TF./front_cam_optical_frame/front_cam_optical_frame,TF./laser0_frame/laser0_frame,TF./sonar_link/sonar_link,TF./base_footprint/base_footprint,TF./base_stabilized/base_stabilized,TF./nav/nav,TF./map/map,TF./scanmatcher_frame/scanmatcher_frame,TF.Enabled.TF.Tree,TF./base_linkTree/base_link,TF./front_cam_linkTree/front_cam_link,TF./front_cam_optical_frameTree/front_cam_optical_frame,TF./laser0_frameTree/laser0_frame,TF./sonar_linkTree/sonar_link,TF./mapTree/map,TF./navTree/nav,TF./base_footprintTree/base_footprint,TF./base_stabilizedTree/base_stabilized,TF./scanmatcher_frameTree/scanmatcher_frame,Laser Scan.Enabled,Camera.Enabled;scrollpos=0,0;splitterpos=179,359;ispageselected=1
 [Display0]
 Name=TF
 Package=rviz
