@@ -15,15 +15,15 @@ xmlns:xacro="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface">
     <quadrotor_base_macro />
     
     <!-- Hokuyo UTM-30LX mounted upside down below the quadrotor body -->
-    <include filename="$(find hector_sensors_description)/urdf/hokuyo_utm30lx.urdf.xacro" />
+<!--    <include filename="$(find hector_sensors_description)/urdf/hokuyo_utm30lx.urdf.xacro" />
     <xacro:hokuyo_utm30lx name="laser0" parent="base_link" ros_topic="scan" update_rate="40" ray_count="1081" min_angle="135" max_angle="-135">
       <origin xyz="0.0 0.0 -0.097" rpy="${M_PI} 0 0"/>
-    </xacro:hokuyo_utm30lx>
+    </xacro:hokuyo_utm30lx>-->
     
     <!-- Forward facing camera -->
     <include filename="$(find hector_sensors_description)/urdf/generic_camera.urdf.xacro" />
-    <xacro:generic_camera name="front_cam" parent="base_link" ros_topic="camera/image" cam_info_topic="camera/camera_info" update_rate="10" res_x="320" res_y="240" image_format="R8G8B8" hfov="90">
-      <origin xyz="0.05 0.0 -0.06" rpy="0 0 0"/>
+    <xacro:generic_camera name="downward_cam" parent="base_link" ros_topic="camera/image" cam_info_topic="camera/camera_info" update_rate="20" res_x="640" res_y="480" image_format="L8" hfov="100">
+      <origin xyz="0.4 0.0 -0.0" rpy="0 ${M_PI/2} 0"/>
     </xacro:generic_camera>
     
 </robot>
