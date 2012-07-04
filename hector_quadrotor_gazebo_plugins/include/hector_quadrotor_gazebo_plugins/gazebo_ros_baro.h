@@ -29,7 +29,7 @@
 #ifndef HECTOR_GAZEBO_PLUGINS_GAZEBO_ROS_BARO_H
 #define HECTOR_GAZEBO_PLUGINS_GAZEBO_ROS_BARO_H
 
-#include "gazebo.h"
+#include "gazebo/gazebo.hh"
 #include "common/Plugin.hh"
 
 #include <ros/ros.h>
