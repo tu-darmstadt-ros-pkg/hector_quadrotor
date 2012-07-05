@@ -60,7 +60,8 @@ GazeboRosBaro::GazeboRosBaro(Entity *parent)
   namespace_ = new ParamT<std::string>("robotNamespace", "", false);
   body_name_ = new ParamT<std::string>("bodyName", "", true);
   frame_id_ = new ParamT<std::string>("frameId", "", false);
-  topic_ = new ParamT<std::string>("topicName", "", true);
+  height_topic_ = new ParamT<std::string>("topicName", "", false);
+  altimeter_topic_ = new ParamT<std::string>("altimeterTopicName", "", false);
   elevation_ = new ParamT<double>("elevation", 0.0, false);;
   qnh_ = new ParamT<double>("qnh", 1013.25, false);
 
@@ -74,7 +75,8 @@ GazeboRosBaro::~GazeboRosBaro()
   delete namespace_;
   delete body_name_;
   delete frame_id_;
-  delete topic_;
+  delete height_topic_;
+  delete altimeter_topic_;
   delete elevation_;
   delete qnh_;
 }
@@ -86,7 +88,8 @@ void GazeboRosBaro::LoadChild(XMLConfigNode *node)
   namespace_->Load(node);
   body_name_->Load(node);
   frame_id_->Load(node);
-  topic_->Load(node);
+  height_topic_->Load(node);
+  altimeter_topic_->Load(node);
 
   // assert that the body by body_name_ exists
   body_ = dynamic_cast<Body*>(parent_->GetBody(**body_name_));
@@ -104,11 +107,17 @@ void GazeboRosBaro::LoadChild(XMLConfigNode *node)
 void GazeboRosBaro::InitChild()
 {
   node_handle_ = new ros::NodeHandle(**namespace_);
+  if (!(**height_topic_).empty()) {
 #ifdef USE_MAV_MSGS
-  publisher_ = node_handle_->advertise<mav_msgs::Height>(**topic_, 10);
+    height_publisher_ = node_handle_->advertise<mav_msgs::Height>(**height_topic_, 10);
 #else
-  publisher_ = node_handle_->advertise<geometry_msgs::PointStamped>(**topic_, 10);
+    height_publisher_ = node_handle_->advertise<geometry_msgs::PointStamped>(**height_topic_, 10);
 #endif
+  }
+
+  if (!(**altimeter_topic_).empty()) {
+    altimeter_publisher_ = node_handle_->advertise<hector_uav_msgs::Altimeter>(**altimeter_topic_, 10);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -119,20 +128,31 @@ void GazeboRosBaro::UpdateChild()
   double dt = (sim_time - lastUpdate).Double();
 
   Pose3d pose = body_->GetWorldPose();
+  double height = sensor_model_(pose.pos.z, dt);
 
+  if (height_publisher_) {
 #ifdef USE_MAV_MSGS
-  double previous_height = height_.height;
-  height_.header.stamp = ros::Time(sim_time.sec, sim_time.nsec);
-  height_.height = sensor_model_(pose.pos.z, dt) - **elevation_;
-  height_.height_variance = sensor_model_.gaussian_noise*sensor_model_.gaussian_noise + sensor_model_.drift*sensor_model_.drift;
-  height_.climb = (height_.height - previous_height) / dt;
-  height_.climb_variance = sensor_model_.gaussian_noise*sensor_model_.gaussian_noise;
+    double previous_height = height_.height;
+    height_.header.stamp = ros::Time(sim_time.sec, sim_time.nsec);
+    height_.height = height;
+    height_.height_variance = sensor_model_.gaussian_noise*sensor_model_.gaussian_noise + sensor_model_.drift*sensor_model_.drift;
+    height_.climb = dt > 0.0 ? (height_.height - previous_height) / dt : 0.0;
+    height_.climb_variance = sensor_model_.gaussian_noise*sensor_model_.gaussian_noise;
 #else
-  height_.header.stamp = ros::Time(sim_time.sec, sim_time.nsec);
-  height_.point.z = sensor_model_(pose.pos.z, dt) - **elevation_;
+    height_.header.stamp = ros::Time(sim_time.sec, sim_time.nsec);
+    height_.point.z = height;
 #endif
 
-  publisher_.publish(height_);
+    height_publisher_.publish(height_);
+  }
+
+  if (altimeter_publisher_) {
+    altimeter_.header = height_.header;
+    altimeter_.altitude = height + **elevation_;
+    altimeter_.pressure = pow((1.0 - altimeter_.altitude / 44330.0), 5.263157) * **qnh_;
+    altimeter_.qnh = **qnh_;
+    altimeter_publisher_.publish(altimeter_);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

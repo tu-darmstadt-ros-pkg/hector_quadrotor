@@ -2,6 +2,6 @@
 
 
 <launch>
-    <include file="$(find hector_gazebo_worlds)/launch/empty_world_realtime.launch" />
+    <include file="$(find gazebo_worlds)/launch/empty_world_throttled.launch" />
     <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor.launch" />
 </launch>

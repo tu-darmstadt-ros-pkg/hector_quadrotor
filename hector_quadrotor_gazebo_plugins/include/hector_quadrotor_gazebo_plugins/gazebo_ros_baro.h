@@ -42,6 +42,8 @@
 #else
   #include <geometry_msgs/PointStamped.h>
 #endif
+#include <hector_uav_msgs/Altimeter.h>
+
 #include <hector_gazebo_plugins/sensor_model.h>
 
 namespace gazebo
@@ -64,18 +66,21 @@ private:
   Body *body_;
 
   ros::NodeHandle* node_handle_;
-  ros::Publisher publisher_;
+  ros::Publisher height_publisher_;
+  ros::Publisher altimeter_publisher_;
 
 #ifdef USE_MAV_MSGS
   mav_msgs::Height height_;
 #else
   geometry_msgs::PointStamped height_;
 #endif
+  hector_uav_msgs::Altimeter altimeter_;
 
   ParamT<std::string> *body_name_;
   ParamT<std::string> *namespace_;
   ParamT<std::string> *frame_id_;
-  ParamT<std::string> *topic_;
+  ParamT<std::string> *height_topic_;
+  ParamT<std::string> *altimeter_topic_;
 
   ParamT<double> *elevation_;
   ParamT<double> *qnh_;
