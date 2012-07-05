@@ -26,73 +26,70 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 
-#ifndef HECTOR_GAZEBO_PLUGINS_GAZEBO_ROS_BARO_H
-#define HECTOR_GAZEBO_PLUGINS_GAZEBO_ROS_BARO_H
-
-#include "gazebo/gazebo.hh"
-#include "common/Plugin.hh"
 
 #include <ros/ros.h>
-#ifdef USE_MAV_MSGS
-  #include <mav_msgs/Height.h>
-#else
-  #include <geometry_msgs/PointStamped.h>
-#endif
-#include <hector_uav_msgs/Altimeter.h>
+#include <geometry_msgs/Twist.h>
 
-#include <hector_gazebo_plugins/sensor_model.h>
-
-namespace gazebo
+int main(int argc, char **argv)
 {
+  ros::init(argc, argv, "test_trajectory");
+  ros::NodeHandle nh;
+  ros::Publisher publisher = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
+  geometry_msgs::Twist twist;
 
-class GazeboRosBaro : public ModelPlugin
-{
-public:
-  GazeboRosBaro();
-  virtual ~GazeboRosBaro();
+  publisher.publish(twist);
+  ros::Duration(5.0).sleep();
 
-protected:
-  virtual void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf);
-  virtual void Reset();
-  virtual void Update();
+  double speed = 3.0;
+  double interval = 3.0;
 
-private:
-  /// \brief The parent World
-  physics::WorldPtr world;
+  twist.linear.z = 2.0;
+  publisher.publish(twist);
+  ros::Duration(interval).sleep();
 
-  /// \brief The link referred to by this plugin
-  physics::LinkPtr link;
+  twist.linear.z = 0.0;
+  publisher.publish(twist);
+  ros::Duration(interval).sleep();
 
-  ros::NodeHandle* node_handle_;
-  ros::Publisher height_publisher_;
-  ros::Publisher altimeter_publisher_;
+  twist.linear.x = speed;
+  publisher.publish(twist);
+  ros::Duration(interval).sleep();
 
-#ifdef USE_MAV_MSGS
-  mav_msgs::Height height_;
-#else
-  geometry_msgs::PointStamped height_;
-#endif
-  hector_uav_msgs::Altimeter altimeter_;
+  twist.linear.x = 0.0;
+  publisher.publish(twist);
+  ros::Duration(interval).sleep();
 
-  std::string namespace_;
-  std::string height_topic_;
-  std::string altimeter_topic_;
-  std::string link_name_;
-  std::string frame_id_;
+  twist.linear.y = speed;
+  publisher.publish(twist);
+  ros::Duration(interval).sleep();
 
-  double elevation_;
-  double qnh_;
+  twist.linear.y = 0.0;
+  publisher.publish(twist);
+  ros::Duration(interval).sleep();
 
-  SensorModel sensor_model_;
+  twist.linear.x = -speed;
+  publisher.publish(twist);
+  ros::Duration(interval).sleep();
 
-  /// \brief save last_time
-  common::Time last_time;
-  common::Time update_period;
+  twist.linear.x = 0.0;
+  publisher.publish(twist);
+  ros::Duration(interval).sleep();
 
-  // Pointer to the update event connection
-  event::ConnectionPtr updateConnection;
-};
+  twist.linear.y = -speed;
+  publisher.publish(twist);
+  ros::Duration(interval).sleep();
 
-} // namespace gazebo
+  twist.linear.y = 0.0;
+  publisher.publish(twist);
+  ros::Duration(interval).sleep();
 
-#endif // HECTOR_GAZEBO_PLUGINS_GAZEBO_ROS_BARO_H
+  twist.linear.z = -1.0;
+  publisher.publish(twist);
+  ros::Duration(interval).sleep();
+
+  twist.linear.z = 0.0;
+  publisher.publish(twist);
+  ros::Duration(interval).sleep();
+
+  return 0;
+}

@@ -1,0 +1,14 @@
+<package>
+  <description brief="hector_uav_msgs">
+
+     hector_uav_msgs
+
+  </description>
+  <author>Johannes Meyer</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/hector_uav_msgs</url>
+
+</package>
+
+

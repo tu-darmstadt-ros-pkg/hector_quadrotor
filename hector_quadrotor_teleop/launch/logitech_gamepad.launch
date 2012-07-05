@@ -10,6 +10,9 @@
     <param name="y_axis" value="3"/>
     <param name="z_axis" value="2"/>
     <param name="yaw_axis" value="1"/>
+    <param name="x_velocity_max" value="5"/>
+    <param name="y_velocity_max" value="5"/>
+    <param name="z_velocity_max" value="5"/>
   </node>
 </launch>
 

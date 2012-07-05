@@ -87,9 +87,14 @@ void GazeboRosBaro::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     frame_id_ = _sdf->GetElement("frameId")->GetValueString();
 
   if (!_sdf->HasElement("topicName"))
-    topic_ = "pressure_height";
+    height_topic_ = "pressure_height";
   else
-    topic_ = _sdf->GetElement("topicName")->GetValueString();
+    height_topic_ = _sdf->GetElement("topicName")->GetValueString();
+
+  if (!_sdf->HasElement("altimeterTopicName"))
+    altimeter_topic_ = "altimeter";
+  else
+    altimeter_topic_ = _sdf->GetElement("altimeterTopicName")->GetValueString();
 
   if (!_sdf->HasElement("elevation"))
     elevation_ = DEFAULT_ELEVATION;
@@ -113,11 +118,17 @@ void GazeboRosBaro::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
   }
 
   node_handle_ = new ros::NodeHandle(namespace_);
+  if (!height_topic_.empty()) {
 #ifdef USE_MAV_MSGS
-  publisher_ = node_handle_->advertise<mav_msgs::Height>(topic_, 1);
+    height_publisher_ = node_handle_->advertise<mav_msgs::Height>(height_topic_, 10);
 #else
-  publisher_ = node_handle_->advertise<geometry_msgs::PointStamped>(topic_, 1);
+    height_publisher_ = node_handle_->advertise<geometry_msgs::PointStamped>(height_topic_, 10);
 #endif
+  }
+
+  if (!altimeter_topic_.empty()) {
+    altimeter_publisher_ = node_handle_->advertise<hector_uav_msgs::Altimeter>(altimeter_topic_, 10);
+  }
 
   Reset();
 
@@ -142,20 +153,31 @@ void GazeboRosBaro::Update()
   if (last_time + update_period > sim_time) return;
 
   math::Pose pose = link->GetWorldPose();
+  double height = sensor_model_(pose.pos.z, dt);
 
+  if (height_publisher_) {
 #ifdef USE_MAV_MSGS
-  double previous_height = height_.height;
-  height_.header.stamp = ros::Time(sim_time.sec, sim_time.nsec);
-  height_.height = sensor_model_(pose.pos.z, dt) - elevation_;
-  height_.height_variance = sensor_model_.gaussian_noise*sensor_model_.gaussian_noise + sensor_model_.drift*sensor_model_.drift;
-  height_.climb = (height_.height - previous_height) / dt;
-  height_.climb_variance = sensor_model_.gaussian_noise*sensor_model_.gaussian_noise;
+    double previous_height = height_.height;
+    height_.header.stamp = ros::Time(sim_time.sec, sim_time.nsec);
+    height_.height = height;
+    height_.height_variance = sensor_model_.gaussian_noise*sensor_model_.gaussian_noise + sensor_model_.drift*sensor_model_.drift;
+    height_.climb = dt > 0.0 ? (height_.height - previous_height) / dt : 0.0;
+    height_.climb_variance = sensor_model_.gaussian_noise*sensor_model_.gaussian_noise;
 #else
-  height_.header.stamp = ros::Time(sim_time.sec, sim_time.nsec);
-  height_.point.z = sensor_model_(pose.pos.z, dt) - elevation_;
+    height_.header.stamp = ros::Time(sim_time.sec, sim_time.nsec);
+    height_.point.z = height;
 #endif
 
-  publisher_.publish(height_);
+    height_publisher_.publish(height_);
+  }
+
+  if (altimeter_publisher_) {
+    altimeter_.header = height_.header;
+    altimeter_.altitude = height + elevation_;
+    altimeter_.pressure = pow((1.0 - altimeter_.altitude / 44330.0), 5.263157) * qnh_;
+    altimeter_.qnh = qnh_;
+    altimeter_publisher_.publish(altimeter_);
+  }
 
   // save last time stamp
   last_time = sim_time;

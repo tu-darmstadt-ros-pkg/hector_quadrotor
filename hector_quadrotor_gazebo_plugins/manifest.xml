@@ -19,6 +19,7 @@
   <depend package="geometry_msgs"/>
   <depend package="sensor_msgs"/>
   <depend package="nav_msgs"/>
+  <depend package="hector_uav_msgs"/>
 
   <export>
     <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib" />

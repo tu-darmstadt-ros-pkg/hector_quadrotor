@@ -25,5 +25,7 @@
      <param name="frame_id" value="nav" />
    </node>
    <!-- node name="hector_pose_estimation" pkg="hector_pose_estimation" type="hector_pose_estimation_node" output="screen"/-->
+
+   <rosparam command="load" ns="gazebo" file="$(find hector_quadrotor_controller)/param/quadrotor_aerodynamics.yaml" />
  </launch>
    
