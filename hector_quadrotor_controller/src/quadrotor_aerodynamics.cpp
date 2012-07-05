@@ -42,6 +42,9 @@ extern "C" {
 
 namespace gazebo {
 
+using namespace common;
+using namespace math;
+
 template <typename T> static inline T checknan(const T& value, const std::string& text = "") {
   if (!(value == value)) {
     if (!text.empty()) std::cerr << text << " contains **!?* Nan values!" << std::endl;
@@ -130,9 +133,9 @@ void GazeboQuadrotorAerodynamics::Load(physics::ModelPtr _model, sdf::ElementPtr
 
   control_rate_ = 100.0;
   if (_sdf->HasElement("controlRate")) control_rate_ = _sdf->GetElement("controlRate")->GetValueDouble();
-  control_delay_ = common::Time();
+  control_delay_ = Time();
   if (_sdf->HasElement("controlDelay")) control_delay_ = _sdf->GetElement("controlDelay")->GetValueDouble();
-  control_tolerance_ = 0.0; // common::Time(world->GetPhysicsEngine()->GetStepTime() / 2);
+  control_tolerance_ = Time(world->GetPhysicsEngine()->GetStepTime() / 2);
   if (_sdf->HasElement("controlTolerance")) control_tolerance_ = _sdf->GetElement("controlTolerance")->GetValueDouble();
 
   // set control timer parameters
@@ -189,6 +192,7 @@ void GazeboQuadrotorAerodynamics::Load(physics::ModelPtr _model, sdf::ElementPtr
   }
 
   callback_queue_thread_ = boost::thread( boost::bind( &GazeboQuadrotorAerodynamics::QueueThread,this ) );
+
   Reset();
 
   // get model parameters
@@ -249,11 +253,11 @@ void GazeboQuadrotorAerodynamics::WindCallback(const geometry_msgs::Vector3Const
 // Update the controller
 void GazeboQuadrotorAerodynamics::Update()
 {
-  math::Vector3 force, torque;
+  Vector3 force, torque;
   boost::mutex::scoped_lock lock(command_mutex_);
 
   // Get simulator time
-  common::Time current_time = world->GetSimTime();
+  Time current_time = world->GetSimTime();
   double dt = (current_time - last_time_).Double();
   last_time_ = current_time;
   if (dt <= 0.0) return;
@@ -261,32 +265,30 @@ void GazeboQuadrotorAerodynamics::Update()
   // Get new commands/state
   // callback_queue_.callAvailable();
 
-  if (voltage_subscriber_) {
-    while(1) {
-      if (!new_motor_voltages_.empty()) {
-        hector_uav_msgs::MotorPWMConstPtr new_motor_voltage = new_motor_voltages_.front();
-        common::Time new_time = common::Time(new_motor_voltage->header.stamp.sec, new_motor_voltage->header.stamp.nsec);
-        if (new_time == 0 || (new_time >= current_time - control_delay_ - control_tolerance_ && new_time <= current_time - control_delay_ + control_tolerance_)) {
-          motor_voltage_ = new_motor_voltage;
-          new_motor_voltages_.pop_front();
-          last_control_time_ = current_time;
-          // std::cout << "Using motor command valid at " << new_time << " for simulation step at " << current_time << " (dt = " << (current_time - new_time) << ")" << std::endl;
-          break;
-        } else if (new_time < current_time - control_delay_ - control_tolerance_) {
-          ROS_WARN("[quadrotor_aerodynamics] command received was too old: %f s", (new_time  - current_time).Double());
-          new_motor_voltages_.pop_front();
-          continue;
-        }
+  while(1) {
+    if (!new_motor_voltages_.empty()) {
+      hector_uav_msgs::MotorPWMConstPtr new_motor_voltage = new_motor_voltages_.front();
+      Time new_time = Time(new_motor_voltage->header.stamp.sec, new_motor_voltage->header.stamp.nsec);
+      if (new_time == Time() || (new_time >= current_time - control_delay_ - control_tolerance_ && new_time <= current_time - control_delay_ + control_tolerance_)) {
+        motor_voltage_ = new_motor_voltage;
+        new_motor_voltages_.pop_front();
+        last_control_time_ = current_time;
+        // std::cout << "Using motor command valid at " << new_time << " for simulation step at " << current_time << " (dt = " << (current_time - new_time) << ")" << std::endl;
+        break;
+      } else if (new_time < current_time - control_delay_ - control_tolerance_) {
+        ROS_WARN("[quadrotor_aerodynamics] command received was too old: %f s", (new_time  - current_time).Double());
+        new_motor_voltages_.pop_front();
+        continue;
       }
-
-      if (new_motor_voltages_.empty() &&  motor_status_.on && control_period_ > 0 && current_time > last_control_time_ + control_period_) {
-        // std::cout << "Waiting for command... ";
-        if (command_condition_.timed_wait(lock, ros::WallDuration(0.1).toBoost())) continue;
-        ROS_ERROR("[quadrotor_aerodynamics] command timed out.");
-      }
-
-      break;
     }
+
+    if (new_motor_voltages_.empty() && motor_status_.on &&  control_period_ > 0 && current_time > last_control_time_ + control_period_) {
+      // std::cout << "Waiting for command... ";
+      if (command_condition_.timed_wait(lock, ros::WallDuration(0.1).toBoost())) continue;
+      ROS_ERROR("[quadrotor_aerodynamics] command timed out.");
+    }
+
+    break;
   }
 
   // fill input vector u for propulsion model
@@ -323,8 +325,8 @@ void GazeboQuadrotorAerodynamics::Update()
   // update propulsion model
   quadrotorPropulsion(propulsion_model_->x.data(), propulsion_model_->u.data(), propulsion_model_->parameters_, dt, propulsion_model_->y.data(), propulsion_model_->x_pred.data());
   propulsion_model_->x = propulsion_model_->x_pred;
-  force  = force  + checknan(math::Vector3(propulsion_model_->y[0], -propulsion_model_->y[1], propulsion_model_->y[2]), "propulsion model force");
-  torque = torque + checknan(math::Vector3(propulsion_model_->y[3], -propulsion_model_->y[4], -propulsion_model_->y[5]), "propulsion model torque");
+  force  = force  + checknan(Vector3(propulsion_model_->y[0], -propulsion_model_->y[1], propulsion_model_->y[2]), "propulsion model force");
+  torque = torque + checknan(Vector3(propulsion_model_->y[3], -propulsion_model_->y[4], -propulsion_model_->y[5]), "propulsion model torque");
 
 //  std::cout << "y = [ ";
 //  for(std::size_t i = 0; i < propulsion_model_->y.size(); ++i)
@@ -359,8 +361,8 @@ void GazeboQuadrotorAerodynamics::Update()
 
   // update drag model
   quadrotorDrag(drag_model_->u.data(), drag_model_->parameters_, dt, drag_model_->y.data());
-  force  = force  - checknan(math::Vector3(drag_model_->y[0], -drag_model_->y[1], -drag_model_->y[2]), "drag model force");
-  torque = torque - checknan(math::Vector3(drag_model_->y[3], -drag_model_->y[4], -drag_model_->y[5]), "drag model torque");
+  force  = force  - checknan(Vector3(drag_model_->y[0], -drag_model_->y[1], -drag_model_->y[2]), "drag model force");
+  torque = torque - checknan(Vector3(drag_model_->y[3], -drag_model_->y[4], -drag_model_->y[5]), "drag model torque");
 
   if (motor_status_publisher_ && current_time >= last_motor_status_time_ + control_period_) {
     motor_status_.header.stamp = ros::Time(current_time.sec, current_time.nsec);
@@ -385,8 +387,8 @@ void GazeboQuadrotorAerodynamics::Reset()
 {
   propulsion_model_->x.assign(0.0);
   propulsion_model_->x_pred.assign(0.0);
-  last_control_time_ = common::Time();
-  last_motor_status_time_ = common::Time();
+  last_control_time_ = Time();
+  last_motor_status_time_ = Time();
   new_motor_voltages_.clear();
   motor_voltage_.reset();
 }
