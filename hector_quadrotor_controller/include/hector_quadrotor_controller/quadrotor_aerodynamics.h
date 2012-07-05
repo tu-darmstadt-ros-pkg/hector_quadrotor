@@ -91,7 +91,7 @@ private:
   ParamT<std::string> *namespace_;
   ParamT<std::string> *param_namespace_;
   ParamT<Time> *control_rate_;
-  ParamT<std::string> *topic_;
+  ParamT<std::string> *voltage_topic_;
   ParamT<std::string> *wind_topic_;
   ParamT<std::string> *wrench_topic_;
   ParamT<std::string> *status_topic_;

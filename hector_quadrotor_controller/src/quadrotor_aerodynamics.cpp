@@ -73,7 +73,7 @@ struct GazeboQuadrotorAerodynamics::PropulsionModel {
 struct GazeboQuadrotorAerodynamics::DragModel {
   DragParameters parameters_;
   boost::array<real_T,6> u;
-  boost::array<real_T,6>  y;
+  boost::array<real_T,6> y;
 };
 
 GazeboQuadrotorAerodynamics::GazeboQuadrotorAerodynamics(Entity *parent)
@@ -93,8 +93,8 @@ GazeboQuadrotorAerodynamics::GazeboQuadrotorAerodynamics(Entity *parent)
   namespace_ = new ParamT<std::string>("robotNamespace", "", false);
   param_namespace_ = new ParamT<std::string>("paramNamespace", "~/quadrotor_aerodynamics", false);
   body_name_ = new ParamT<std::string>("bodyName", "", true);
-  control_rate_ = new ParamT<Time>("controlRate", 0, false);
-  topic_ = new ParamT<std::string>("topicName", "motor_voltage", false);
+  control_rate_ = new ParamT<Time>("controlRate", 100.0, false);
+  voltage_topic_ = new ParamT<std::string>("voltageTopicName", "motor_voltage", false);
   wind_topic_ = new ParamT<std::string>("windTopicName", "wind", false);
   wrench_topic_ = new ParamT<std::string>("wrenchTopic", "wrench_out", false);
   status_topic_ = new ParamT<std::string>("statusTopic", "motor_status", false);
@@ -118,7 +118,7 @@ GazeboQuadrotorAerodynamics::~GazeboQuadrotorAerodynamics()
   delete param_namespace_;
   delete body_name_;
   delete control_rate_;
-  delete topic_;
+  delete voltage_topic_;
   delete wind_topic_;
   delete wrench_topic_;
   delete status_topic_;
@@ -136,7 +136,7 @@ void GazeboQuadrotorAerodynamics::LoadChild(XMLConfigNode *node)
   param_namespace_->Load(node);
   body_name_->Load(node);
   control_rate_->Load(node);
-  topic_->Load(node);
+  voltage_topic_->Load(node);
   wind_topic_->Load(node);
   wrench_topic_->Load(node);
   status_topic_->Load(node);
@@ -191,16 +191,16 @@ void GazeboQuadrotorAerodynamics::LoadChild(XMLConfigNode *node)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Initialize the controllerb
+// Initialize the controller
 void GazeboQuadrotorAerodynamics::InitChild()
 {
   node_handle_ = new ros::NodeHandle(**namespace_);
 
   // subscribe command
-  if (!(**topic_).empty())
+  if (!(**voltage_topic_).empty())
   {
     ros::SubscribeOptions ops = ros::SubscribeOptions::create<hector_uav_msgs::MotorPWM>(
-      **topic_, 1,
+      **voltage_topic_, 1,
       boost::bind(&GazeboQuadrotorAerodynamics::CommandCallback, this, _1),
       ros::VoidPtr(), &callback_queue_);
     voltage_subscriber_ = node_handle_->subscribe(ops);
@@ -264,18 +264,18 @@ void GazeboQuadrotorAerodynamics::UpdateChild()
   boost::mutex::scoped_lock lock(command_mutex_);
 
   // Get simulator time
-  double dt = Simulator::Instance()->GetSimTime() - lastUpdate;
-  if (dt == 0.0) return;
+  Time current_time = Simulator::Instance()->GetSimTime();
+  double dt = current_time - lastUpdate;
+  if (dt <= 0.0) return;
 
   // Get new commands/state
   // callback_queue_.callAvailable();
 
-  Time current_time = Simulator::Instance()->GetSimTime();
   while(1) {
     if (!new_motor_voltages_.empty()) {
       hector_uav_msgs::MotorPWMConstPtr new_motor_voltage = new_motor_voltages_.front();
       Time new_time = Time(new_motor_voltage->header.stamp.sec, new_motor_voltage->header.stamp.nsec);
-      if (!new_time || (new_time >= current_time - control_delay_ - control_tolerance_ && new_time <= current_time - control_delay_ + control_tolerance_)) {
+      if (new_time == Time() || (new_time >= current_time - control_delay_ - control_tolerance_ && new_time <= current_time - control_delay_ + control_tolerance_)) {
         motor_voltage_ = new_motor_voltage;
         new_motor_voltages_.pop_front();
         last_control_time_ = current_time;
@@ -288,7 +288,7 @@ void GazeboQuadrotorAerodynamics::UpdateChild()
       }
     }
 
-    if (new_motor_voltages_.empty() && control_period_ > 0 && current_time > last_control_time_ + control_period_) {
+    if (new_motor_voltages_.empty() && motor_status_.on &&  control_period_ > 0 && current_time > last_control_time_ + control_period_) {
       // std::cout << "Waiting for command... ";
       if (command_condition_.timed_wait(lock, ros::WallDuration(0.1).toBoost())) continue;
       ROS_ERROR("[quadrotor_aerodynamics] command timed out.");
@@ -307,11 +307,13 @@ void GazeboQuadrotorAerodynamics::UpdateChild()
   propulsion_model_->u[4] = -rate.y;
   propulsion_model_->u[5] = -rate.z;
   if (motor_voltage_ && motor_voltage_->pwm.size() >= 4) {
+    motor_status_.on = motor_voltage_->pwm[0] > 0 || motor_voltage_->pwm[1] > 0 || motor_voltage_->pwm[2] > 0 || motor_voltage_->pwm[3] > 0 ? 1 : 0;
     propulsion_model_->u[6] = motor_voltage_->pwm[0] * 14.8 / 255.0;
     propulsion_model_->u[7] = motor_voltage_->pwm[1] * 14.8 / 255.0;
     propulsion_model_->u[8] = motor_voltage_->pwm[2] * 14.8 / 255.0;
     propulsion_model_->u[9] = motor_voltage_->pwm[3] * 14.8 / 255.0;
   } else {
+    motor_status_.on = 0;
     propulsion_model_->u[6] = 0.0;
     propulsion_model_->u[7] = 0.0;
     propulsion_model_->u[8] = 0.0;
@@ -369,8 +371,7 @@ void GazeboQuadrotorAerodynamics::UpdateChild()
   torque = torque - checknan(Vector3(drag_model_->y[3], -drag_model_->y[4], -drag_model_->y[5]), "drag model torque");
 
   if (motor_status_publisher_ && current_time >= last_motor_status_time_ + control_period_) {
-    motor_status_.header.stamp = ros::Time(Simulator::Instance()->GetSimTime().sec, Simulator::Instance()->GetSimTime().nsec);
-    motor_status_.on = 1;
+    motor_status_.header.stamp = ros::Time(current_time.sec, current_time.nsec);
     motor_status_.running = propulsion_model_->x[0] > 0.0 && propulsion_model_->x[1] > 0.0 && propulsion_model_->x[2] > 0.0 && propulsion_model_->x[3] > 0.0;
     motor_status_.frequency.resize(4);
     motor_status_.frequency[0] = propulsion_model_->x[0];
@@ -407,7 +408,6 @@ void GazeboQuadrotorAerodynamics::ResetChild()
   new_motor_voltages_.clear();
   motor_voltage_.reset();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // custom callback queue thread
