@@ -133,16 +133,13 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <maxForce>30</maxForce>
       </controller:hector_gazebo_quadrotor_simple_controller>
 
+      <!--
       <controller:hector_gazebo_quadrotor_aerodynamics name="quadrotor_aerodynamics" plugin="libhector_gazebo_quadrotor_aerodynamics.so">
         <alwaysOn>true</alwaysOn>
         <updateRate>0.0</updateRate>
         <bodyName>base_link</bodyName>
-        <topicName>motor_pwm</topicName>
-        <!--
-          <controlRate>100</controlRate>
-          <controlDelay>0.015</controlDelay>
-        -->
       </controller:hector_gazebo_quadrotor_aerodynamics>
+      -->
     </gazebo>
   </xacro:macro>
 </robot>
