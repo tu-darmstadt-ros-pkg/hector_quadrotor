@@ -9,6 +9,12 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/hector_uav_msgs</url>
 
+  <depend package="geometry_msgs" />
+
+  <export>
+    <cpp cflags="-I${prefix}/include"/>
+  </export>
+
 </package>
 
 
