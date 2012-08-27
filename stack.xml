@@ -8,7 +8,6 @@
   <depend stack="hector_gazebo" />
   <depend stack="hector_localization" />
   <depend stack="hector_models" />
-  <depend stack="hector_quadrotor" />
   <depend stack="hector_slam" />
   <depend stack="ros" />
   <depend stack="ros_comm" />
