@@ -5,10 +5,9 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/hector_quadrotor</url>
   <depend stack="common_msgs" />
+  <depend stack="hector_common" />
   <depend stack="hector_gazebo" />
-  <depend stack="hector_localization" />
   <depend stack="hector_models" />
-  <depend stack="hector_slam" />
   <depend stack="ros" />
   <depend stack="ros_comm" />
   <depend stack="simulator_gazebo" />
