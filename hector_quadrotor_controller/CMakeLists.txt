@@ -12,14 +12,34 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 rosbuild_init()
 
 #set the default path for built executables to the "bin" directory
-#set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 #rosbuild_add_boost_directories()
 
-rosbuild_add_library(hector_gazebo_ros_baro src/gazebo_ros_baro.cpp)
-#rosbuild_link_boost(hector_gazebo_ros_baro thread)
+option(USE_AERODYNAMICS_MODEL "Use a model of the quadrotor aerodynamics and propulsion system for simulation." OFF)
+if(USE_AERODYNAMICS_MODEL)
+  set(MATLAB_MODEL_DIR "${CMAKE_SOURCE_DIR}/matlab/emcprj/rtwlib")
+  include_directories(${MATLAB_MODEL_DIR})
+  add_subdirectory(matlab)
+
+  if(TARGET quadrotor_model)
+    rosbuild_add_library(hector_gazebo_quadrotor_aerodynamics src/quadrotor_aerodynamics.cpp)
+    target_link_libraries(hector_gazebo_quadrotor_aerodynamics "${MATLAB_MODEL_DIR}/quadrotorPropulsion/quadrotorPropulsion.a" "${MATLAB_MODEL_DIR}/quadrotorDrag/quadrotorDrag.a")
+    add_dependencies(hector_gazebo_quadrotor_aerodynamics quadrotor_model)
+  else()
+    message(WARNING "Quadrotor model is not available. Skipping target hector_gazebo_quadrotor_aerodynamics...")
+    set(USE_AERODYNAMICS_MODEL 0)
+  endif()
+endif()
+
+rosbuild_add_library(hector_gazebo_quadrotor_simple_controller src/quadrotor_simple_controller.cpp)
+#rosbuild_link_boost(hector_gazebo_quadrotor_simple_controller thread)
+
+rosbuild_add_executable(test_trajectory src/test_trajectory.cpp)
+
+add_subdirectory(urdf)
 
 #uncomment if you have defined messages
 #rosbuild_genmsg()

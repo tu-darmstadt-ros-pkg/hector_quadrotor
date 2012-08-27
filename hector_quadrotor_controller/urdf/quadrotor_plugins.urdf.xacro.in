@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:include filename="$(find hector_quadrotor_controller)/urdf/quadrotor_sensors.urdf.xacro" />
+  <xacro:include filename="$(find hector_quadrotor_controller)/urdf/@CONTROLLER_URDF@" />
+
+  <!-- Quadrotor Gazebo Plugins -->
+  <xacro:macro name="quadrotor_plugins">
+    <canonicalBody>base_link</canonicalBody>
+    <quadrotor_sensors/>
+    <quadrotor_controller/>
+  </xacro:macro>
+</robot>
