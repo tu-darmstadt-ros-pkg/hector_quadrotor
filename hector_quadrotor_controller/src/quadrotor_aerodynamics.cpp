@@ -131,15 +131,14 @@ void GazeboQuadrotorAerodynamics::Load(physics::ModelPtr _model, sdf::ElementPtr
   else
     status_topic_ = _sdf->GetElement("statusTopic")->GetValueString();
 
+  // set control timing parameters
   control_rate_ = 100.0;
   if (_sdf->HasElement("controlRate")) control_rate_ = _sdf->GetElement("controlRate")->GetValueDouble();
+  control_period_ = (control_rate_ > 0) ? (1.0 / control_rate_) : 0.0;
+  control_tolerance_ = control_period_ / 2.0;
+  if (_sdf->HasElement("controlTolerance")) control_tolerance_ = _sdf->GetElement("controlTolerance")->GetValueDouble();
   control_delay_ = Time();
   if (_sdf->HasElement("controlDelay")) control_delay_ = _sdf->GetElement("controlDelay")->GetValueDouble();
-  control_tolerance_ = Time(world->GetPhysicsEngine()->GetStepTime() / 2);
-  if (_sdf->HasElement("controlTolerance")) control_tolerance_ = _sdf->GetElement("controlTolerance")->GetValueDouble();
-
-  // set control timer parameters
-  control_period_ = (control_rate_ > 0) ? (1.0 / control_rate_) : 0.0;
 
   // start ros node
   if (!ros::isInitialized())
@@ -241,6 +240,7 @@ void GazeboQuadrotorAerodynamics::CommandCallback(const hector_uav_msgs::MotorPW
   boost::mutex::scoped_lock lock(command_mutex_);
   motor_status_.on = true;
   new_motor_voltages_.push_back(command);
+  ROS_DEBUG_STREAM("Received motor command valid at " << command->header.stamp);
   command_condition_.notify_all();
 }
 
@@ -274,7 +274,7 @@ void GazeboQuadrotorAerodynamics::Update()
         motor_voltage_ = new_motor_voltage;
         new_motor_voltages_.pop_front();
         last_control_time_ = current_time - control_delay_;
-        // std::cout << "Using motor command valid at " << new_time << " for simulation step at " << current_time << " (dt = " << (current_time - new_time) << ")" << std::endl;
+        ROS_DEBUG_STREAM("Using motor command valid at " << new_time << " for simulation step at " << current_time << " (dt = " << (current_time - new_time) << ")");
         break;
       } else if (new_time < current_time - control_delay_ - control_tolerance_) {
         ROS_DEBUG("[quadrotor_aerodynamics] command received was too old: %f s", (new_time  - current_time).Double());
