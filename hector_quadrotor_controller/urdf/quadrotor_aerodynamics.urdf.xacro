@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+
+<robot
+xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+xmlns:xacro="http://ros.org/wiki/xacro"
+>
+
+  <!-- Quadrotor Aerodynamics Plugin -->
+  <xacro:macro name="quadrotor_controller">
+    <gazebo>
+      <controller:hector_gazebo_quadrotor_aerodynamics name="quadrotor_aerodynamics" plugin="libhector_gazebo_quadrotor_aerodynamics.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>0.0</updateRate>
+        <bodyName>base_link</bodyName>
+      </controller:hector_gazebo_quadrotor_aerodynamics>
+    </gazebo>
+  </xacro:macro>
+</robot>
+
