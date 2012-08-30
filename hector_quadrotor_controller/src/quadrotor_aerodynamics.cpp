@@ -148,7 +148,7 @@ void GazeboQuadrotorAerodynamics::LoadChild(XMLConfigNode *node)
 
   // set control timer/delay parameters
   control_period_ = (**control_rate_ > 0) ? (1.0 / **control_rate_) : 0.0;
-  control_delay_ = **control_delay_param_;
+  control_delay_ = (**control_delay_param_ > 0) ? **control_delay_param_ : Time(control_period_.Double() / 2);
   control_tolerance_ = Time((control_period_> 0 ? control_period_.Double() : World::Instance()->GetPhysicsEngine()->GetStepTime().Double()) / 2);
 
   // check update rate against world physics update rate
@@ -248,6 +248,7 @@ void GazeboQuadrotorAerodynamics::CommandCallback(const hector_uav_msgs::MotorPW
   boost::mutex::scoped_lock lock(command_mutex_);
   motor_status_.on = true;
   new_motor_voltages_.push_back(command);
+  ROS_DEBUG_STREAM("Received motor command valid at " << command->header.stamp);
   command_condition_.notify_all();
 }
 
@@ -280,7 +281,7 @@ void GazeboQuadrotorAerodynamics::UpdateChild()
         motor_voltage_ = new_motor_voltage;
         new_motor_voltages_.pop_front();
         last_control_time_ = current_time - control_delay_;
-        // std::cout << "Using motor command valid at " << new_time << " for simulation step at " << current_time << " (dt = " << (current_time - new_time) << ")" << std::endl;
+        ROS_DEBUG_STREAM("Using motor command valid at " << new_time << " for simulation step at " << current_time << " (dt = " << (current_time - new_time) << ")");
         break;
       } else if (new_time < current_time - control_delay_ - control_tolerance_) {
         ROS_DEBUG("[quadrotor_aerodynamics] command received was too old: %f s", (new_time  - current_time).Double());
