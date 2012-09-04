@@ -14,7 +14,7 @@
   <depend package="hector_sensors_gazebo"/>
   <depend package="hector_quadrotor_gazebo_plugins"/>
   <depend package="hector_quadrotor_controller"/>
-  <depend package="odometry_to_tf"/>
+  <depend package="message_to_tf"/>
 
 </package>
 
