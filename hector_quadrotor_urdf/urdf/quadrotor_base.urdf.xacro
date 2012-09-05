@@ -33,7 +33,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         </geometry>
       </collision>
     </link>
-    
+
     <!-- Sonar height sensor -->
     <sonar_sensor name="sonar" parent="base_link" ros_topic="sonar_height" update_rate="10" min_range="0.03" max_range="3.0" field_of_view="40" ray_count="3">
       <origin xyz="0.12 0.0 -0.012" rpy="0 ${90*pi/180} 0"/>
