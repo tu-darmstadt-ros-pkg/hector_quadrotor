@@ -26,7 +26,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 
-#include <hector_quadrotor_gazebo_plugins/quadrotor_simple_controller.h>
+#include <hector_quadrotor_controller/quadrotor_simple_controller.h>
 
 #include <gazebo/Sensor.hh>
 #include <gazebo/Global.hh>

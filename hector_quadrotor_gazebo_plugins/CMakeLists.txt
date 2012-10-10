@@ -18,8 +18,6 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 #rosbuild_add_boost_directories()
 
-rosbuild_add_library(hector_gazebo_quadrotor_simple_controller src/quadrotor_simple_controller.cpp)
-#rosbuild_link_boost(hector_gazebo_quadrotor_simple_controller thread)
 rosbuild_add_library(hector_gazebo_ros_baro src/gazebo_ros_baro.cpp)
 #rosbuild_link_boost(hector_gazebo_ros_baro thread)
 

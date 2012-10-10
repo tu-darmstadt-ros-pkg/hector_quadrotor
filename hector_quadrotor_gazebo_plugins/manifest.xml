@@ -2,9 +2,7 @@
   <description brief="hector_quadrotor_gazebo_plugins">
 
      hector_quadrotor_gazebo_plugins provides gazebo plugins for using quadrotors in gazebo.
-     The main plugin is a simple controller allowing to command the quadrotor's velocity
-     using a geometry_msgs/Twist message for teleoperation. The hector_gazebo_ros_baro
-     sensor plugin simulates an altimeter based on barometric pressure.
+     The hector_gazebo_ros_baro sensor plugin simulates an altimeter based on barometric pressure.
 
   </description>
   <author>Johannes Meyer</author>
@@ -17,8 +15,6 @@
   <depend package="hector_gazebo_plugins"/>
 
   <depend package="geometry_msgs"/>
-  <depend package="sensor_msgs"/>
-  <depend package="nav_msgs"/>
   <depend package="hector_uav_msgs"/>
 
   <export>
