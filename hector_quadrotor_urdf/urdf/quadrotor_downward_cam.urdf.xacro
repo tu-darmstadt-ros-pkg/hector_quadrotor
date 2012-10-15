@@ -20,7 +20,7 @@ xmlns:xacro="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface">
       <origin xyz="0.0 0.0 -0.097" rpy="${M_PI} 0 0"/>
     </xacro:hokuyo_utm30lx>-->
     
-    <!-- Forward facing camera -->
+    <!-- Downward facing camera -->
     <include filename="$(find hector_sensors_description)/urdf/generic_camera.urdf.xacro" />
     <xacro:generic_camera name="downward_cam" parent="base_link" ros_topic="camera/image" cam_info_topic="camera/camera_info" update_rate="20" res_x="640" res_y="480" image_format="L8" hfov="100">
       <origin xyz="0.4 0.0 -0.0" rpy="0 ${M_PI/2} 0"/>
