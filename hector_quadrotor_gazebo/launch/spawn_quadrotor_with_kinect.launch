@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+
+ <launch>
+   <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor.launch" >
+     <arg name="model" value="$(find hector_quadrotor_urdf)/urdf/quadrotor_with_kinect.urdf.xacro"/> 
+   </include>
+ </launch>
+ 

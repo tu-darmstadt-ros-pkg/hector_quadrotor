@@ -270,7 +270,7 @@ void GazeboQuadrotorSimpleController::UpdateChild()
 
   // set force and torque in gazebo
   body_->SetForce(force);
-  body_->SetTorque(torque);
+  body_->SetTorque(torque - body_->GetMass().GetCoG().GetCrossProd(force));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
