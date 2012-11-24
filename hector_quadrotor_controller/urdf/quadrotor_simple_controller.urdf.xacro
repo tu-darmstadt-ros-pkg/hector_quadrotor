@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+
+<robot
+xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+xmlns:xacro="http://ros.org/wiki/xacro"
+>
+
+  <!-- Quadrotor Simple Controller Plugin -->
+  <xacro:macro name="quadrotor_simple_controller">
+    <gazebo>
+      <controller:hector_gazebo_quadrotor_simple_controller name="quadrotor_simple_controller" plugin="libhector_gazebo_quadrotor_simple_controller.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>0.0</updateRate>
+        <bodyName>base_link</bodyName>
+        <stateTopic>ground_truth/state</stateTopic>
+        <imuTopic>raw_imu</imuTopic>
+        <topicName>cmd_vel</topicName>
+        <rollpitchProportionalGain>10.0</rollpitchProportionalGain>
+        <rollpitchDifferentialGain>5.0</rollpitchDifferentialGain>
+        <rollpitchLimit>0.5</rollpitchLimit>
+        <yawProportionalGain>2.0</yawProportionalGain>
+        <yawDifferentialGain>1.0</yawDifferentialGain>
+        <yawLimit>1.5</yawLimit>
+        <velocityXYProportionalGain>5.0</velocityXYProportionalGain>
+        <velocityXYDifferentialGain>1.0</velocityXYDifferentialGain>
+        <velocityXYLimit>2</velocityXYLimit>
+        <velocityZProportionalGain>5.0</velocityZProportionalGain>
+        <velocityZDifferentialGain>1.0</velocityZDifferentialGain>
+        <velocityZLimit>2</velocityZLimit>
+        <maxForce>30</maxForce>
+      </controller:hector_gazebo_quadrotor_simple_controller>
+    </gazebo>
+  </xacro:macro>
+</robot>
