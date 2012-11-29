@@ -28,7 +28,7 @@ eml.cstructname(parameter,'PropulsionParameters');
 % initialize vectors
 xpred   = xin;      % motorspeed
 v_1     = zeros(4,1);
-y       = zeros(6,1);
+y       = zeros(14,1);
 F_m     = zeros(4,1);
 U       = zeros(4,1);
 M_e     = zeros(4,1);
@@ -52,6 +52,7 @@ CT1s = parameter.CT1s;
 CT2s = parameter.CT2s;
 k_t  = parameter.k_t;
 l_m  = parameter.l_m;
+Psi  = parameter.Psi;
 
 v_1(1) = - w + l_m*q;
 v_1(2) = - w - l_m*p;
@@ -84,3 +85,9 @@ y(4) = (F_m(4)-F_m(2))*l_m;
 y(5) = (F_m(1)-F_m(3))*l_m;
 % torque for rotating quadrocopter around z-axis is the electrical torque
 y(6) = (-M_e(1)-M_e(3)+M_e(2)+M_e(4));
+
+% motor speeds (rad/s)
+y(7:10) = xpred(1:4);
+
+% motor current (A)
+y(11:14) = M_e(1:4) / Psi;

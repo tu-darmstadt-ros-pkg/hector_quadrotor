@@ -26,8 +26,8 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 
-#ifndef HECTOR_GAZEBO_PLUGINS_QUADROTOR_AERODYNAMICS_H
-#define HECTOR_GAZEBO_PLUGINS_QUADROTOR_AERODYNAMICS_H
+#ifndef HECTOR_GAZEBO_PLUGINS_QUADROTOR_PROPULSION_H
+#define HECTOR_GAZEBO_PLUGINS_QUADROTOR_PROPULSION_H
 
 #include <gazebo/Controller.hh>
 #include <gazebo/Entity.hh>
@@ -39,6 +39,9 @@
 #include <ros/callback_queue.h>
 #include <ros/ros.h>
 
+#include <hector_uav_msgs/MotorStatus.h>
+#include <hector_uav_msgs/MotorPWM.h>
+#include <geometry_msgs/Wrench.h>
 #include <geometry_msgs/Vector3.h>
 
 #include <boost/thread.hpp>
@@ -47,11 +50,11 @@
 namespace gazebo
 {
 
-class GazeboQuadrotorAerodynamics : public Controller
+class GazeboQuadrotorPropulsion : public Controller
 {
 public:
-  GazeboQuadrotorAerodynamics(Entity *parent);
-  virtual ~GazeboQuadrotorAerodynamics();
+  GazeboQuadrotorPropulsion(Entity *parent);
+  virtual ~GazeboQuadrotorPropulsion();
 
 protected:
   virtual void LoadChild(XMLConfigNode *node);
@@ -69,10 +72,15 @@ private:
   boost::thread callback_queue_thread_;
   void QueueThread();
 
-  ros::Subscriber wind_subscriber_;
+  ros::Subscriber voltage_subscriber_;
+  ros::Publisher wrench_publisher_;
+  ros::Publisher motor_status_publisher_;
 
-  geometry_msgs::Vector3 wind_;
-  void WindCallback(const geometry_msgs::Vector3ConstPtr&);
+  hector_uav_msgs::MotorPWMConstPtr motor_voltage_;
+  std::list<hector_uav_msgs::MotorPWMConstPtr> new_motor_voltages_;
+  geometry_msgs::Wrench wrench_;
+  hector_uav_msgs::MotorStatus motor_status_;
+  void CommandCallback(const hector_uav_msgs::MotorPWMConstPtr&);
 
   Vector3 velocity, rate;
 
@@ -81,7 +89,6 @@ private:
   ParamT<std::string> *param_namespace_;
   ParamT<Time> *control_rate_;
   ParamT<std::string> *voltage_topic_;
-  ParamT<std::string> *wind_topic_;
   ParamT<std::string> *wrench_topic_;
   ParamT<std::string> *status_topic_;
   ParamT<Time> *control_delay_param_;
@@ -92,16 +99,14 @@ private:
   class PropulsionModel;
   PropulsionModel *propulsion_model_;
 
-  class DragModel;
-  DragModel *drag_model_;
-
   Time control_period_;
   Time last_control_time_;
   Time last_motor_status_time_;
 
-  boost::mutex wind_mutex_;
+  boost::condition command_condition_;
+  boost::mutex command_mutex_;
 };
 
 }
 
-#endif // HECTOR_GAZEBO_PLUGINS_QUADROTOR_AERODYNAMICS_H
+#endif // HECTOR_GAZEBO_PLUGINS_QUADROTOR_PROPULSION_H

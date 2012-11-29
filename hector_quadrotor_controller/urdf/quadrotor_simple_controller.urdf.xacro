@@ -6,7 +6,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
 >
 
   <!-- Quadrotor Simple Controller Plugin -->
-  <xacro:macro name="quadrotor_controller">
+  <xacro:macro name="quadrotor_simple_controller">
     <gazebo>
       <controller:hector_gazebo_quadrotor_simple_controller name="quadrotor_simple_controller" plugin="libhector_gazebo_quadrotor_simple_controller.so">
         <alwaysOn>true</alwaysOn>

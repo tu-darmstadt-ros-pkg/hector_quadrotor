@@ -1,7 +1,11 @@
-if(USE_AERODYNAMICS_MODEL)
-  set(CONTROLLER_URDF "quadrotor_aerodynamics.urdf.xacro")
+if(USE_PROPULSION_MODEL)
+  set(URDF "${URDF}  <quadrotor_propulsion/>\n")
 else()
-  set(CONTROLLER_URDF "quadrotor_simple_controller.urdf.xacro")
+  set(URDF "${URDF}  <quadrotor_simple_controller/>\n")
+endif()
+
+if(USE_AERODYNAMICS_MODEL)
+  set(URDF "${URDF}  <quadrotor_aerodynamics/>\n")
 endif()
 
 configure_file(quadrotor_plugins.urdf.xacro.in ${PROJECT_SOURCE_DIR}/urdf/quadrotor_plugins.urdf.xacro @ONLY)
