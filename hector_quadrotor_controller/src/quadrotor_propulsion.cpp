@@ -226,7 +226,7 @@ void GazeboQuadrotorPropulsion::Update()
       if (new_time == Time() || (new_time >= current_time - control_delay_ - dt - control_tolerance_ && new_time <= current_time - control_delay_ + control_tolerance_)) {
         motor_voltage_ = new_motor_voltage;
         new_motor_voltages_.pop_front();
-        last_control_time_ = current_time - control_delay_;
+        last_control_time_ = current_time;
         ROS_DEBUG_STREAM_NAMED("quadrotor_propulsion", "Using motor command valid at t = " << new_time.Double() << " for simulation step at t = " << current_time.Double() << " (dt = " << (current_time - new_time).Double() << ")");
         break;
       } else if (new_time < current_time - control_delay_ - control_tolerance_) {
@@ -236,8 +236,8 @@ void GazeboQuadrotorPropulsion::Update()
       }
     }
 
-    if (new_motor_voltages_.empty() && motor_status_.on &&  control_period_ > 0 && current_time > last_control_time_ + control_period_ + control_tolerance_) {
-      ROS_DEBUG_NAMED("quadrotor_propulsion", "waiting for command...");
+    if (new_motor_voltages_.empty() && motor_status_.on &&  control_period_ > 0 && current_time >= last_control_time_ + control_period_ + control_tolerance_) {
+      ROS_DEBUG_NAMED("quadrotor_propulsion", "Waiting for command at simulation step t = %f s... last update was %f s ago", current_time.Double(), (current_time - last_control_time_).Double());
       if (command_condition_.timed_wait(lock, (ros::Duration(control_period_.sec, control_period_.nsec) * 100.0).toBoost())) continue;
       ROS_ERROR_NAMED("quadrotor_propulsion", "command timed out.");
       motor_status_.on = false;

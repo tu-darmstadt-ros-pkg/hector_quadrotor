@@ -1,7 +1,8 @@
 <package>
   <description brief="hector_quadrotor_gazebo">
 
-     hector_quadrotor_gazebo provides a quadrotor model usable in gazebo simulation. It can be commanded using geometry_msgs/Twist messages.
+     hector_quadrotor_gazebo provides a quadrotor model usable in gazebo simulation.
+     It can be commanded using geometry_msgs/Twist messages.
 
   </description>
   <author>Stefan Kohlbrecher, Johannes Meyer</author>
@@ -13,7 +14,6 @@
   <depend package="hector_gazebo_plugins"/>
   <depend package="hector_sensors_gazebo"/>
   <depend package="hector_quadrotor_gazebo_plugins"/>
-  <depend package="hector_quadrotor_controller"/>
   <depend package="message_to_tf"/>
 
 </package>
