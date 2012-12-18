@@ -6,7 +6,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
 >
 
   <!-- Quadrotor Simple Controller Plugin -->
-  <xacro:macro name="quadrotor_controller">
+  <xacro:macro name="quadrotor_simple_controller">
     <gazebo>
       <controller:hector_gazebo_quadrotor_simple_controller name="quadrotor_simple_controller" plugin="libhector_gazebo_quadrotor_simple_controller.so">
         <alwaysOn>true</alwaysOn>
@@ -15,26 +15,18 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <stateTopic>ground_truth/state</stateTopic>
         <imuTopic>raw_imu</imuTopic>
         <topicName>cmd_vel</topicName>
-        <rollpitch>
-          <proportionalGain>10.0</proportionalGain>
-          <differentialGain>5.0</differentialGain>
-          <limit>0.5</limit>
-        </rollpitch>
-        <yaw>
-          <proportionalGain>2.0</proportionalGain>
-          <differentialGain>1.0</differentialGain>
-          <limit>1.5</limit>
-        </yaw>
-        <velocity_xy>
-          <proportionalGain>5.0</proportionalGain>
-          <differentialGain>1.0</differentialGain>
-          <limit>2</limit>
-        </velocity_xy>
-        <velocity_z>
-          <proportionalGain>5.0</proportionalGain>
-          <differentialGain>1.0</differentialGain>
-          <limit>2</limit>
-        </velocity_z>
+        <rollpitchProportionalGain>10.0</rollpitchProportionalGain>
+        <rollpitchDifferentialGain>5.0</rollpitchDifferentialGain>
+        <rollpitchLimit>0.5</rollpitchLimit>
+        <yawProportionalGain>2.0</yawProportionalGain>
+        <yawDifferentialGain>1.0</yawDifferentialGain>
+        <yawLimit>1.5</yawLimit>
+        <velocityXYProportionalGain>5.0</velocityXYProportionalGain>
+        <velocityXYDifferentialGain>1.0</velocityXYDifferentialGain>
+        <velocityXYLimit>2</velocityXYLimit>
+        <velocityZProportionalGain>5.0</velocityZProportionalGain>
+        <velocityZDifferentialGain>1.0</velocityZDifferentialGain>
+        <velocityZLimit>2</velocityZLimit>
         <maxForce>30</maxForce>
       </controller:hector_gazebo_quadrotor_simple_controller>
     </gazebo>

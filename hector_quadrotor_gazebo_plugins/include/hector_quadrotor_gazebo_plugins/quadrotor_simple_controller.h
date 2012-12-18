@@ -29,12 +29,8 @@
 #ifndef HECTOR_GAZEBO_PLUGINS_QUADROTOR_SIMPLE_CONTROLLER_H
 #define HECTOR_GAZEBO_PLUGINS_QUADROTOR_SIMPLE_CONTROLLER_H
 
-#include <gazebo/Controller.hh>
-#include <gazebo/Entity.hh>
-#include <gazebo/Model.hh>
-#include <gazebo/Body.hh>
-#include <gazebo/Param.hh>
-#include <gazebo/Time.hh>
+#include "gazebo/gazebo.hh"
+#include "common/Plugin.hh"
 
 #include <ros/callback_queue.h>
 #include <ros/ros.h>
@@ -46,22 +42,23 @@
 namespace gazebo
 {
 
-class GazeboQuadrotorSimpleController : public Controller
+class GazeboQuadrotorSimpleController : public ModelPlugin
 {
 public:
-  GazeboQuadrotorSimpleController(Entity *parent);
+  GazeboQuadrotorSimpleController();
   virtual ~GazeboQuadrotorSimpleController();
 
 protected:
-  virtual void LoadChild(XMLConfigNode *node);
-  virtual void InitChild();
-  virtual void UpdateChild();
-  virtual void FiniChild();
-  virtual void ResetChild();
+  virtual void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf);
+  virtual void Update();
+  virtual void Reset();
 
 private:
-  Model *parent_;
-  Body *body_;
+  /// \brief The parent World
+  physics::WorldPtr world;
+
+  /// \brief The link referred to by this plugin
+  physics::LinkPtr link;
 
   ros::NodeHandle* node_handle_;
   ros::CallbackQueue callback_queue_;
@@ -79,37 +76,26 @@ private:
   void StateCallback(const nav_msgs::OdometryConstPtr&);
 
   ros::Time state_stamp;
-  Pose3d pose;
-  Vector3 euler, velocity, acceleration, angular_velocity;
+  math::Pose pose;
+  math::Vector3 euler, velocity, acceleration, angular_velocity;
 
-  ParamT<std::string> *body_name_param_;
-  std::string body_name_;
-  ParamT<std::string> *namespace_param_;
+  std::string link_name_;
   std::string namespace_;
-  ParamT<std::string> *velocity_topic_param_;
   std::string velocity_topic_;
-  ParamT<std::string> *imu_topic_param_;
   std::string imu_topic_;
-  ParamT<std::string> *state_topic_param_;
   std::string state_topic_;
-  ParamT<double> *max_force_param_;
   double max_force_;
 
   class PIDController {
   public:
-    PIDController(std::vector<Param*>& parameters);
+    PIDController();
     virtual ~PIDController();
-    virtual void LoadChild(XMLConfigNode *node);
+    virtual void Load(sdf::ElementPtr _sdf, const std::string& prefix = "");
 
-    ParamT<double> *gain_p_param_;
     double gain_p;
-    ParamT<double> *gain_i_param_;
     double gain_i;
-    ParamT<double> *gain_d_param_;
     double gain_d;
-    ParamT<double> *time_constant_param_;
     double time_constant;
-    ParamT<double> *limit_param_;
     double limit;
 
     double input;
@@ -122,7 +108,6 @@ private:
   };
 
   struct Controllers {
-    Controllers(std::vector<Param*>& parameters) : roll(parameters), pitch(parameters), yaw(parameters), velocity_x(parameters), velocity_y(parameters), velocity_z(parameters) {}
     PIDController roll;
     PIDController pitch;
     PIDController yaw;
@@ -131,8 +116,14 @@ private:
     PIDController velocity_z;
   } controllers_;
 
-  Vector3 inertia;
+  math::Vector3 inertia;
   double mass;
+
+  /// \brief save last_time
+  common::Time last_time;
+
+  // Pointer to the update event connection
+  event::ConnectionPtr updateConnection;
 };
 
 }

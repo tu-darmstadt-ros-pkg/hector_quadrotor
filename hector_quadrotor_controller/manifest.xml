@@ -4,8 +4,6 @@
      hector_quadrotor_controller provides plugins for a quadrotor controller in gazebo.
      hector_quadrotor_aerodynamics simulates the quadrotor's motor, propeller and
      drag dynamics, given the four input voltages and the wind vector.
-     hector_quadrotor_simple_controller is a simple controller allowing to command the quadrotor's velocity
-     using a geometry_msgs/Twist message for teleoperation. 
 
   </description>
   <author>Johannes Meyer and Alexander Sendobry</author>

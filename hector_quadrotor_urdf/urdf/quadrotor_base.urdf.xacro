@@ -7,7 +7,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
 >
 
   <include filename="$(find hector_sensors_description)/urdf/sonar_sensor.urdf.xacro" />
-  <include filename="$(find hector_quadrotor_controller)/urdf/quadrotor_plugins.urdf.xacro" />
+  <include filename="$(find hector_quadrotor_gazebo)/urdf/quadrotor_plugins.urdf.xacro" />
   <property name="pi" value="3.1415926535897931" />
 
   <!-- Main quadrotor link -->
