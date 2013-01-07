@@ -6,15 +6,15 @@ xmlns:xacro="http://ros.org/wiki/xacro"
 >
 
   <!-- Quadrotor Simple Controller Plugin -->
-  <xacro:macro name="quadrotor_simple_controller">
+  <xacro:macro name="quadrotor_simple_controller" params="state_topic imu_topic">
     <gazebo>
       <controller:hector_gazebo_quadrotor_simple_controller name="quadrotor_simple_controller" plugin="libhector_gazebo_quadrotor_simple_controller.so">
         <alwaysOn>true</alwaysOn>
         <updateRate>0.0</updateRate>
         <bodyName>base_link</bodyName>
-        <stateTopic>ground_truth/state</stateTopic>
-        <imuTopic>raw_imu</imuTopic>
         <topicName>cmd_vel</topicName>
+        <stateTopic>${state_topic}</stateTopic>
+        <imuTopic>${imu_topic}</imuTopic>
         <rollpitchProportionalGain>10.0</rollpitchProportionalGain>
         <rollpitchDifferentialGain>5.0</rollpitchDifferentialGain>
         <rollpitchLimit>0.5</rollpitchLimit>
@@ -23,7 +23,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <yawLimit>1.5</yawLimit>
         <velocityXYProportionalGain>5.0</velocityXYProportionalGain>
         <velocityXYDifferentialGain>1.0</velocityXYDifferentialGain>
-        <velocityXYLimit>2</velocityXYLimit>
+        <velocityXYLimit>5</velocityXYLimit>
         <velocityZProportionalGain>5.0</velocityZProportionalGain>
         <velocityZDifferentialGain>1.0</velocityZDifferentialGain>
         <velocityZLimit>2</velocityZLimit>

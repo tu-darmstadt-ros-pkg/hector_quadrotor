@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+
+<robot
+xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+xmlns:xacro="http://ros.org/wiki/xacro"
+>
+
+  <!-- Quadrotor Controller Plugin -->
+  <xacro:macro name="quadrotor_controller">
+    <gazebo>
+      <controller:hector_quadrotor_pose_estimation name="quadrotor_pose_estimation" plugin="libgazebo_rtt_plugin.so">
+        <import>hector_pose_estimation_rtt</import>
+        <component>hector_pose_estimation::PoseEstimationTaskContext</component>
+        <port name="raw_imu" queue_size="10" />
+        <port name="magnetic" />
+        <port name="pressure_height" />
+        <port name="fix" />
+        <port name="fix_velocity" />
+        <port name="state" queue_size="10" />
+        <port name="imu" queue_size="10" />
+      </controller:hector_quadrotor_pose_estimation>
+
+      <controller:hector_quadrotor_controller name="quadrotor_controller" plugin="libhector_quadrotor_controller.so">
+        <import>quadro</import>
+        <component>Controller</component>
+        <configuration>$(find hector_quadrotor_controller)/conf/controller.cpf</configuration>
+
+        <port name="sonar_height" />
+        <port name="command_velocity" topic="cmd_vel" />
+        <port name="state" queue_size="10" />
+        <port name="imu" queue_size="10" />
+        <port name="motor_status" />
+        <port name="motor_output" topic="motor_pwm" queue_size="10" />
+      </controller:hector_quadrotor_controller>
+    </gazebo>
+  </xacro:macro>
+</robot>

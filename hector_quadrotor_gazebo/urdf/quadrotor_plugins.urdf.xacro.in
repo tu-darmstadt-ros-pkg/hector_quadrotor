@@ -5,6 +5,7 @@
   <xacro:include filename="$(find hector_quadrotor_gazebo_plugins)/urdf/quadrotor_simple_controller.urdf.xacro" />
   <xacro:include filename="$(find hector_quadrotor_controller)/urdf/quadrotor_propulsion.urdf.xacro" />
   <xacro:include filename="$(find hector_quadrotor_controller)/urdf/quadrotor_aerodynamics.urdf.xacro" />
+  <xacro:include filename="$(find hector_quadrotor_controller)/urdf/quadrotor_controller.urdf.xacro" />
 
   <!-- Quadrotor Gazebo Plugins -->
   <xacro:macro name="quadrotor_plugins">

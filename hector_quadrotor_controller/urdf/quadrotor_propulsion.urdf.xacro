@@ -5,15 +5,15 @@ xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controlle
 xmlns:xacro="http://ros.org/wiki/xacro"
 >
 
-  <!-- Quadrotor Aerodynamics Plugin -->
+  <!-- Quadrotor Propulsion -->
   <xacro:macro name="quadrotor_propulsion">
     <gazebo>
       <controller:hector_gazebo_quadrotor_propulsion name="quadrotor_propulsion" plugin="libhector_gazebo_quadrotor_propulsion.so">
         <alwaysOn>true</alwaysOn>
         <updateRate>0.0</updateRate>
         <bodyName>base_link</bodyName>
-        <controlRate>100.0</controlRate>
-        <controlDelay>0.01</controlDelay>
+        <!-- <controlRate>100.0</controlRate> -->
+        <!-- <controlDelay>0.01</controlDelay> -->
       </controller:hector_gazebo_quadrotor_propulsion>
     </gazebo>
   </xacro:macro>

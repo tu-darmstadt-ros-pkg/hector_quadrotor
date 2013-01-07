@@ -55,27 +55,27 @@ void GazeboQuadrotorSimpleController::Load(physics::ModelPtr _model, sdf::Elemen
   world = _model->GetWorld();
 
   // load parameters
-  if (!_sdf->HasElement("robotNamespace"))
+  if (!_sdf->HasElement("robotNamespace") || !_sdf->GetElement("robotNamespace")->GetValue())
     namespace_.clear();
   else
     namespace_ = _sdf->GetElement("robotNamespace")->GetValueString() + "/";
 
-  if (!_sdf->HasElement("topicName"))
+  if (!_sdf->HasElement("topicName") || !_sdf->GetElement("topicName")->GetValue())
     velocity_topic_ = "cmd_vel";
   else
     velocity_topic_ = _sdf->GetElement("topicName")->GetValueString();
 
-  if (!_sdf->HasElement("imuTopic"))
+  if (!_sdf->HasElement("imuTopic") || !_sdf->GetElement("imuTopic")->GetValue())
     imu_topic_.clear();
   else
     imu_topic_ = _sdf->GetElement("imuTopic")->GetValueString();
 
-  if (!_sdf->HasElement("stateTopic"))
+  if (!_sdf->HasElement("stateTopic") || !_sdf->GetElement("stateTopic")->GetValue())
     state_topic_.clear();
   else
     state_topic_ = _sdf->GetElement("stateTopic")->GetValueString();
 
-  if (!_sdf->HasElement("bodyName"))
+  if (!_sdf->HasElement("bodyName") || !_sdf->GetElement("bodyName")->GetValue())
   {
     link = _model->GetLink();
     link_name_ = link->GetName();
@@ -91,7 +91,7 @@ void GazeboQuadrotorSimpleController::Load(physics::ModelPtr _model, sdf::Elemen
     return;
   }
 
-  if (!_sdf->HasElement("maxForce"))
+  if (!_sdf->HasElement("maxForce") || !_sdf->GetElement("maxForce")->GetValue())
     max_force_ = -1;
   else
     max_force_ = _sdf->GetElement("maxForce")->GetValueDouble();
