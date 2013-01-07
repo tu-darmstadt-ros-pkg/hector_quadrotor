@@ -10,7 +10,6 @@ xmlns:xacro="http://ros.org/wiki/xacro"
   <xacro:macro name="quadrotor_sensors">
     <gazebo>
       <controller:hector_gazebo_ros_imu name="quadrotor_imu_sim" plugin="libhector_gazebo_ros_imu.so">
-        <alwaysOn>true</alwaysOn>
         <updateRate>100.0</updateRate>
         <bodyName>base_link</bodyName>
         <topicName>raw_imu</topicName>
@@ -25,7 +24,6 @@ xmlns:xacro="http://ros.org/wiki/xacro"
       </controller:hector_gazebo_ros_imu>
 
       <controller:hector_gazebo_ros_baro name="quadrotor_baro_sim" plugin="libhector_gazebo_ros_baro.so">
-        <alwaysOn>true</alwaysOn>
         <updateRate>10.0</updateRate>
         <bodyName>base_link</bodyName>
         <topicName>pressure_height</topicName>
@@ -36,7 +34,6 @@ xmlns:xacro="http://ros.org/wiki/xacro"
       </controller:hector_gazebo_ros_baro>
 
       <controller:hector_gazebo_ros_magnetic name="quadrotor_magnetic_sim" plugin="libhector_gazebo_ros_magnetic.so">
-        <alwaysOn>true</alwaysOn>
         <updateRate>10.0</updateRate>
         <bodyName>base_link</bodyName>
         <topicName>magnetic</topicName>
@@ -46,19 +43,17 @@ xmlns:xacro="http://ros.org/wiki/xacro"
       </controller:hector_gazebo_ros_magnetic>
 
       <controller:hector_gazebo_ros_gps name="quadrotor_gps_sim" plugin="libhector_gazebo_ros_gps.so">
-        <alwaysOn>true</alwaysOn>
         <updateRate>4.0</updateRate>
         <bodyName>base_link</bodyName>
         <topicName>fix</topicName>
         <velocityTopicName>fix_velocity</velocityTopicName>
         <drift>5.0 5.0 5.0</drift>
-        <gaussianNoise>0.1 0.1 0.1</gaussianNoise>
+        <gaussianNoise>0.01 0.01 0.01</gaussianNoise>
         <velocityDrift>0 0 0</velocityDrift>
-        <velocityGaussianNoise>0.1 0.1 0.1</velocityGaussianNoise>
+        <velocityGaussianNoise>0.05 0.05 0.05</velocityGaussianNoise>
       </controller:hector_gazebo_ros_gps>
 
       <controller:gazebo_ros_p3d name="quadrotor_groundtruth_sim" plugin="libgazebo_ros_p3d.so">
-        <alwaysOn>true</alwaysOn>
         <updateRate>100.0</updateRate>
         <bodyName>base_link</bodyName>
         <topicName>ground_truth/state</topicName>
