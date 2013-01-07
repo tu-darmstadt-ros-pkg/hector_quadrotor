@@ -20,9 +20,12 @@
      <param name="tf_prefix" type="string" value="" />
    </node>
 
+   <arg name="use_ground_truth_for_tf" default="true" />
    <node name="ground_truth_to_tf" pkg="message_to_tf" type="message_to_tf" output="screen">
      <param name="odometry_topic" value="ground_truth/state" />
-     <param name="frame_id" value="nav" />
+     <param name="frame_id" value="/nav" />
+     <param name="tf_prefix" value="" if="$(arg use_ground_truth_for_tf)" />
+     <param name="tf_prefix" value="ground_truth" unless="$(arg use_ground_truth_for_tf)" />
    </node>
    <!-- node name="hector_pose_estimation" pkg="hector_pose_estimation" type="hector_pose_estimation_node" output="screen"/-->
 

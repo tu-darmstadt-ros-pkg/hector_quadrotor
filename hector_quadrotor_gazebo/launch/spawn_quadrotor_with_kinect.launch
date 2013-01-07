@@ -2,8 +2,11 @@
 
 
  <launch>
+   <arg name="use_ground_truth_for_tf" default="true" />
+
    <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor.launch" >
-     <arg name="model" value="$(find hector_quadrotor_urdf)/urdf/quadrotor_with_kinect.urdf.xacro"/> 
+     <arg name="model" value="$(find hector_quadrotor_urdf)/urdf/quadrotor_with_kinect.urdf.xacro"/>
+     <arg name="use_ground_truth_for_tf" value="$(arg use_ground_truth_for_tf)" />
    </include>
  </launch>
  
