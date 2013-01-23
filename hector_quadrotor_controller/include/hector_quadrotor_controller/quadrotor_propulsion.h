@@ -35,6 +35,7 @@
 #include <ros/callback_queue.h>
 #include <ros/ros.h>
 
+#include <hector_uav_msgs/Supply.h>
 #include <hector_uav_msgs/MotorStatus.h>
 #include <hector_uav_msgs/MotorPWM.h>
 #include <geometry_msgs/Wrench.h>
@@ -72,11 +73,13 @@ private:
 
   ros::Subscriber voltage_subscriber_;
   ros::Publisher wrench_publisher_;
+  ros::Publisher supply_publisher_;
   ros::Publisher motor_status_publisher_;
 
   hector_uav_msgs::MotorPWMConstPtr motor_voltage_;
   std::list<hector_uav_msgs::MotorPWMConstPtr> new_motor_voltages_;
   geometry_msgs::Wrench wrench_;
+  hector_uav_msgs::Supply supply_;
   hector_uav_msgs::MotorStatus motor_status_;
   void CommandCallback(const hector_uav_msgs::MotorPWMConstPtr&);
 
@@ -88,6 +91,7 @@ private:
   double control_rate_;
   std::string voltage_topic_;
   std::string wrench_topic_;
+  std::string supply_topic_;
   std::string status_topic_;
   common::Time control_delay_;
   common::Time control_tolerance_;

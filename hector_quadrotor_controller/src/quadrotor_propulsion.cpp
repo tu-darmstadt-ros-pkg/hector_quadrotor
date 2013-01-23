@@ -106,6 +106,11 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
   else
     wrench_topic_ = _sdf->GetElement("wrenchTopic")->GetValueString();
 
+  if (!_sdf->HasElement("supplyTopic"))
+    supply_topic_ = "supply";
+  else
+    supply_topic_ = _sdf->GetElement("supplyTopic")->GetValueString();
+
   if (!_sdf->HasElement("statusTopic"))
     status_topic_ = "motor_status";
   else
@@ -119,6 +124,11 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
   if (_sdf->HasElement("controlTolerance")) control_tolerance_ = _sdf->GetElement("controlTolerance")->GetValueDouble();
   control_delay_ = Time();
   if (_sdf->HasElement("controlDelay")) control_delay_ = _sdf->GetElement("controlDelay")->GetValueDouble();
+
+  // set initial supply voltage
+  supply_.voltage.resize(1);
+  supply_.voltage[0] = 14.8;
+  if (_sdf->HasElement("supplyVoltage")) supply_.voltage[0] = _sdf->GetElement("supplyVoltage")->GetValueDouble();
 
   // start ros node
   if (!ros::isInitialized())
@@ -148,6 +158,19 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
       ros::SubscriberStatusCallback(), ros::SubscriberStatusCallback(),
       ros::VoidConstPtr(), &callback_queue_);
     wrench_publisher_ = node_handle_->advertise(ops);
+  }
+
+  // publish and latch supply
+  if (!supply_topic_.empty())
+  {
+    ros::AdvertiseOptions ops = ros::AdvertiseOptions::create<hector_uav_msgs::Supply>(
+      supply_topic_, 10,
+      ros::SubscriberStatusCallback(), ros::SubscriberStatusCallback(),
+      ros::VoidConstPtr(), &callback_queue_);
+    ops.latch = true;
+    supply_publisher_ = node_handle_->advertise(ops);
+
+    supply_publisher_.publish(supply_);
   }
 
   // publish motor_status
@@ -256,10 +279,10 @@ void GazeboQuadrotorPropulsion::Update()
   propulsion_model_->u[4] = -rate.y;
   propulsion_model_->u[5] = -rate.z;
   if (motor_voltage_ && motor_voltage_->pwm.size() >= 4) {
-    propulsion_model_->u[6] = motor_voltage_->pwm[0] * 14.8 / 255.0;
-    propulsion_model_->u[7] = motor_voltage_->pwm[1] * 14.8 / 255.0;
-    propulsion_model_->u[8] = motor_voltage_->pwm[2] * 14.8 / 255.0;
-    propulsion_model_->u[9] = motor_voltage_->pwm[3] * 14.8 / 255.0;
+    propulsion_model_->u[6] = motor_voltage_->pwm[0] * supply_.voltage[0] / 255.0;
+    propulsion_model_->u[7] = motor_voltage_->pwm[1] * supply_.voltage[0] / 255.0;
+    propulsion_model_->u[8] = motor_voltage_->pwm[2] * supply_.voltage[0] / 255.0;
+    propulsion_model_->u[9] = motor_voltage_->pwm[3] * supply_.voltage[0] / 255.0;
   } else {
     propulsion_model_->u[6] = 0.0;
     propulsion_model_->u[7] = 0.0;
