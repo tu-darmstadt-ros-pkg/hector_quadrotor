@@ -304,6 +304,13 @@ void GazeboQuadrotorPropulsion::Update()
   // publish motor status
   if (motor_status_publisher_ && current_time >= last_motor_status_time_ + control_period_) {
     motor_status_.header.stamp = ros::Time(current_time.sec, current_time.nsec);
+
+    motor_status_.voltage.resize(4);
+    motor_status_.voltage[0] = propulsion_model_->u[6];
+    motor_status_.voltage[1] = propulsion_model_->u[7];
+    motor_status_.voltage[2] = propulsion_model_->u[8];
+    motor_status_.voltage[3] = propulsion_model_->u[9];
+
     motor_status_.frequency.resize(4);
     motor_status_.frequency[0] = propulsion_model_->y[6];
     motor_status_.frequency[1] = propulsion_model_->y[7];
