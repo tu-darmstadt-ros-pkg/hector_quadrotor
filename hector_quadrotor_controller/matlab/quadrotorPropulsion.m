@@ -8,6 +8,7 @@ assert(isa(uin,'double'));
 assert(all(size(uin) == [10 1]));
 
 assert(isa(parameter,'struct'));
+assert(isa(parameter.k_m,'double'));
 assert(isa(parameter.k_t,'double'));
 
 assert(isa(parameter.CT2s,'double'));
@@ -17,6 +18,9 @@ assert(isa(parameter.CT0s,'double'));
 assert(isa(parameter.Psi,'double'));
 assert(isa(parameter.J_M,'double'));
 assert(isa(parameter.R_A,'double'));
+
+assert(isa(parameter.alpha_m,'double'));
+assert(isa(parameter.beta_m,'double'));
 
 assert(isa(parameter.l_m,'double'));
 
@@ -32,6 +36,7 @@ y       = zeros(14,1);
 F_m     = zeros(4,1);
 U       = zeros(4,1);
 M_e     = zeros(4,1);
+I       = zeros(4,1);
 F       = zeros(3,1);
 
 % Input variables
@@ -71,7 +76,7 @@ for i = 1:4
     % sum up all rotor forces
     F(3) = F(3) + F_m(i) ;
     
-    [M_e(i),xpred(i)] = motorspeed(xin(i), [U(i) k_t*F_m(i)], parameter, dt);
+    [M_e(i),I(i),xpred(i)] = motorspeed(xin(i), [U(i) F_m(i)], parameter, dt);
 end
 
 % System output, i.e. force and torque of quadrotor
@@ -90,4 +95,4 @@ y(6) = (-M_e(1)-M_e(3)+M_e(2)+M_e(4));
 y(7:10) = xpred(1:4);
 
 % motor current (A)
-y(11:14) = M_e(1:4) / Psi;
+y(11:14) = I(1:4); % M_e(1:4) / Psi;

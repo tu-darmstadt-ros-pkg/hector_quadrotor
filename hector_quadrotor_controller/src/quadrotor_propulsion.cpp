@@ -30,6 +30,8 @@
 #include "common/Events.hh"
 #include "physics/physics.h"
 
+#include <rosgraph_msgs/Clock.h>
+
 extern "C" {
   #include "quadrotorPropulsion/quadrotorPropulsion.h"
   #include "quadrotorPropulsion/quadrotorPropulsion_initialize.h"
@@ -96,6 +98,11 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
   else
     param_namespace_ = _sdf->GetElement("paramNamespace")->GetValueString() + "/";
 
+  if (!_sdf->HasElement("triggerTopic"))
+    trigger_topic_ = "quadro/trigger";
+  else
+    trigger_topic_ = _sdf->GetElement("triggerTopic")->GetValueString();
+
   if (!_sdf->HasElement("voltageTopicName"))
     voltage_topic_ = "motor_pwm";
   else
@@ -140,6 +147,17 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
 
   node_handle_ = new ros::NodeHandle(namespace_);
 
+
+  // publish trigger
+  if (!trigger_topic_.empty())
+  {
+    ros::AdvertiseOptions ops = ros::AdvertiseOptions::create<rosgraph_msgs::Clock>(
+      trigger_topic_, 10,
+      ros::SubscriberStatusCallback(), ros::SubscriberStatusCallback(),
+      ros::VoidConstPtr(), &callback_queue_);
+    trigger_publisher_ = node_handle_->advertise(ops);
+  }
+
   // subscribe command
   if (!voltage_topic_.empty())
   {
@@ -183,30 +201,37 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
     motor_status_publisher_ = node_handle_->advertise(ops);
   }
 
-  callback_queue_thread_ = boost::thread( boost::bind( &GazeboQuadrotorPropulsion::QueueThread,this ) );
+  // callback_queue_thread_ = boost::thread( boost::bind( &GazeboQuadrotorPropulsion::QueueThread,this ) );
 
   Reset();
 
   // get model parameters
   ros::NodeHandle param(param_namespace_);
-  param.getParam("k_t",  propulsion_model_->parameters_.k_t);
-  param.getParam("CT0s", propulsion_model_->parameters_.CT0s);
-  param.getParam("CT1s", propulsion_model_->parameters_.CT1s);
-  param.getParam("CT2s", propulsion_model_->parameters_.CT2s);
-  param.getParam("J_M",  propulsion_model_->parameters_.J_M);
-  param.getParam("l_m",  propulsion_model_->parameters_.l_m);
-  param.getParam("Psi",  propulsion_model_->parameters_.Psi);
-  param.getParam("R_A",  propulsion_model_->parameters_.R_A);
+  param.getParam("k_m",     propulsion_model_->parameters_.k_m);
+  param.getParam("k_t",     propulsion_model_->parameters_.k_t);
+  param.getParam("CT0s",    propulsion_model_->parameters_.CT0s);
+  param.getParam("CT1s",    propulsion_model_->parameters_.CT1s);
+  param.getParam("CT2s",    propulsion_model_->parameters_.CT2s);
+  param.getParam("J_M",     propulsion_model_->parameters_.J_M);
+  param.getParam("l_m",     propulsion_model_->parameters_.l_m);
+  param.getParam("Psi",     propulsion_model_->parameters_.Psi);
+  param.getParam("R_A",     propulsion_model_->parameters_.R_A);
+  param.getParam("alpha_m", propulsion_model_->parameters_.alpha_m);
+  param.getParam("beta_m",  propulsion_model_->parameters_.beta_m);
 
   std::cout << "Loaded the following quadrotor propulsion model parameters from namespace " << param.getNamespace() << ":" << std::endl;
-  std::cout << "k_t = " << propulsion_model_->parameters_.k_t << std::endl;
-  std::cout << "CT2s = " << propulsion_model_->parameters_.CT2s << std::endl;
-  std::cout << "CT1s = " << propulsion_model_->parameters_.CT1s << std::endl;
-  std::cout << "CT0s = " << propulsion_model_->parameters_.CT0s << std::endl;
-  std::cout << "Psi = "  << propulsion_model_->parameters_.Psi << std::endl;
-  std::cout << "J_M = "  << propulsion_model_->parameters_.J_M << std::endl;
-  std::cout << "R_A = "  << propulsion_model_->parameters_.R_A << std::endl;
-  std::cout << "l_m = "  << propulsion_model_->parameters_.l_m << std::endl;
+  std::cout << "k_m     = " << propulsion_model_->parameters_.k_m << std::endl;
+  std::cout << "k_t     = " << propulsion_model_->parameters_.k_t << std::endl;
+  std::cout << "CT2s    = " << propulsion_model_->parameters_.CT2s << std::endl;
+  std::cout << "CT1s    = " << propulsion_model_->parameters_.CT1s << std::endl;
+  std::cout << "CT0s    = " << propulsion_model_->parameters_.CT0s << std::endl;
+  std::cout << "Psi     = " << propulsion_model_->parameters_.Psi << std::endl;
+  std::cout << "J_M     = " << propulsion_model_->parameters_.J_M << std::endl;
+  std::cout << "R_A     = " << propulsion_model_->parameters_.R_A << std::endl;
+  std::cout << "l_m     = " << propulsion_model_->parameters_.l_m << std::endl;
+  std::cout << "alpha_m = " << propulsion_model_->parameters_.alpha_m << std::endl;
+  std::cout << "beta_m  = " << propulsion_model_->parameters_.beta_m << std::endl;
+
 
   // New Mechanism for Updating every World Cycle
   // Listen to the update event. This event is broadcast every
@@ -219,10 +244,10 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
 // Callbacks
 void GazeboQuadrotorPropulsion::CommandCallback(const hector_uav_msgs::MotorPWMConstPtr& command)
 {
-  boost::mutex::scoped_lock lock(command_mutex_);
+  //boost::mutex::scoped_lock lock(command_mutex_);
   motor_status_.on = true;
-  new_motor_voltages_.push_back(command);
-  ROS_DEBUG_STREAM("Received motor command valid at " << command->header.stamp);
+  new_motor_voltages_.push(command);
+  ROS_DEBUG_STREAM_NAMED("quadrotor_propulsion", "Received motor command valid at " << command->header.stamp);
   command_condition_.notify_all();
 }
 
@@ -239,32 +264,64 @@ void GazeboQuadrotorPropulsion::Update()
   last_time_ = current_time;
   if (dt <= 0.0) return;
 
+  // Send trigger
+  bool trigger = false;
+  if (control_period_ > 0.0) {
+    uint64_t current_nsec        = (uint64_t)current_time.sec * 1000000000ull + current_time.nsec;
+    uint64_t control_period_nsec = (uint64_t)control_period_.sec * 1000000000ull + control_period_.nsec;
+    trigger = (current_nsec % control_period_nsec == 0);
+  }
+
+  if (trigger && trigger_publisher_) {
+    if (control_period_ <= 0 || current_time >= last_trigger_time_ + control_period_) {
+      rosgraph_msgs::Clock clock;
+      clock.clock = ros::Time(current_time.sec, current_time.nsec);
+      trigger_publisher_.publish(clock);
+      ROS_DEBUG_STREAM_NAMED("quadrotor_propulsion", "Sent a trigger message at t = " << current_time.Double() << " (dt = " << (current_time - last_trigger_time_).Double() << ")");
+      last_trigger_time_ = current_time;
+    }
+  }
+
   // Get new commands/state
-  // callback_queue_.callAvailable();
+  callback_queue_.callAvailable();
 
   while(1) {
     if (!new_motor_voltages_.empty()) {
       hector_uav_msgs::MotorPWMConstPtr new_motor_voltage = new_motor_voltages_.front();
       Time new_time = Time(new_motor_voltage->header.stamp.sec, new_motor_voltage->header.stamp.nsec);
+
       if (new_time == Time() || (new_time >= current_time - control_delay_ - dt - control_tolerance_ && new_time <= current_time - control_delay_ + control_tolerance_)) {
         motor_voltage_ = new_motor_voltage;
-        new_motor_voltages_.pop_front();
+        new_motor_voltages_.pop();
         last_control_time_ = current_time;
-        ROS_DEBUG_STREAM_NAMED("quadrotor_propulsion", "Using motor command valid at t = " << new_time.Double() << " for simulation step at t = " << current_time.Double() << " (dt = " << (current_time - new_time).Double() << ")");
-        break;
+        last_trigger_time_ = current_time;
+        ROS_DEBUG_STREAM_NAMED("quadrotor_propulsion", "Using motor command valid at t = " << new_time.Double() << "s for simulation step at t = " << current_time.Double() << "s (dt = " << (current_time - new_time).Double() << "s)");
+
+      // new motor command is too old
       } else if (new_time < current_time - control_delay_ - control_tolerance_) {
-        ROS_DEBUG_NAMED("quadrotor_propulsion", "command received was too old: %f s", (new_time - current_time).Double());
-        new_motor_voltages_.pop_front();
+        ROS_DEBUG_NAMED("quadrotor_propulsion", "command received was too old: %fs", (new_time - current_time).Double());
+        new_motor_voltages_.pop();
         continue;
+
+      // new motor command is too new
+      } else {
       }
+
+      break;
     }
 
-    if (new_motor_voltages_.empty() && motor_status_.on &&  control_period_ > 0 && current_time >= last_control_time_ + control_period_ + control_tolerance_) {
-      ROS_DEBUG_NAMED("quadrotor_propulsion", "Waiting for command at simulation step t = %f s... last update was %f s ago", current_time.Double(), (current_time - last_control_time_).Double());
-      if (command_condition_.timed_wait(lock, (ros::Duration(control_period_.sec, control_period_.nsec) * 100.0).toBoost())) continue;
-      ROS_ERROR_NAMED("quadrotor_propulsion", "command timed out.");
-      motor_status_.on = false;
-    }
+    assert(new_motor_voltages_.empty() == true);
+    if (!motor_status_.on || !trigger) break;
+
+    // if (new_motor_voltages_.empty() && motor_status_.on &&  control_period_ > 0 && current_time >= last_control_time_ + control_period_ + control_tolerance_) {
+    ROS_DEBUG_NAMED("quadrotor_propulsion", "Waiting for command at simulation step t = %fs... last update was %fs ago", current_time.Double(), (current_time - last_control_time_).Double());
+    // if (command_condition_.timed_wait(lock, (ros::Duration(control_period_.sec, control_period_.nsec) * 100.0).toBoost())) continue;
+    callback_queue_.callAvailable(ros::WallDuration(1.0));
+    if (!new_motor_voltages_.empty()) continue;
+
+    ROS_ERROR_NAMED("quadrotor_propulsion", "Command timed out. Disabling motors.");
+    motor_status_.on = false;
+    // }
 
     break;
   }
@@ -278,7 +335,7 @@ void GazeboQuadrotorPropulsion::Update()
   propulsion_model_->u[3] = rate.x;
   propulsion_model_->u[4] = -rate.y;
   propulsion_model_->u[5] = -rate.z;
-  if (motor_voltage_ && motor_voltage_->pwm.size() >= 4) {
+  if (motor_status_.on && motor_voltage_ && motor_voltage_->pwm.size() >= 4) {
     propulsion_model_->u[6] = motor_voltage_->pwm[0] * supply_.voltage[0] / 255.0;
     propulsion_model_->u[7] = motor_voltage_->pwm[1] * supply_.voltage[0] / 255.0;
     propulsion_model_->u[8] = motor_voltage_->pwm[2] * supply_.voltage[0] / 255.0;
@@ -359,7 +416,7 @@ void GazeboQuadrotorPropulsion::Reset()
   propulsion_model_->x_pred.assign(0.0);
   last_control_time_ = Time();
   last_motor_status_time_ = Time();
-  new_motor_voltages_.clear();
+  new_motor_voltages_ = std::queue<hector_uav_msgs::MotorPWMConstPtr>(); // .clear();
   motor_voltage_.reset();
 }
 

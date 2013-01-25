@@ -1,5 +1,5 @@
 quadrotor_aerodynamics:
-        C_wxy: 0.08
-        C_wz: 0.08
+        C_wxy: 0.12
+        C_wz: 0.1
         C_mxy: 0.074156208000000
         C_mz: 0.050643264000000

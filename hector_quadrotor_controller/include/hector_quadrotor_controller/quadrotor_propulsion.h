@@ -43,7 +43,7 @@
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
-#include <list>
+#include <queue>
 
 namespace gazebo
 {
@@ -71,13 +71,14 @@ private:
   boost::thread callback_queue_thread_;
   void QueueThread();
 
+  ros::Publisher trigger_publisher_;
   ros::Subscriber voltage_subscriber_;
   ros::Publisher wrench_publisher_;
   ros::Publisher supply_publisher_;
   ros::Publisher motor_status_publisher_;
 
   hector_uav_msgs::MotorPWMConstPtr motor_voltage_;
-  std::list<hector_uav_msgs::MotorPWMConstPtr> new_motor_voltages_;
+  std::queue<hector_uav_msgs::MotorPWMConstPtr> new_motor_voltages_;
   geometry_msgs::Wrench wrench_;
   hector_uav_msgs::Supply supply_;
   hector_uav_msgs::MotorStatus motor_status_;
@@ -89,6 +90,7 @@ private:
   std::string namespace_;
   std::string param_namespace_;
   double control_rate_;
+  std::string trigger_topic_;
   std::string voltage_topic_;
   std::string wrench_topic_;
   std::string supply_topic_;
@@ -101,6 +103,7 @@ private:
 
   common::Time last_time_;
   common::Time control_period_;
+  common::Time last_trigger_time_;
   common::Time last_control_time_;
   common::Time last_motor_status_time_;
 

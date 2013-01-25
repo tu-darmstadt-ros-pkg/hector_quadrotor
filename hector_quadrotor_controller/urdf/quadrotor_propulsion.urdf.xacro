@@ -12,8 +12,9 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <alwaysOn>true</alwaysOn>
         <updateRate>0.0</updateRate>
         <bodyName>base_link</bodyName>
-        <!-- <controlRate>100.0</controlRate> -->
-        <!-- <controlDelay>0.01</controlDelay> -->
+        <controlRate>100.0</controlRate>
+        <!-- <controlTolerance>0.01</controlTolerance> -->
+        <controlDelay>0.01</controlDelay>
       </controller:hector_gazebo_quadrotor_propulsion>
     </gazebo>
   </xacro:macro>

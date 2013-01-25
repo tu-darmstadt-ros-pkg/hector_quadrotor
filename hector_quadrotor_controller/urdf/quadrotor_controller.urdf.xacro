@@ -6,31 +6,21 @@ xmlns:xacro="http://ros.org/wiki/xacro"
 >
 
   <!-- Quadrotor Controller Plugin -->
-  <xacro:macro name="quadrotor_controller">
+  <xacro:macro name="quadrotor_controller" params="state_topic imu_topic">
     <gazebo>
-      <controller:hector_quadrotor_pose_estimation name="quadrotor_pose_estimation" plugin="libgazebo_rtt_plugin.so">
-        <import>hector_pose_estimation_rtt</import>
-        <component>hector_pose_estimation::PoseEstimationTaskContext</component>
-        <port name="raw_imu" queue_size="10" />
-        <port name="magnetic" />
-        <port name="pressure_height" />
-        <port name="fix" />
-        <port name="fix_velocity" />
-        <port name="state" queue_size="10" />
-        <port name="imu" queue_size="10" />
-      </controller:hector_quadrotor_pose_estimation>
-
       <controller:hector_quadrotor_controller name="quadrotor_controller" plugin="libhector_quadrotor_controller.so">
+        <updateRate>100.0</updateRate>
         <import>quadro</import>
         <component>Controller</component>
-        <configuration>$(find hector_quadrotor_controller)/conf/controller.cpf</configuration>
+        <configuration>$(find quadro)/conf/controller.cpf</configuration>
 
         <port name="sonar_height" />
         <port name="command_velocity" topic="cmd_vel" />
-        <port name="state" queue_size="10" />
-        <port name="imu" queue_size="10" />
+        <port name="state" topic="${state_topic}" queue_size="10" />
+        <port name="imu" topic="${imu_topic}" queue_size="10" />
         <port name="motor_status" />
         <port name="motor_output" topic="motor_pwm" queue_size="10" />
+        <port name="height" />
       </controller:hector_quadrotor_controller>
     </gazebo>
   </xacro:macro>
