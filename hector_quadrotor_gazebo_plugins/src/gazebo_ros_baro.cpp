@@ -43,8 +43,7 @@ GazeboRosBaro::GazeboRosBaro()
 // Destructor
 GazeboRosBaro::~GazeboRosBaro()
 {
-  event::Events::DisconnectWorldUpdateStart(updateConnection);
-
+  updateTimer.Disconnect(updateConnection);
   node_handle_->shutdown();
   delete node_handle_;
 }
@@ -76,10 +75,6 @@ void GazeboRosBaro::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     ROS_FATAL("gazebo_ros_baro plugin error: bodyName: %s does not exist\n", link_name_.c_str());
     return;
   }
-
-  double update_rate = 0.0;
-  if (_sdf->HasElement("updateRate")) update_rate = _sdf->GetElement("updateRate")->GetValueDouble();
-  update_period = update_rate > 0.0 ? 1.0/update_rate : 0.0;
 
   if (!_sdf->HasElement("frameId"))
     frame_id_ = link->GetName();
@@ -132,15 +127,14 @@ void GazeboRosBaro::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
   Reset();
 
-  // New Mechanism for Updating every World Cycle
-  // Listen to the update event. This event is broadcast every
-  // simulation iteration.
-  updateConnection = event::Events::ConnectWorldUpdateStart(
-      boost::bind(&GazeboRosBaro::Update, this));
+  // connect Update function
+  updateTimer.Load(world, _sdf);
+  updateConnection = updateTimer.Connect(boost::bind(&GazeboRosBaro::Update, this));
 }
 
 void GazeboRosBaro::Reset()
 {
+  updateTimer.Reset();
   sensor_model_.reset();
 }
 
@@ -149,8 +143,7 @@ void GazeboRosBaro::Reset()
 void GazeboRosBaro::Update()
 {
   common::Time sim_time = world->GetSimTime();
-  double dt = (sim_time - last_time).Double();
-  if (last_time + update_period > sim_time) return;
+  double dt = updateTimer.getTimeSinceLastUpdate().Double();
 
   math::Pose pose = link->GetWorldPose();
   double height = sensor_model_(pose.pos.z, dt);
@@ -178,9 +171,6 @@ void GazeboRosBaro::Update()
     altimeter_.qnh = qnh_;
     altimeter_publisher_.publish(altimeter_);
   }
-
-  // save last time stamp
-  last_time = sim_time;
 }
 
 // Register this plugin with the simulator

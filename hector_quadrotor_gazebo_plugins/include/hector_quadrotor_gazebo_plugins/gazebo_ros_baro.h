@@ -41,6 +41,7 @@
 #include <hector_uav_msgs/Altimeter.h>
 
 #include <hector_gazebo_plugins/sensor_model.h>
+#include <hector_gazebo_plugins/update_timer.h>
 
 namespace gazebo
 {
@@ -85,11 +86,7 @@ private:
 
   SensorModel sensor_model_;
 
-  /// \brief save last_time
-  common::Time last_time;
-  common::Time update_period;
-
-  // Pointer to the update event connection
+  UpdateTimer updateTimer;
   event::ConnectionPtr updateConnection;
 };
 

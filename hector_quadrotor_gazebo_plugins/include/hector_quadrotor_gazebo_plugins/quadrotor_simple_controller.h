@@ -39,6 +39,8 @@
 #include <sensor_msgs/Imu.h>
 #include <nav_msgs/Odometry.h>
 
+#include <hector_gazebo_plugins/update_timer.h>
+
 namespace gazebo
 {
 
@@ -119,10 +121,9 @@ private:
   math::Vector3 inertia;
   double mass;
 
-  /// \brief save last_time
-  common::Time last_time;
+  math::Vector3 force, torque;
 
-  // Pointer to the update event connection
+  UpdateTimer controlTimer;
   event::ConnectionPtr updateConnection;
 };
 
