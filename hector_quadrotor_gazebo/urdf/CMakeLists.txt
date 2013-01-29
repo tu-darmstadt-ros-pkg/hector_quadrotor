@@ -9,7 +9,7 @@ else()
   set(CONTROL_IMU_TOPIC "imu")
 endif()
 
-option(USE_PROPULSION_MODEL "Use a model of the quadrotor propulsion system" ON)
+option(USE_PROPULSION_MODEL "Use a model of the quadrotor propulsion system" OFF)
 if(USE_PROPULSION_MODEL AND
     (NOT EXISTS ${hector_quadrotor_controller_PACKAGE_PATH}/lib/libhector_quadrotor_controller.so OR
      NOT EXISTS ${hector_quadrotor_controller_PACKAGE_PATH}/lib/libhector_gazebo_quadrotor_propulsion.so))
@@ -24,7 +24,7 @@ else()
   set(URDF "${URDF}    <quadrotor_simple_controller state_topic=\"${CONTROL_STATE_TOPIC}\" imu_topic=\"${CONTROL_IMU_TOPIC}\" />\n")
 endif()
 
-option(USE_AERODYNAMICS_MODEL "Use a model of the quadrotor aerodynamics" ON)
+option(USE_AERODYNAMICS_MODEL "Use a model of the quadrotor aerodynamics" OFF)
 if(USE_AERODYNAMICS_MODEL AND NOT EXISTS ${hector_quadrotor_controller_PACKAGE_PATH}/lib/libhector_gazebo_quadrotor_aerodynamics.so)
   message(STATUS "Not using the aerodynamics model as the required plugin is not built. Try to run 'rosmake hector_quadrotor_controller'.")
   set(USE_AERODYNAMICS_MODEL OFF)
