@@ -201,7 +201,7 @@ void GazeboQuadrotorSimpleController::Update()
   callback_queue_.callAvailable();
 
   double dt;
-  if (controlTimer.update(dt) && dt != 0.0) {
+  if (controlTimer.update(dt) && dt > 0.0) {
     // Get Pose/Orientation from Gazebo (if no state subscriber is active)
     if (imu_topic_.empty()) {
       pose = link->GetWorldPose();
