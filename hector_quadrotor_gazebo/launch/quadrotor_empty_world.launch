@@ -1,7 +1,17 @@
 <?xml version="1.0"?>
 
-
 <launch>
-    <include file="$(find gazebo_worlds)/launch/empty_world_throttled.launch" />
-    <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor.launch" />
+  <arg name="paused" default="false"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="gui" default="true"/>
+  <arg name="throttled" default="true"/>
+
+  <include file="$(find gazebo_worlds)/launch/empty_world.launch">
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+    <arg name="gui" value="$(arg gui)"/>
+    <arg name="throttled" value="$(arg throttled)"/>
+  </include>
+
+  <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor.launch" />
 </launch>
