@@ -27,8 +27,8 @@
 //=================================================================================================
 
 #include <hector_quadrotor_gazebo_plugins/quadrotor_simple_controller.h>
-#include "common/Events.hh"
-#include "physics/physics.h"
+#include <gazebo/common/Events.hh>
+#include <gazebo/physics/physics.hh>
 
 #include <cmath>
 
@@ -42,7 +42,7 @@ GazeboQuadrotorSimpleController::GazeboQuadrotorSimpleController()
 // Destructor
 GazeboQuadrotorSimpleController::~GazeboQuadrotorSimpleController()
 {
-  event::Events::DisconnectWorldUpdateStart(updateConnection);
+  event::Events::DisconnectWorldUpdateBegin(updateConnection);
 
   node_handle_->shutdown();
   delete node_handle_;
@@ -152,7 +152,7 @@ void GazeboQuadrotorSimpleController::Load(physics::ModelPtr _model, sdf::Elemen
   // Listen to the update event. This event is broadcast every
   // simulation iteration.
   controlTimer.Load(world, _sdf);
-  updateConnection = event::Events::ConnectWorldUpdateStart(
+  updateConnection = event::Events::ConnectWorldUpdateBegin(
       boost::bind(&GazeboQuadrotorSimpleController::Update, this));
 }
 
@@ -224,7 +224,7 @@ void GazeboQuadrotorSimpleController::Update()
     // Get gravity
     math::Vector3 gravity_body = pose.rot.RotateVector(world->GetPhysicsEngine()->GetGravity());
     double gravity = gravity_body.GetLength();
-    double load_factor = gravity * gravity / world->GetPhysicsEngine()->GetGravity().GetDotProd(gravity_body);  // Get gravity
+    double load_factor = gravity * gravity / world->GetPhysicsEngine()->GetGravity().Dot(gravity_body);  // Get gravity
 
     // Rotate vectors to coordinate frames relevant for control
     math::Quaternion heading_quaternion(cos(euler.z/2),0,0,sin(euler.z/2));
@@ -258,7 +258,7 @@ void GazeboQuadrotorSimpleController::Update()
 
   // set force and torque in gazebo
   link->AddRelativeForce(force);
-  link->AddRelativeTorque(torque - link->GetInertial()->GetCoG().GetCrossProd(force));
+  link->AddRelativeTorque(torque - link->GetInertial()->GetCoG().Cross(force));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

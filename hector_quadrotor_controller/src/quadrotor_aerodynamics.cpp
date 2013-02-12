@@ -27,8 +27,8 @@
 //=================================================================================================
 
 #include <hector_quadrotor_controller/quadrotor_aerodynamics.h>
-#include "common/Events.hh"
-#include "physics/physics.h"
+#include <gazebo/common/Events.hh>
+#include <gazebo/physics/physics.hh>
 
 extern "C" {
   #include "quadrotorDrag/quadrotorDrag.h"
@@ -68,7 +68,7 @@ GazeboQuadrotorAerodynamics::GazeboQuadrotorAerodynamics()
 // Destructor
 GazeboQuadrotorAerodynamics::~GazeboQuadrotorAerodynamics()
 {
-  event::Events::DisconnectWorldUpdateStart(updateConnection);
+  event::Events::DisconnectWorldUpdateBegin(updateConnection);
   node_handle_->shutdown();
   callback_queue_thread_.join();
   delete node_handle_;
@@ -137,7 +137,7 @@ void GazeboQuadrotorAerodynamics::Load(physics::ModelPtr _model, sdf::ElementPtr
   // New Mechanism for Updating every World Cycle
   // Listen to the update event. This event is broadcast every
   // simulation iteration.
-  updateConnection = event::Events::ConnectWorldUpdateStart(
+  updateConnection = event::Events::ConnectWorldUpdateBegin(
       boost::bind(&GazeboQuadrotorAerodynamics::Update, this));
 }
 
@@ -189,7 +189,7 @@ void GazeboQuadrotorAerodynamics::Update()
 
   // set force and torque in gazebo
   link->AddRelativeForce(force);
-  link->AddRelativeTorque(torque - link->GetInertial()->GetCoG().GetCrossProd(force));
+  link->AddRelativeTorque(torque - link->GetInertial()->GetCoG().Cross(force));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

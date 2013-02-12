@@ -27,8 +27,8 @@
 //=================================================================================================
 
 #include <hector_quadrotor_controller/quadrotor_propulsion.h>
-#include "common/Events.hh"
-#include "physics/physics.h"
+#include <gazebo/common/Events.hh>
+#include <gazebo/physics/physics.hh>
 
 #include <rosgraph_msgs/Clock.h>
 
@@ -72,7 +72,7 @@ GazeboQuadrotorPropulsion::GazeboQuadrotorPropulsion()
 // Destructor
 GazeboQuadrotorPropulsion::~GazeboQuadrotorPropulsion()
 {
-  event::Events::DisconnectWorldUpdateStart(updateConnection);
+  event::Events::DisconnectWorldUpdateBegin(updateConnection);
   node_handle_->shutdown();
   callback_queue_thread_.join();
   delete node_handle_;
@@ -236,7 +236,7 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
   // New Mechanism for Updating every World Cycle
   // Listen to the update event. This event is broadcast every
   // simulation iteration.
-  updateConnection = event::Events::ConnectWorldUpdateStart(
+  updateConnection = event::Events::ConnectWorldUpdateBegin(
       boost::bind(&GazeboQuadrotorPropulsion::Update, this));
 }
 
@@ -379,7 +379,7 @@ void GazeboQuadrotorPropulsion::Update()
 
   // set force and torque in gazebo
   link->AddRelativeForce(force);
-  link->AddRelativeTorque(torque - link->GetInertial()->GetCoG().GetCrossProd(force));
+  link->AddRelativeTorque(torque - link->GetInertial()->GetCoG().Cross(force));
 
   // publish motor status
   if (motor_status_publisher_ && current_time >= last_motor_status_time_ + control_period_) {
