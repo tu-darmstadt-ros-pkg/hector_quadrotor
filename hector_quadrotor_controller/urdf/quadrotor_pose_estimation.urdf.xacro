@@ -5,13 +5,14 @@ xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controlle
 xmlns:xacro="http://ros.org/wiki/xacro"
 >
 
-  <!-- Quadrotor Controller Plugin -->
-  <xacro:macro name="quadrotor_controller" params="state_topic imu_topic">
+  <!-- Quadrotor Pose Estimation Plugin -->
+  <xacro:macro name="quadrotor_pose_estimation">
     <gazebo>
       <controller:hector_quadrotor_pose_estimation name="quadrotor_pose_estimation" plugin="libgazebo_rtt_plugin.so">
         <updateRate>100.0</updateRate>
         <import>hector_pose_estimation_rtt</import>
         <component>hector_pose_estimation::PoseEstimationTaskContext</component>
+
         <port name="raw_imu" queue_size="10" />
         <port name="magnetic" />
         <port name="pressure_height" />
@@ -20,23 +21,6 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <port name="state" queue_size="10" />
         <port name="imu" queue_size="10" />
       </controller:hector_quadrotor_pose_estimation>
-
-      <controller:mbn name="model_based_navigation" plugin="libgazebo_rtt_plugin.so">
-        <updateRate>100.0</updateRate>
-        <import>quadro</import>
-        <component>Simulink</component>
-        <property name="Model">$(find quadro)/simulink/MBN/RTWmodel_QK_SFSVD_ROS.so</property>
-
-        <port name="raw_imu" queue_size="10" />
-        <port name="magnetic" />
-        <port name="altimeter" />
-        <port name="fix" />
-        <port name="fix_velocity" />
-        <port name="motor_status" />
-        <port name="state" topic="mbn/state" queue_size="10" />
-        <port name="imu" topic="mbn/imu" queue_size="10" />
-        <port name="log" topic="mbn/log" queue_size="10" />
-      </controller:mbn>
     </gazebo>
   </xacro:macro>
 </robot>

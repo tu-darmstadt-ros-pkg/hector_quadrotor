@@ -8,7 +8,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
   <!-- Quadrotor Controller Plugin -->
   <xacro:macro name="quadrotor_controller" params="state_topic imu_topic">
     <gazebo>
-      <controller:hector_quadrotor_controller name="quadrotor_controller" plugin="libhector_quadrotor_controller.so">
+      <controller:hector_quadrotor_controller name="quadrotor_controller" plugin="libgazebo_rtt_plugin.so">
         <updateRate>100.0</updateRate>
         <import>quadro</import>
         <component>Controller</component>
