@@ -29,13 +29,14 @@
 #ifndef HECTOR_GAZEBO_PLUGINS_QUADROTOR_AERODYNAMICS_H
 #define HECTOR_GAZEBO_PLUGINS_QUADROTOR_AERODYNAMICS_H
 
-#include "gazebo/gazebo.hh"
-#include "common/Plugin.hh"
+#include <gazebo/common/Plugin.hh>
 
 #include <ros/callback_queue.h>
 #include <ros/ros.h>
 
 #include <geometry_msgs/Vector3.h>
+
+#include <boost/thread.hpp>
 
 namespace gazebo
 {

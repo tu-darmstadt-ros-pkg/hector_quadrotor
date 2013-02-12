@@ -27,8 +27,8 @@
 //=================================================================================================
 
 #include <hector_quadrotor_gazebo_plugins/gazebo_ros_baro.h>
-#include "common/Events.hh"
-#include "physics/physics.h"
+#include <gazebo/common/Events.hh>
+#include <gazebo/physics/physics.hh>
 
 static const double DEFAULT_ELEVATION = 0.0;
 static const double DEFAULT_QNH       = 1013.25;

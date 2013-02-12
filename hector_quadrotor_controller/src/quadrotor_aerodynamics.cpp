@@ -27,8 +27,8 @@
 //=================================================================================================
 
 #include <hector_quadrotor_controller/quadrotor_aerodynamics.h>
-#include "common/Events.hh"
-#include "physics/physics.h"
+#include <gazebo/common/Events.hh>
+#include <gazebo/physics/physics.hh>
 
 extern "C" {
   #include "quadrotorDrag/quadrotorDrag.h"

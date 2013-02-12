@@ -27,8 +27,8 @@
 //=================================================================================================
 
 #include <hector_quadrotor_gazebo_plugins/quadrotor_simple_controller.h>
-#include "common/Events.hh"
-#include "physics/physics.h"
+#include <gazebo/common/Events.hh>
+#include <gazebo/physics/physics.hh>
 
 #include <cmath>
 

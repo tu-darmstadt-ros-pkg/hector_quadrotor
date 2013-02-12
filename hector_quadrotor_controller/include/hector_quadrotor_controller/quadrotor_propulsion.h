@@ -29,8 +29,7 @@
 #ifndef HECTOR_GAZEBO_PLUGINS_QUADROTOR_PROPULSION_H
 #define HECTOR_GAZEBO_PLUGINS_QUADROTOR_PROPULSION_H
 
-#include "gazebo/gazebo.hh"
-#include "common/Plugin.hh"
+#include <gazebo/common/Plugin.hh>
 
 #include <ros/callback_queue.h>
 #include <ros/ros.h>

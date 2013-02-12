@@ -27,8 +27,8 @@
 //=================================================================================================
 
 #include <hector_quadrotor_controller/quadrotor_propulsion.h>
-#include "common/Events.hh"
-#include "physics/physics.h"
+#include <gazebo/common/Events.hh>
+#include <gazebo/physics/physics.hh>
 
 #include <rosgraph_msgs/Clock.h>
 
