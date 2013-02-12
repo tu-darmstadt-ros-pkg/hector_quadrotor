@@ -44,6 +44,8 @@
 #include <boost/thread/condition.hpp>
 #include <queue>
 
+#include <hector_gazebo_plugins/update_timer.h>
+
 namespace gazebo
 {
 
@@ -88,7 +90,6 @@ private:
   std::string body_name_;
   std::string namespace_;
   std::string param_namespace_;
-  double control_rate_;
   std::string trigger_topic_;
   std::string voltage_topic_;
   std::string wrench_topic_;
@@ -100,8 +101,6 @@ private:
   class PropulsionModel;
   PropulsionModel *propulsion_model_;
 
-  common::Time last_time_;
-  common::Time control_period_;
   common::Time last_trigger_time_;
   common::Time last_control_time_;
   common::Time last_motor_status_time_;
@@ -111,6 +110,8 @@ private:
 
   // Pointer to the update event connection
   event::ConnectionPtr updateConnection;
+
+  UpdateTimer controlTimer;
 };
 
 }

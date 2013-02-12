@@ -124,9 +124,7 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
     status_topic_ = _sdf->GetElement("statusTopic")->GetValueString();
 
   // set control timing parameters
-  control_rate_ = 0.0;
-  if (_sdf->HasElement("controlRate")) control_rate_ = _sdf->GetElement("controlRate")->GetValueDouble();
-  control_period_ = (control_rate_ > 0) ? (1.0 / control_rate_) : 0.0;
+  controlTimer.Load(world, _sdf, "control");
   control_tolerance_ = Time();
   if (_sdf->HasElement("controlTolerance")) control_tolerance_ = _sdf->GetElement("controlTolerance")->GetValueDouble();
   control_delay_ = Time();
@@ -245,6 +243,9 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
 void GazeboQuadrotorPropulsion::CommandCallback(const hector_uav_msgs::MotorPWMConstPtr& command)
 {
   //boost::mutex::scoped_lock lock(command_mutex_);
+  if (!motor_status_.on)
+    ROS_WARN_NAMED("quadrotor_propulsion", "Received new motor command. Enabled motors.");
+
   motor_status_.on = true;
   new_motor_voltages_.push(command);
   ROS_DEBUG_STREAM_NAMED("quadrotor_propulsion", "Received motor command valid at " << command->header.stamp);
@@ -260,26 +261,16 @@ void GazeboQuadrotorPropulsion::Update()
 
   // Get simulator time
   Time current_time = world->GetSimTime();
-  Time dt = current_time - last_time_;
-  last_time_ = current_time;
-  if (dt <= 0.0) return;
+  double dt = controlTimer.getTimeSinceLastUpdate().Double();
+  bool trigger = controlTimer.update();
 
   // Send trigger
-  bool trigger = false;
-  if (control_period_ > 0.0) {
-    uint64_t current_nsec        = (uint64_t)current_time.sec * 1000000000ull + current_time.nsec;
-    uint64_t control_period_nsec = (uint64_t)control_period_.sec * 1000000000ull + control_period_.nsec;
-    trigger = (current_nsec % control_period_nsec == 0);
-  }
-
   if (trigger && trigger_publisher_) {
-    if (control_period_ <= 0 || current_time >= last_trigger_time_ + control_period_) {
-      rosgraph_msgs::Clock clock;
-      clock.clock = ros::Time(current_time.sec, current_time.nsec);
-      trigger_publisher_.publish(clock);
-      ROS_DEBUG_STREAM_NAMED("quadrotor_propulsion", "Sent a trigger message at t = " << current_time.Double() << " (dt = " << (current_time - last_trigger_time_).Double() << ")");
-      last_trigger_time_ = current_time;
-    }
+    rosgraph_msgs::Clock clock;
+    clock.clock = ros::Time(current_time.sec, current_time.nsec);
+    trigger_publisher_.publish(clock);
+    ROS_DEBUG_STREAM_NAMED("quadrotor_propulsion", "Sent a trigger message at t = " << current_time.Double() << " (dt = " << (current_time - last_trigger_time_).Double() << ")");
+    last_trigger_time_ = current_time;
   }
 
   // Get new commands/state
@@ -319,7 +310,7 @@ void GazeboQuadrotorPropulsion::Update()
     callback_queue_.callAvailable(ros::WallDuration(1.0));
     if (!new_motor_voltages_.empty()) continue;
 
-    ROS_ERROR_NAMED("quadrotor_propulsion", "Command timed out. Disabling motors.");
+    ROS_ERROR_NAMED("quadrotor_propulsion", "Command timed out. Disabled motors.");
     motor_status_.on = false;
     // }
 
@@ -356,7 +347,7 @@ void GazeboQuadrotorPropulsion::Update()
   checknan(propulsion_model_->x, "propulsion model state");
 
   // update propulsion model
-  quadrotorPropulsion(propulsion_model_->x.data(), propulsion_model_->u.data(), propulsion_model_->parameters_, dt.Double(), propulsion_model_->y.data(), propulsion_model_->x_pred.data());
+  quadrotorPropulsion(propulsion_model_->x.data(), propulsion_model_->u.data(), propulsion_model_->parameters_, dt, propulsion_model_->y.data(), propulsion_model_->x_pred.data());
   propulsion_model_->x = propulsion_model_->x_pred;
   force  = force  + checknan(Vector3(propulsion_model_->y[0], -propulsion_model_->y[1], propulsion_model_->y[2]), "propulsion model force");
   torque = torque + checknan(Vector3(propulsion_model_->y[3], -propulsion_model_->y[4], -propulsion_model_->y[5]), "propulsion model torque");
@@ -382,7 +373,7 @@ void GazeboQuadrotorPropulsion::Update()
   link->AddRelativeTorque(torque - link->GetInertial()->GetCoG().GetCrossProd(force));
 
   // publish motor status
-  if (motor_status_publisher_ && current_time >= last_motor_status_time_ + control_period_) {
+  if (motor_status_publisher_ && trigger /* && current_time >= last_motor_status_time_ + control_period_ */) {
     motor_status_.header.stamp = ros::Time(current_time.sec, current_time.nsec);
 
     motor_status_.voltage.resize(4);
