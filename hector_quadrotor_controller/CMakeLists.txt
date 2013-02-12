@@ -34,7 +34,7 @@ if(BUILD_PROPULSION_MODEL)
 endif()
 
 option(BUILD_AERODYNAMICS_MODEL "Use a model of the quadrotor aerodynamics (requires Matlab)" ON)
-if(BUILD_PROPULSION_MODEL)
+if(BUILD_AERODYNAMICS_MODEL)
   if(TARGET quadrotor_model)
     rosbuild_add_library(hector_gazebo_quadrotor_aerodynamics src/quadrotor_aerodynamics.cpp)
     target_link_libraries(hector_gazebo_quadrotor_aerodynamics ${CMAKE_CURRENT_BINARY_DIR}/matlab/quadrotorDrag.a)
