@@ -8,11 +8,11 @@ xmlns:xacro="http://ros.org/wiki/xacro"
   <!-- Quadrotor Aerodynamics Plugin -->
   <xacro:macro name="quadrotor_aerodynamics">
     <gazebo>
-      <plugin name="quadrotor_aerodynamics" filename="libhector_gazebo_quadrotor_aerodynamics.so">
+      <controller:hector_gazebo_quadrotor_aerodynamics name="quadrotor_aerodynamics" plugin="libhector_gazebo_quadrotor_aerodynamics.so">
         <alwaysOn>true</alwaysOn>
         <updateRate>0.0</updateRate>
         <bodyName>base_link</bodyName>
-      </plugin>
+      </controller:hector_gazebo_quadrotor_aerodynamics>
     </gazebo>
   </xacro:macro>
 </robot>

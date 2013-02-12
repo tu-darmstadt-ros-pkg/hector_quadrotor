@@ -9,7 +9,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
   <!-- Quadrotor Sensor Plugins -->
   <xacro:macro name="quadrotor_sensors">
     <gazebo>
-      <plugin name="quadrotor_imu_sim" filename="libhector_gazebo_ros_imu.so">
+      <controller:hector_gazebo_ros_imu name="quadrotor_imu_sim" plugin="libhector_gazebo_ros_imu.so">
         <updateRate>100.0</updateRate>
         <bodyName>base_link</bodyName>
         <topicName>raw_imu</topicName>
@@ -21,9 +21,9 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <rateGaussianNoise>0.05 0.05 0.015</rateGaussianNoise>
         <headingDrift>0.1</headingDrift>
         <headingGaussianNoise>0.05</headingGaussianNoise>
-      </plugin>
+      </controller:hector_gazebo_ros_imu>
 
-      <plugin name="quadrotor_baro_sim" filename="libhector_gazebo_ros_baro.so">
+      <controller:hector_gazebo_ros_baro name="quadrotor_baro_sim" plugin="libhector_gazebo_ros_baro.so">
         <updateRate>10.0</updateRate>
         <bodyName>base_link</bodyName>
         <topicName>pressure_height</topicName>
@@ -31,18 +31,18 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <offset>0</offset>
         <drift>0.1</drift>
         <gaussianNoise>0.5</gaussianNoise>
-      </plugin>
+      </controller:hector_gazebo_ros_baro>
 
-      <plugin name="quadrotor_magnetic_sim" filename="libhector_gazebo_ros_magnetic.so">
+      <controller:hector_gazebo_ros_magnetic name="quadrotor_magnetic_sim" plugin="libhector_gazebo_ros_magnetic.so">
         <updateRate>10.0</updateRate>
         <bodyName>base_link</bodyName>
         <topicName>magnetic</topicName>
         <offset>0 0 0</offset>
         <drift>0.0 0.0 0.0</drift>
         <gaussianNoise>1.3e-2 1.3e-2 1.3e-2</gaussianNoise>
-      </plugin>
+      </controller:hector_gazebo_ros_magnetic>
 
-      <plugin name="quadrotor_gps_sim" filename="libhector_gazebo_ros_gps.so">
+      <controller:hector_gazebo_ros_gps name="quadrotor_gps_sim" plugin="libhector_gazebo_ros_gps.so">
         <updateRate>4.0</updateRate>
         <bodyName>base_link</bodyName>
         <topicName>fix</topicName>
@@ -51,15 +51,15 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <gaussianNoise>0.01 0.01 0.01</gaussianNoise>
         <velocityDrift>0 0 0</velocityDrift>
         <velocityGaussianNoise>0.05 0.05 0.05</velocityGaussianNoise>
-      </plugin>
+      </controller:hector_gazebo_ros_gps>
 
-      <plugin name="quadrotor_groundtruth_sim" filename="libgazebo_ros_p3d.so">
+      <controller:gazebo_ros_p3d name="quadrotor_groundtruth_sim" plugin="libgazebo_ros_p3d.so">
         <updateRate>100.0</updateRate>
         <bodyName>base_link</bodyName>
         <topicName>ground_truth/state</topicName>
         <gaussianNoise>0.0</gaussianNoise>
         <frameName>map</frameName>
-      </plugin>
+      </controller:gazebo_ros_p3d>
 
     </gazebo>
   </xacro:macro>

@@ -8,7 +8,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
   <!-- Quadrotor Simple Controller Plugin -->
   <xacro:macro name="quadrotor_simple_controller" params="state_topic imu_topic">
     <gazebo>
-      <plugin name="quadrotor_simple_controller" filename="libhector_gazebo_quadrotor_simple_controller.so">
+      <controller:hector_gazebo_quadrotor_simple_controller name="quadrotor_simple_controller" plugin="libhector_gazebo_quadrotor_simple_controller.so">
         <alwaysOn>true</alwaysOn>
         <updateRate>0.0</updateRate>
         <bodyName>base_link</bodyName>
@@ -28,7 +28,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <velocityZDifferentialGain>1.0</velocityZDifferentialGain>
         <velocityZLimit>2</velocityZLimit>
         <maxForce>30</maxForce>
-      </plugin>
+      </controller:hector_gazebo_quadrotor_simple_controller>
     </gazebo>
   </xacro:macro>
 </robot>

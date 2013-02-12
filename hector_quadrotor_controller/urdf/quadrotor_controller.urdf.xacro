@@ -8,7 +8,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
   <!-- Quadrotor Controller Plugin -->
   <xacro:macro name="quadrotor_controller" params="state_topic imu_topic">
     <gazebo>
-      <plugin name="quadrotor_controller" filename="libgazebo_rtt_plugin.so">
+      <controller:hector_quadrotor_controller name="quadrotor_controller" plugin="libgazebo_rtt_plugin.so">
         <updateRate>100.0</updateRate>
         <import>quadro</import>
         <component>Controller</component>
@@ -21,7 +21,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <port name="motor_status" />
         <port name="motor_output" topic="motor_pwm" queue_size="10" />
         <port name="height" />
-      </plugin>
+      </controller:hector_quadrotor_controller>
     </gazebo>
   </xacro:macro>
 </robot>
