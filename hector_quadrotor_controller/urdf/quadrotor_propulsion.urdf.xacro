@@ -8,14 +8,14 @@ xmlns:xacro="http://ros.org/wiki/xacro"
   <!-- Quadrotor Propulsion -->
   <xacro:macro name="quadrotor_propulsion">
     <gazebo>
-      <controller:hector_gazebo_quadrotor_propulsion name="quadrotor_propulsion" plugin="libhector_gazebo_quadrotor_propulsion.so">
+      <plugin name="quadrotor_propulsion" filename="libhector_gazebo_quadrotor_propulsion.so">
         <alwaysOn>true</alwaysOn>
         <updateRate>0.0</updateRate>
         <bodyName>base_link</bodyName>
         <controlRate>100.0</controlRate>
         <!-- <controlTolerance>0.01</controlTolerance> -->
         <controlDelay>0.01</controlDelay>
-      </controller:hector_gazebo_quadrotor_propulsion>
+      </plugin>
     </gazebo>
   </xacro:macro>
 </robot>

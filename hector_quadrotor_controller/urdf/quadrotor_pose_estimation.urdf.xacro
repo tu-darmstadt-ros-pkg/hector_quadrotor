@@ -8,7 +8,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
   <!-- Quadrotor Pose Estimation Plugin -->
   <xacro:macro name="quadrotor_pose_estimation">
     <gazebo>
-      <controller:hector_quadrotor_pose_estimation name="quadrotor_pose_estimation" plugin="libgazebo_rtt_plugin.so">
+      <plugin name="quadrotor_pose_estimation" filename="libgazebo_rtt_plugin.so">
         <updateRate>100.0</updateRate>
         <import>hector_pose_estimation_rtt</import>
         <component>hector_pose_estimation::PoseEstimationTaskContext</component>
@@ -20,7 +20,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <port name="fix_velocity" />
         <port name="state" queue_size="10" />
         <port name="imu" queue_size="10" />
-      </controller:hector_quadrotor_pose_estimation>
+      </plugin>
     </gazebo>
   </xacro:macro>
 </robot>

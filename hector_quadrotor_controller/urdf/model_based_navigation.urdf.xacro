@@ -8,7 +8,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
   <!-- Quadrotor Model Based Navigation Plugin -->
   <xacro:macro name="model_based_navigation">
     <gazebo>
-      <controller:mbn name="model_based_navigation" plugin="libgazebo_rtt_plugin.so">
+      <plugin name="model_based_navigation" filename="libgazebo_rtt_plugin.so">
         <updateRate>100.0</updateRate>
         <import>quadro</import>
         <component>Simulink</component>
@@ -23,7 +23,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <port name="state" topic="mbn/state" queue_size="10" />
         <port name="imu" topic="mbn/imu" queue_size="10" />
         <port name="log" topic="mbn/log" queue_size="10" />
-      </controller:mbn>
+      </plugin>
     </gazebo>
   </xacro:macro>
 </robot>
