@@ -20,8 +20,6 @@
   <depend package="nav_msgs"/>
   <depend package="hector_uav_msgs"/>
 
-  <depend package="gazebo_rtt_plugin"/>
-
   <export>
     <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib" />
     <gazebo plugin_path="${prefix}/lib" />
