@@ -101,6 +101,7 @@ private:
   class PropulsionModel;
   PropulsionModel *propulsion_model_;
 
+  common::Time last_time_;
   common::Time last_trigger_time_;
   common::Time last_control_time_;
   common::Time last_motor_status_time_;
