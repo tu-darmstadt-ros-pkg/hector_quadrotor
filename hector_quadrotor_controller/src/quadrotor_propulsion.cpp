@@ -261,14 +261,17 @@ void GazeboQuadrotorPropulsion::Update()
 
   // Get simulator time
   Time current_time = world->GetSimTime();
-  double dt = controlTimer.getTimeSinceLastUpdate().Double();
-  bool trigger = controlTimer.update();
+  Time dt = current_time - last_time_;
+  last_time_ = current_time;
+  if (dt <= 0.0) return;
 
   // Send trigger
+  bool trigger = controlTimer.update();
   if (trigger && trigger_publisher_) {
     rosgraph_msgs::Clock clock;
     clock.clock = ros::Time(current_time.sec, current_time.nsec);
     trigger_publisher_.publish(clock);
+
     ROS_DEBUG_STREAM_NAMED("quadrotor_propulsion", "Sent a trigger message at t = " << current_time.Double() << " (dt = " << (current_time - last_trigger_time_).Double() << ")");
     last_trigger_time_ = current_time;
   }
@@ -276,7 +279,7 @@ void GazeboQuadrotorPropulsion::Update()
   // Get new commands/state
   callback_queue_.callAvailable();
 
-  while(1) {
+  do {
     if (!new_motor_voltages_.empty()) {
       hector_uav_msgs::MotorPWMConstPtr new_motor_voltage = new_motor_voltages_.front();
       Time new_time = Time(new_motor_voltage->header.stamp.sec, new_motor_voltage->header.stamp.nsec);
@@ -288,34 +291,31 @@ void GazeboQuadrotorPropulsion::Update()
         last_trigger_time_ = current_time;
         ROS_DEBUG_STREAM_NAMED("quadrotor_propulsion", "Using motor command valid at t = " << new_time.Double() << "s for simulation step at t = " << current_time.Double() << "s (dt = " << (current_time - new_time).Double() << "s)");
 
-      // new motor command is too old
+      // new motor command is too old:
       } else if (new_time < current_time - control_delay_ - control_tolerance_) {
         ROS_DEBUG_NAMED("quadrotor_propulsion", "command received was too old: %fs", (new_time - current_time).Double());
         new_motor_voltages_.pop();
         continue;
 
-      // new motor command is too new
+      // new motor command is too new:
       } else {
+        // do nothing
       }
 
-      break;
+    } else {
+      if (!motor_status_.on || !trigger) break;
+
+      // if (new_motor_voltages_.empty() && motor_status_.on &&  control_period_ > 0 && current_time >= last_control_time_ + control_period_ + control_tolerance_) {
+      ROS_DEBUG_NAMED("quadrotor_propulsion", "Waiting for command at simulation step t = %fs... last update was %fs ago", current_time.Double(), (current_time - last_control_time_).Double());
+      // if (command_condition_.timed_wait(lock, (ros::Duration(control_period_.sec, control_period_.nsec) * 100.0).toBoost())) continue;
+      callback_queue_.callAvailable(ros::WallDuration(1.0));
+      if (!new_motor_voltages_.empty()) continue;
+
+      ROS_ERROR_NAMED("quadrotor_propulsion", "Command timed out. Disabled motors.");
+      motor_status_.on = false;
     }
 
-    assert(new_motor_voltages_.empty() == true);
-    if (!motor_status_.on || !trigger) break;
-
-    // if (new_motor_voltages_.empty() && motor_status_.on &&  control_period_ > 0 && current_time >= last_control_time_ + control_period_ + control_tolerance_) {
-    ROS_DEBUG_NAMED("quadrotor_propulsion", "Waiting for command at simulation step t = %fs... last update was %fs ago", current_time.Double(), (current_time - last_control_time_).Double());
-    // if (command_condition_.timed_wait(lock, (ros::Duration(control_period_.sec, control_period_.nsec) * 100.0).toBoost())) continue;
-    callback_queue_.callAvailable(ros::WallDuration(1.0));
-    if (!new_motor_voltages_.empty()) continue;
-
-    ROS_ERROR_NAMED("quadrotor_propulsion", "Command timed out. Disabled motors.");
-    motor_status_.on = false;
-    // }
-
-    break;
-  }
+  } while(false);
 
   // fill input vector u for propulsion model
   velocity = link->GetRelativeLinearVel();
@@ -347,7 +347,7 @@ void GazeboQuadrotorPropulsion::Update()
   checknan(propulsion_model_->x, "propulsion model state");
 
   // update propulsion model
-  quadrotorPropulsion(propulsion_model_->x.data(), propulsion_model_->u.data(), propulsion_model_->parameters_, dt, propulsion_model_->y.data(), propulsion_model_->x_pred.data());
+  quadrotorPropulsion(propulsion_model_->x.data(), propulsion_model_->u.data(), propulsion_model_->parameters_, dt.Double(), propulsion_model_->y.data(), propulsion_model_->x_pred.data());
   propulsion_model_->x = propulsion_model_->x_pred;
   force  = force  + checknan(Vector3(propulsion_model_->y[0], -propulsion_model_->y[1], propulsion_model_->y[2]), "propulsion model force");
   torque = torque + checknan(Vector3(propulsion_model_->y[3], -propulsion_model_->y[4], -propulsion_model_->y[5]), "propulsion model torque");
