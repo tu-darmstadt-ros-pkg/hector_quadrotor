@@ -26,7 +26,7 @@
         <altimeterTopicName>altimeter</altimeterTopicName>
         <offset>0</offset>
         <drift>0.1</drift>
-        <gaussianNoise>0.5</gaussianNoise>
+        <gaussianNoise>0.1</gaussianNoise>
       </plugin>
 
       <plugin name="quadrotor_magnetic_sim" filename="libhector_gazebo_ros_magnetic.so">
