@@ -30,7 +30,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <altimeterTopicName>altimeter</altimeterTopicName>
         <offset>0</offset>
         <drift>0.1</drift>
-        <gaussianNoise>0.5</gaussianNoise>
+        <gaussianNoise>0.1</gaussianNoise>
       </controller:hector_gazebo_ros_baro>
 
       <controller:hector_gazebo_ros_magnetic name="quadrotor_magnetic_sim" plugin="libhector_gazebo_ros_magnetic.so">
