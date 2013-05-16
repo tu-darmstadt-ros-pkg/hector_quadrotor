@@ -20,7 +20,7 @@ if(USE_POSE_ESTIMATION)
 endif()
 
 if(USE_POSE_ESTIMATION)
-  set(URDF "${URDF}    <quadrotor_pose_estimation/>\n")
+  set(URDF "${URDF}    <xacro:quadrotor_pose_estimation/>\n")
 endif()
 
 option(USE_PROPULSION_MODEL "Use a model of the quadrotor propulsion system" OFF)
@@ -36,10 +36,10 @@ if(USE_PROPULSION_MODEL)
 endif()
 
 if(USE_PROPULSION_MODEL)
-  set(URDF "${URDF}    <quadrotor_controller state_topic=\"${CONTROL_STATE_TOPIC}\" imu_topic=\"${CONTROL_IMU_TOPIC}\"/>\n")
-  set(URDF "${URDF}    <quadrotor_propulsion/>\n")
+  set(URDF "${URDF}    <xacro:quadrotor_controller state_topic=\"${CONTROL_STATE_TOPIC}\" imu_topic=\"${CONTROL_IMU_TOPIC}\"/>\n")
+  set(URDF "${URDF}    <xacro:quadrotor_propulsion/>\n")
 else()
-  set(URDF "${URDF}    <quadrotor_simple_controller state_topic=\"${CONTROL_STATE_TOPIC}\" imu_topic=\"${CONTROL_IMU_TOPIC}\" />\n")
+  set(URDF "${URDF}    <xacro:quadrotor_simple_controller state_topic=\"${CONTROL_STATE_TOPIC}\" imu_topic=\"${CONTROL_IMU_TOPIC}\"/>\n")
 endif()
 
 option(USE_AERODYNAMICS_MODEL "Use a model of the quadrotor aerodynamics" OFF)
@@ -49,7 +49,7 @@ if(USE_AERODYNAMICS_MODEL AND NOT EXISTS ${hector_quadrotor_controller_PACKAGE_P
 endif()
 
 if(USE_AERODYNAMICS_MODEL)
-  set(URDF "${URDF}    <quadrotor_aerodynamics/>\n")
+  set(URDF "${URDF}    <xacro:quadrotor_aerodynamics/>\n")
 endif()
 
 configure_file(quadrotor_plugins.urdf.xacro.in ${PROJECT_SOURCE_DIR}/urdf/quadrotor_plugins.urdf.xacro @ONLY)

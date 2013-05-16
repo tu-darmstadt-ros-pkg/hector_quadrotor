@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 
 <robot
-xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
 xmlns:xacro="http://ros.org/wiki/xacro"
 >
 
