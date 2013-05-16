@@ -11,7 +11,7 @@
   <!-- Quadrotor Gazebo Plugins -->
   <xacro:macro name="quadrotor_plugins">
     <canonicalBody>base_link</canonicalBody>
-    <quadrotor_sensors/>
+    <xacro:quadrotor_sensors/>
 @URDF@
   </xacro:macro>
 </robot>
