@@ -3,7 +3,6 @@
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
 
   <xacro:include filename="$(find hector_sensors_description)/urdf/sonar_sensor.urdf.xacro" />
-  <xacro:include filename="$(find hector_quadrotor_gazebo)/urdf/quadrotor_plugins.urdf.xacro" />
   <xacro:property name="pi" value="3.1415926535897931" />
 
   <!-- Main quadrotor link -->
@@ -35,11 +34,5 @@
       <origin xyz="-0.16 0.0 -0.012" rpy="0 ${90*pi/180} 0"/>
     </xacro:sonar_sensor>
 
-    <gazebo reference="base_link">
-      <turnGravityOff>false</turnGravityOff>
-    </gazebo>
-
-    <!-- Gazebo Plugins -->
-    <xacro:quadrotor_plugins/>
   </xacro:macro>
 </robot>

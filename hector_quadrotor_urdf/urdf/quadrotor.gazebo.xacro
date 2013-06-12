@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+
+<robot name="quadrotor" xmlns:xacro="http://ros.org/wiki/xacro">
+    <xacro:include filename="$(find hector_quadrotor_urdf)/urdf/quadrotor.urdf.xacro" />
+    <xacro:include filename="$(find hector_quadrotor_gazebo)/urdf/quadrotor_plugins.gazebo.xacro" />
+</robot>
+

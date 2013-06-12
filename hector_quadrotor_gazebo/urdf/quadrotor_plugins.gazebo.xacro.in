@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:include filename="$(find hector_quadrotor_gazebo)/urdf/quadrotor_sensors.gazebo.xacro" />
+  <xacro:include filename="$(find hector_quadrotor_controller)/urdf/quadrotor_pose_estimation.gazebo.xacro" />
+  <xacro:include filename="$(find hector_quadrotor_gazebo_plugins)/urdf/quadrotor_simple_controller.gazebo.xacro" />
+  <xacro:include filename="$(find hector_quadrotor_controller)/urdf/quadrotor_propulsion.gazebo.xacro" />
+  <xacro:include filename="$(find hector_quadrotor_controller)/urdf/quadrotor_aerodynamics.gazebo.xacro" />
+  <xacro:include filename="$(find hector_quadrotor_controller)/urdf/quadrotor_controller.gazebo.xacro" />
+
+  <!-- Quadrotor Gazebo Plugins -->
+@URDF@
+</robot>

@@ -2,7 +2,7 @@
 
 
  <launch>
-   <arg name="model" default="$(find hector_quadrotor_urdf)/urdf/quadrotor.urdf.xacro"/>
+   <arg name="model" default="$(find hector_quadrotor_urdf)/urdf/quadrotor.gazebo.xacro"/>
    <!-- send the robot XML to param server -->
    <param name="robot_description" command="$(find xacro)/xacro.py '$(arg model)'" />
    

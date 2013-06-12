@@ -9,7 +9,7 @@ xmlns:xacro="http://ros.org/wiki/xacro"
     <gazebo>
       <plugin name="quadrotor_pose_estimation" filename="libgazebo_rtt_plugin.so">
         <updateRate>100.0</updateRate>
-        <import>hector_pose_estimation_rtt</import>
+        <import>rtt_hector_pose_estimation</import>
         <component>hector_pose_estimation::PoseEstimationTaskContext</component>
 
         <port name="raw_imu" queue_size="10" />
