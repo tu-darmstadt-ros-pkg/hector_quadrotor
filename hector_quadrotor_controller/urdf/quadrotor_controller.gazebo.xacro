@@ -11,13 +11,13 @@
         <component>Controller</component>
         <configuration>$(find quadro)/conf/controller.cpf</configuration>
 
-        <port name="sonar_height" />
-        <port name="command_velocity" topic="cmd_vel" />
-        <port name="state" topic="${state_topic}" queue_size="10" />
-        <port name="imu" topic="${imu_topic}" queue_size="10" />
-        <port name="motor_status" />
-        <port name="motor_output" topic="motor_pwm" queue_size="10" />
-        <port name="height" />
+        <port><name>sonar_height</name></port>
+        <port><name>command_velocity</name><topic>cmd_vel</topic></port>
+        <port><name>state</name><topic>${state_topic}</topic><queue_size>10</queue_size></port>
+        <port><name>imu</name><topic>${imu_topic}</topic><queue_size>10</queue_size></port>
+        <port><name>motor_status</name></port>
+        <port><name>motor_output</name><topic>motor_pwm</topic><queue_size>10</queue_size></port>
+        <port><name>height</name></port>
       </plugin>
     </gazebo>
   </xacro:macro>

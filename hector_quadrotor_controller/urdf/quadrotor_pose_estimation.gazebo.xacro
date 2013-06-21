@@ -12,13 +12,13 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <import>rtt_hector_pose_estimation</import>
         <component>hector_pose_estimation::PoseEstimationTaskContext</component>
 
-        <port name="raw_imu" queue_size="10" />
-        <port name="magnetic" />
-        <port name="pressure_height" />
-        <port name="fix" />
-        <port name="fix_velocity" />
-        <port name="state" queue_size="10" />
-        <port name="imu" queue_size="10" />
+        <port><name>raw_imu</name><queue_size>10</queue_size></port>
+        <port><name>magnetic</name></port>
+        <port><name>pressure_height</name></port>
+        <port><name>fix</name></port>
+        <port><name>fix_velocity</name></port>
+        <port><name>state</name><queue_size>10</queue_size></port>
+        <port><name>imu</name><queue_size>10</queue_size></port>
       </plugin>
     </gazebo>
   </xacro:macro>
