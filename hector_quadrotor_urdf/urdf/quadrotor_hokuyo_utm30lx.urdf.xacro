@@ -15,13 +15,13 @@
     
     <!-- Hokuyo UTM-30LX mounted upside down below the quadrotor body -->
     <xacro:include filename="$(find hector_sensors_description)/urdf/hokuyo_utm30lx.urdf.xacro" />
-    <xacro:hokuyo_utm30lx name="laser0" parent="base_link" ros_topic="scan" update_rate="40" ray_count="1081" min_angle="135" max_angle="-135">
+    <xacro:hokuyo_utm30lx name="laser0" parent="base_link" ros_topic="scan" update_rate="40" ray_count="1081" min_angle="${-135 * M_PI/180.0}" max_angle="${135 * M_PI/180.0}">
       <origin xyz="0.0 0.0 -0.097" rpy="${M_PI} 0 0"/>
     </xacro:hokuyo_utm30lx>
     
     <!-- Forward facing camera -->
     <xacro:include filename="$(find hector_sensors_description)/urdf/generic_camera.urdf.xacro" />
-    <xacro:generic_camera name="front_cam" parent="base_link" ros_topic="camera/image" cam_info_topic="camera/camera_info" update_rate="10" res_x="320" res_y="240" image_format="R8G8B8" hfov="90">
+    <xacro:generic_camera name="front_cam" parent="base_link" ros_topic="camera/image" cam_info_topic="camera/camera_info" update_rate="10" res_x="320" res_y="240" image_format="R8G8B8" hfov="${90 * M_PI/180.0}">
       <origin xyz="0.05 0.0 -0.06" rpy="0 0 0"/>
     </xacro:generic_camera>
     
