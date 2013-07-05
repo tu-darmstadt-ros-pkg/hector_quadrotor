@@ -1,4 +1,4 @@
-- git: { local-name: hector_quadrotor, uri: 'https://github.com/tu-darmstadt-ros-pkg/hector_quadrotor.git', version: groovy-devel }
-- git: { local-name: hector_common, uri: 'https://github.com/tu-darmstadt-ros-pkg/hector_common.git', version: master }
-- git: { local-name: hector_gazebo, uri: 'https://github.com/tu-darmstadt-ros-pkg/hector_gazebo.git', version: groovy-devel }
-- git: { local-name: hector_models, uri: 'https://github.com/tu-darmstadt-ros-pkg/hector_models.git', version: groovy-devel }
+- git: {local-name: hector_quadrotor, uri: 'https://github.com/tu-darmstadt-ros-pkg/hector_quadrotor.git', version: groovy-devel}
+- git: {local-name: hector_common, uri: 'https://github.com/tu-darmstadt-ros-pkg/hector_common.git', version: master}
+- git: {local-name: hector_gazebo, uri: 'https://github.com/tu-darmstadt-ros-pkg/hector_gazebo.git', version: groovy-devel}
+- git: {local-name: hector_models, uri: 'https://github.com/tu-darmstadt-ros-pkg/hector_models.git', version: groovy-devel}
