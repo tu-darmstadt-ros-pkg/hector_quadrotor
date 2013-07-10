@@ -27,6 +27,10 @@
      <param name="tf_prefix" value="" if="$(arg use_ground_truth_for_tf)" />
      <param name="tf_prefix" value="ground_truth" unless="$(arg use_ground_truth_for_tf)" />
    </node>
+   <node name="state_to_tf" pkg="message_to_tf" type="message_to_tf" output="screen" unless="$(arg use_ground_truth_for_tf)">
+     <param name="odometry_topic" value="state" />
+     <param name="frame_id" value="/nav" />
+   </node>
    <!-- node name="hector_pose_estimation" pkg="hector_pose_estimation" type="hector_pose_estimation_node" output="screen"/-->
 
    <arg name="motors" default="robbe_2827-34_epp1045" />
