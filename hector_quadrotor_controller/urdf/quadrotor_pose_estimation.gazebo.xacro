@@ -19,6 +19,8 @@ xmlns:xacro="http://ros.org/wiki/xacro"
         <port><name>fix_velocity</name></port>
         <port><name>state</name><queue_size>10</queue_size></port>
         <port><name>imu</name><queue_size>10</queue_size></port>
+
+        <port><name>syscommand</name><queue_size>1</queue_size></port>
       </plugin>
     </gazebo>
   </xacro:macro>

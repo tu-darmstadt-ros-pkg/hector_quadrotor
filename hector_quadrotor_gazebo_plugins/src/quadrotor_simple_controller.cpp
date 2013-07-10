@@ -58,7 +58,7 @@ void GazeboQuadrotorSimpleController::Load(physics::ModelPtr _model, sdf::Elemen
   if (!_sdf->HasElement("robotNamespace") || !_sdf->GetElement("robotNamespace")->GetValue())
     namespace_.clear();
   else
-    namespace_ = _sdf->GetElement("robotNamespace")->GetValueString() + "/";
+    namespace_ = _sdf->GetElement("robotNamespace")->GetValueString();
 
   if (!_sdf->HasElement("topicName") || !_sdf->GetElement("topicName")->GetValue())
     velocity_topic_ = "cmd_vel";
