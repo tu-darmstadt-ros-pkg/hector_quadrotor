@@ -30,6 +30,8 @@
 #define HECTOR_GAZEBO_PLUGINS_QUADROTOR_PROPULSION_H
 
 #include <gazebo/common/Plugin.hh>
+#include <gazebo/common/Time.hh>
+#include <gazebo/math/Vector3.hh>
 
 #include <ros/callback_queue.h>
 #include <ros/ros.h>
