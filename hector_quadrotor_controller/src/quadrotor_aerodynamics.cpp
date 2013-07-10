@@ -87,12 +87,12 @@ void GazeboQuadrotorAerodynamics::Load(physics::ModelPtr _model, sdf::ElementPtr
   if (!_sdf->HasElement("robotNamespace"))
     namespace_.clear();
   else
-    namespace_ = _sdf->GetElement("robotNamespace")->GetValueString() + "/";
+    namespace_ = _sdf->GetElement("robotNamespace")->GetValueString();
 
   if (!_sdf->HasElement("paramNamespace"))
-    param_namespace_ = "~/quadrotor_aerodynamics/";
+    param_namespace_ = "quadrotor_aerodynamics";
   else
-    param_namespace_ = _sdf->GetElement("paramNamespace")->GetValueString() + "/";
+    param_namespace_ = _sdf->GetElement("paramNamespace")->GetValueString();
 
   if (!_sdf->HasElement("windTopicName"))
     wind_topic_ = "wind";
@@ -122,7 +122,7 @@ void GazeboQuadrotorAerodynamics::Load(physics::ModelPtr _model, sdf::ElementPtr
   callback_queue_thread_ = boost::thread( boost::bind( &GazeboQuadrotorAerodynamics::QueueThread,this ) );
 
   // get model parameters
-  ros::NodeHandle param(param_namespace_);
+  ros::NodeHandle param(*node_handle_, param_namespace_);
   param.getParam("C_wxy", drag_model_->parameters_.C_wxy);
   param.getParam("C_wz",  drag_model_->parameters_.C_wz);
   param.getParam("C_mxy", drag_model_->parameters_.C_mxy);

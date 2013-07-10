@@ -91,12 +91,12 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
   if (!_sdf->HasElement("robotNamespace"))
     namespace_.clear();
   else
-    namespace_ = _sdf->GetElement("robotNamespace")->GetValueString() + "/";
+    namespace_ = _sdf->GetElement("robotNamespace")->GetValueString();
 
   if (!_sdf->HasElement("paramNamespace"))
-    param_namespace_ = "~/quadrotor_propulsion/";
+    param_namespace_ = "quadrotor_propulsion";
   else
-    param_namespace_ = _sdf->GetElement("paramNamespace")->GetValueString() + "/";
+    param_namespace_ = _sdf->GetElement("paramNamespace")->GetValueString();
 
   if (!_sdf->HasElement("triggerTopic"))
     trigger_topic_ = "quadro/trigger";
@@ -204,7 +204,7 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
   Reset();
 
   // get model parameters
-  ros::NodeHandle param(param_namespace_);
+  ros::NodeHandle param(*node_handle_, param_namespace_);
   param.getParam("k_m",     propulsion_model_->parameters_.k_m);
   param.getParam("k_t",     propulsion_model_->parameters_.k_t);
   param.getParam("CT0s",    propulsion_model_->parameters_.CT0s);
