@@ -13,6 +13,7 @@
 
         <port><name>sonar_height</name></port>
         <port><name>command_velocity</name><topic>cmd_vel</topic></port>
+        <port><name>rc</name><topic>rc</topic></port>
         <port><name>state</name><topic>${state_topic}</topic><queue_size>10</queue_size></port>
         <port><name>imu</name><topic>${imu_topic}</topic><queue_size>10</queue_size></port>
         <port><name>motor_status</name></port>
