@@ -10,5 +10,4 @@
    </include>
    
    <include file="$(find hector_slam_launch)/launch/tutorial.launch" />
-   <param name="quadrotor_tf/frame_id" value="nav" />
  </launch>

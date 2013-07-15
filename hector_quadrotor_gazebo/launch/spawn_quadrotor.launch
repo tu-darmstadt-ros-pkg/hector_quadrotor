@@ -7,29 +7,31 @@
    <param name="robot_description" command="$(find xacro)/xacro.py '$(arg model)'" />
    
    <!-- push robot_description to factory and spawn robot in gazebo -->
+   <arg name="name" default="quadrotor"/>
    <node name="spawn_robot" pkg="gazebo_ros" type="spawn_model"
    args="-param robot_description
    -urdf
    -z 0.5
-   -model quadrotor"
+   -model $(arg name)"
      respawn="false" output="screen"/>
      
    <!-- start robot state publisher -->
    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen" >
      <param name="publish_frequency" type="double" value="50.0" />
-     <param name="tf_prefix" type="string" value="" />
+     <param name="tf_prefix" type="string" value="$(optenv ROS_NAMESPACE)" />
    </node>
 
    <arg name="use_ground_truth_for_tf" default="true" />
    <node name="ground_truth_to_tf" pkg="message_to_tf" type="message_to_tf" output="screen">
      <param name="odometry_topic" value="ground_truth/state" />
      <param name="frame_id" value="/nav" />
-     <param name="tf_prefix" value="" if="$(arg use_ground_truth_for_tf)" />
-     <param name="tf_prefix" value="ground_truth" unless="$(arg use_ground_truth_for_tf)" />
+     <param name="tf_prefix" value="$(optenv ROS_NAMESPACE)" if="$(arg use_ground_truth_for_tf)" />
+     <param name="tf_prefix" value="$(optenv ROS_NAMESPACE)/ground_truth" unless="$(arg use_ground_truth_for_tf)" />
    </node>
    <node name="state_to_tf" pkg="message_to_tf" type="message_to_tf" output="screen" unless="$(arg use_ground_truth_for_tf)">
      <param name="odometry_topic" value="state" />
-     <param name="frame_id" value="/nav" />
+     <param name="frame_id" value="nav" />
+     <param name="tf_prefix" value="$(optenv ROS_NAMESPACE)" />
    </node>
    <!-- node name="hector_pose_estimation" pkg="hector_pose_estimation" type="hector_pose_estimation_node" output="screen"/-->
 
