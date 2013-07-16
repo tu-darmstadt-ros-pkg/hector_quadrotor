@@ -9,6 +9,13 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
 #set(ROS_BUILD_TYPE RelWithDebInfo)
 
+# Find gazebo
+include (FindPkgConfig)
+if (PKG_CONFIG_FOUND)
+  pkg_check_modules(GAZEBO gazebo)
+endif()
+include_directories(${GAZEBO_INCLUDE_DIRS})
+
 rosbuild_init()
 
 #set the default path for built executables to the "bin" directory
@@ -25,7 +32,7 @@ option(BUILD_PROPULSION_MODEL "Build a model of the quadrotor propulsion system 
 if(BUILD_PROPULSION_MODEL)
   if(TARGET quadrotor_model)
     rosbuild_add_library(hector_gazebo_quadrotor_propulsion src/quadrotor_propulsion.cpp)
-    target_link_libraries(hector_gazebo_quadrotor_propulsion ${CMAKE_CURRENT_BINARY_DIR}/matlab/quadrotorPropulsion.a)
+    target_link_libraries(hector_gazebo_quadrotor_propulsion ${GAZEBO_LIBRARIES} ${CMAKE_CURRENT_BINARY_DIR}/matlab/quadrotorPropulsion.a)
     add_dependencies(hector_gazebo_quadrotor_propulsion quadrotor_model)
   else()
     message(WARNING "Quadrotor model is not available. Skipping target hector_gazebo_quadrotor_propulsion...")
@@ -37,7 +44,7 @@ option(BUILD_AERODYNAMICS_MODEL "Use a model of the quadrotor aerodynamics (requ
 if(BUILD_AERODYNAMICS_MODEL)
   if(TARGET quadrotor_model)
     rosbuild_add_library(hector_gazebo_quadrotor_aerodynamics src/quadrotor_aerodynamics.cpp)
-    target_link_libraries(hector_gazebo_quadrotor_aerodynamics ${CMAKE_CURRENT_BINARY_DIR}/matlab/quadrotorDrag.a)
+    target_link_libraries(hector_gazebo_quadrotor_aerodynamics ${GAZEBO_LIBRARIES} ${CMAKE_CURRENT_BINARY_DIR}/matlab/quadrotorDrag.a)
     add_dependencies(hector_gazebo_quadrotor_aerodynamics quadrotor_model)
   else()
     message(WARNING "Quadrotor model is not available. Skipping target hector_gazebo_quadrotor_aerodynamics...")

@@ -9,6 +9,13 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
 #set(ROS_BUILD_TYPE RelWithDebInfo)
 
+# Find gazebo
+include (FindPkgConfig)
+if (PKG_CONFIG_FOUND)
+  pkg_check_modules(GAZEBO gazebo)
+endif()
+include_directories(${GAZEBO_INCLUDE_DIRS})
+
 rosbuild_init()
 
 #set the default path for built executables to the "bin" directory
@@ -20,7 +27,9 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 rosbuild_add_library(hector_gazebo_ros_baro src/gazebo_ros_baro.cpp)
 #rosbuild_link_boost(hector_gazebo_ros_baro thread)
+target_link_libraries(hector_gazebo_ros_baro ${GAZEBO_LIBRARIES})
 
 rosbuild_add_library(hector_gazebo_quadrotor_simple_controller src/quadrotor_simple_controller.cpp)
 #rosbuild_link_boost(hector_gazebo_quadrotor_simple_controller thread)
+target_link_libraries(hector_gazebo_quadrotor_simple_controller ${GAZEBO_LIBRARIES})
 

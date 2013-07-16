@@ -13,12 +13,13 @@
   <url>http://ros.org/wiki/hector_quadrotor_gazebo_plugins</url>
 
   <depend package="roscpp"/>
-  <depend package="gazebo"/>
   <depend package="gazebo_ros"/>
   <depend package="hector_gazebo_plugins"/>
 
   <depend package="geometry_msgs"/>
   <depend package="hector_uav_msgs"/>
+
+  <rosdep name="gazebo"/>
 
   <export>
     <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib" />

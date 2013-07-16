@@ -12,7 +12,6 @@
   <url>http://ros.org/wiki/hector_quadrotor_controller</url>
 
   <depend package="roscpp"/>
-  <depend package="gazebo"/>
   <depend package="gazebo_ros"/>
   
   <depend package="rosgraph_msgs"/>
@@ -22,6 +21,8 @@
   <depend package="hector_uav_msgs"/>
 
   <depend package="hector_gazebo_plugins"/>
+
+  <rosdep name="gazebo"/>
 
   <export>
     <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib" />
