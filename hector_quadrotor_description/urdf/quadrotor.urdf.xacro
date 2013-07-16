@@ -6,7 +6,7 @@
 >
 
     <!-- Included URDF Files -->
-    <xacro:include filename="$(find hector_quadrotor_urdf)/urdf/quadrotor_base.urdf.xacro" />
+    <xacro:include filename="$(find hector_quadrotor_description)/urdf/quadrotor_base.urdf.xacro" />
     
     <!-- Instantiate quadrotor_base_macro once (has no parameters atm) -->
     <xacro:quadrotor_base_macro />
