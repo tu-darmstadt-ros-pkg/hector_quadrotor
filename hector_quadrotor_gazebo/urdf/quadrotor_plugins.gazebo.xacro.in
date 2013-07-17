@@ -9,5 +9,6 @@
   <xacro:include filename="$(find hector_quadrotor_gazebo)/urdf/quadrotor_controller.gazebo.xacro" />
 
   <!-- Quadrotor Gazebo Plugins -->
+  <xacro:quadrotor_sensors/>
 @URDF@
 </robot>
