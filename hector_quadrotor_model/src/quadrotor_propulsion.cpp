@@ -175,8 +175,14 @@ bool QuadrotorPropulsion::processQueue(const ros::Time &timestamp, const ros::Du
   boost::mutex::scoped_lock lock(command_queue_mutex_);
   bool new_command = false;
 
-  ros::Time min = timestamp - delay - tolerance /* - ros::Duration(dt) */;
-  ros::Time max = timestamp - delay + tolerance;
+  ros::Time min(timestamp), max(timestamp);
+  try {
+    min = timestamp - delay - tolerance /* - ros::Duration(dt) */;
+  } catch (std::runtime_error &e) {}
+
+  try {
+    max = timestamp - delay + tolerance;
+  } catch (std::runtime_error &e) {}
 
   while(1) {
 
