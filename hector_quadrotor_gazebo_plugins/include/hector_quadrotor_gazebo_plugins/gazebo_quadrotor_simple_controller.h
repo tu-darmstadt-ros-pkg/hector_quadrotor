@@ -66,6 +66,7 @@ private:
   ros::Subscriber velocity_subscriber_;
   ros::Subscriber imu_subscriber_;
   ros::Subscriber state_subscriber_;
+  ros::Publisher wrench_publisher_;
 
   // void CallbackQueueThread();
   // boost::mutex lock_;
@@ -85,6 +86,7 @@ private:
   std::string velocity_topic_;
   std::string imu_topic_;
   std::string state_topic_;
+  std::string wrench_topic_;
   double max_force_;
 
   class PIDController {
