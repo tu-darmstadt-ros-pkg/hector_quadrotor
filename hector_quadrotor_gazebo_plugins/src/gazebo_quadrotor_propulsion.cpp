@@ -182,7 +182,7 @@ void GazeboQuadrotorPropulsion::Update()
   callback_queue_.callAvailable();
 
   // Process input queue
-  model_.processQueue(ros::Time(current_time.sec, current_time.nsec), control_tolerance_, control_delay_, ros::WallDuration(1.0), &callback_queue_);
+  model_.processQueue(ros::Time(current_time.sec, current_time.nsec), control_tolerance_, control_delay_, (model_.getMotorStatus().on && trigger) ? ros::WallDuration(1.0) : ros::WallDuration(), &callback_queue_);
 
   // fill input vector u for propulsion model
   geometry_msgs::Twist twist;

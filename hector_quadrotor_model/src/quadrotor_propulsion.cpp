@@ -99,6 +99,7 @@ void QuadrotorPropulsion::configure(const std::string &ns)
   std::cout << "beta_m  = " << propulsion_model_->parameters_.beta_m << std::endl;
 #endif
 
+  initial_voltage_ = 14.8;
   param.getParam("supply_voltage", initial_voltage_);
   reset();
 }
@@ -184,7 +185,7 @@ bool QuadrotorPropulsion::processQueue(const ros::Time &timestamp, const ros::Du
     max = timestamp - delay + tolerance;
   } catch (std::runtime_error &e) {}
 
-  while(1) {
+  do {
 
     if (!command_queue_.empty()) {
       hector_uav_msgs::MotorPWMConstPtr new_motor_voltage = command_queue_.front();
