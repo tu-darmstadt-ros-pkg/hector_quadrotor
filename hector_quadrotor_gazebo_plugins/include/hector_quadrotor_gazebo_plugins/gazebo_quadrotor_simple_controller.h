@@ -26,33 +26,33 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 
-#ifndef HECTOR_GAZEBO_PLUGINS_QUADROTOR_AERODYNAMICS_H
-#define HECTOR_GAZEBO_PLUGINS_QUADROTOR_AERODYNAMICS_H
+#ifndef HECTOR_QUADROTOR_GAZEBO_PLUGINS_QUADROTOR_SIMPLE_CONTROLLER_H
+#define HECTOR_QUADROTOR_GAZEBO_PLUGINS_QUADROTOR_SIMPLE_CONTROLLER_H
 
 #include <gazebo/common/Plugin.hh>
-#include <gazebo/common/Time.hh>
-#include <gazebo/math/Vector3.hh>
 
 #include <ros/callback_queue.h>
 #include <ros/ros.h>
 
-#include <geometry_msgs/Vector3.h>
+#include <geometry_msgs/Twist.h>
+#include <sensor_msgs/Imu.h>
+#include <nav_msgs/Odometry.h>
 
-#include <boost/thread.hpp>
+#include <hector_gazebo_plugins/update_timer.h>
 
 namespace gazebo
 {
 
-class GazeboQuadrotorAerodynamics : public ModelPlugin
+class GazeboQuadrotorSimpleController : public ModelPlugin
 {
 public:
-  GazeboQuadrotorAerodynamics();
-  virtual ~GazeboQuadrotorAerodynamics();
+  GazeboQuadrotorSimpleController();
+  virtual ~GazeboQuadrotorSimpleController();
 
 protected:
   virtual void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf);
-  virtual void Reset();
   virtual void Update();
+  virtual void Reset();
 
 private:
   /// \brief The parent World
@@ -63,33 +63,69 @@ private:
 
   ros::NodeHandle* node_handle_;
   ros::CallbackQueue callback_queue_;
-  boost::thread callback_queue_thread_;
-  void QueueThread();
+  ros::Subscriber velocity_subscriber_;
+  ros::Subscriber imu_subscriber_;
+  ros::Subscriber state_subscriber_;
 
-  ros::Subscriber wind_subscriber_;
+  // void CallbackQueueThread();
+  // boost::mutex lock_;
+  // boost::thread callback_queue_thread_;
 
-  geometry_msgs::Vector3 wind_;
-  void WindCallback(const geometry_msgs::Vector3ConstPtr&);
+  geometry_msgs::Twist velocity_command_;
+  void VelocityCallback(const geometry_msgs::TwistConstPtr&);
+  void ImuCallback(const sensor_msgs::ImuConstPtr&);
+  void StateCallback(const nav_msgs::OdometryConstPtr&);
 
-  math::Vector3 velocity, rate;
+  ros::Time state_stamp;
+  math::Pose pose;
+  math::Vector3 euler, velocity, acceleration, angular_velocity;
 
-  std::string body_name_;
+  std::string link_name_;
   std::string namespace_;
-  std::string param_namespace_;
-  double control_rate_;
-  std::string wind_topic_;
+  std::string velocity_topic_;
+  std::string imu_topic_;
+  std::string state_topic_;
+  double max_force_;
 
-  class DragModel;
-  DragModel *drag_model_;
+  class PIDController {
+  public:
+    PIDController();
+    virtual ~PIDController();
+    virtual void Load(sdf::ElementPtr _sdf, const std::string& prefix = "");
 
-  common::Time last_time_;
+    double gain_p;
+    double gain_i;
+    double gain_d;
+    double time_constant;
+    double limit;
 
-  boost::mutex wind_mutex_;
+    double input;
+    double dinput;
+    double output;
+    double p, i, d;
 
-  // Pointer to the update event connection
+    double update(double input, double x, double dx, double dt);
+    void reset();
+  };
+
+  struct Controllers {
+    PIDController roll;
+    PIDController pitch;
+    PIDController yaw;
+    PIDController velocity_x;
+    PIDController velocity_y;
+    PIDController velocity_z;
+  } controllers_;
+
+  math::Vector3 inertia;
+  double mass;
+
+  math::Vector3 force, torque;
+
+  UpdateTimer controlTimer;
   event::ConnectionPtr updateConnection;
 };
 
 }
 
-#endif // HECTOR_GAZEBO_PLUGINS_QUADROTOR_AERODYNAMICS_H
+#endif // HECTOR_QUADROTOR_GAZEBO_PLUGINS_QUADROTOR_SIMPLE_CONTROLLER_H

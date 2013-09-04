@@ -26,54 +26,28 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 
-#include <hector_quadrotor_controller/quadrotor_aerodynamics.h>
+#include <hector_quadrotor_gazebo_plugins/gazebo_quadrotor_aerodynamics.h>
+#include <hector_quadrotor_model/helpers.h>
+
 #include <gazebo/common/Events.hh>
 #include <gazebo/physics/physics.hh>
-
-extern "C" {
-  #include "quadrotorDrag/quadrotorDrag.h"
-  #include "quadrotorDrag/quadrotorDrag_initialize.h"
-}
-
-#include <boost/array.hpp>
 
 namespace gazebo {
 
 using namespace common;
 using namespace math;
-
-template <typename T> static inline T checknan(const T& value, const std::string& text = "") {
-  if (!(value == value)) {
-    if (!text.empty()) std::cerr << text << " contains **!?* Nan values!" << std::endl;
-    return T();
-  }
-  return value;
-}
-
-// extern void quadrotorDrag(const real_T uin[6], const DragParameters parameter, real_T dt, real_T y[6]);
-struct GazeboQuadrotorAerodynamics::DragModel {
-  DragParameters parameters_;
-  boost::array<real_T,6> u;
-  boost::array<real_T,6> y;
-};
+using namespace hector_quadrotor_model;
 
 GazeboQuadrotorAerodynamics::GazeboQuadrotorAerodynamics()
 {
-  // initialize drag model
-  quadrotorDrag_initialize();
-  drag_model_ = new DragModel;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Destructor
 GazeboQuadrotorAerodynamics::~GazeboQuadrotorAerodynamics()
 {
   event::Events::DisconnectWorldUpdateBegin(updateConnection);
   node_handle_->shutdown();
   callback_queue_thread_.join();
   delete node_handle_;
-
-  delete drag_model_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -83,21 +57,18 @@ void GazeboQuadrotorAerodynamics::Load(physics::ModelPtr _model, sdf::ElementPtr
   world = _model->GetWorld();
   link = _model->GetLink();
 
+  // default parameters
+  namespace_.clear();
+  param_namespace_ = "quadrotor_aerodynamics";
+  wind_topic_ = "wind";
+
   // load parameters
-  if (!_sdf->HasElement("robotNamespace"))
-    namespace_.clear();
-  else
-    namespace_ = _sdf->GetElement("robotNamespace")->GetValueString();
+  if (_sdf->HasElement("robotNamespace")) namespace_ = _sdf->GetElement("robotNamespace")->GetValueString();
+  if (_sdf->HasElement("paramNamespace")) param_namespace_ = _sdf->GetElement("paramNamespace")->GetValueString();
+  if (_sdf->HasElement("windTopicName"))  wind_topic_ = _sdf->GetElement("windTopicName")->GetValueString();
 
-  if (!_sdf->HasElement("paramNamespace"))
-    param_namespace_ = "quadrotor_aerodynamics";
-  else
-    param_namespace_ = _sdf->GetElement("paramNamespace")->GetValueString();
-
-  if (!_sdf->HasElement("windTopicName"))
-    wind_topic_ = "wind";
-  else
-    wind_topic_ = _sdf->GetElement("windTopicName")->GetValueString();
+  // get model parameters
+  model_.configure(param_namespace_);
 
   // start ros node
   if (!ros::isInitialized())
@@ -106,33 +77,21 @@ void GazeboQuadrotorAerodynamics::Load(physics::ModelPtr _model, sdf::ElementPtr
     char **argv = NULL;
     ros::init(argc,argv,"gazebo",ros::init_options::NoSigintHandler|ros::init_options::AnonymousName);
   }
-
   node_handle_ = new ros::NodeHandle(namespace_);
 
   // subscribe command
   if (!wind_topic_.empty())
   {
-    ros::SubscribeOptions ops = ros::SubscribeOptions::create<geometry_msgs::Vector3>(
+    ros::SubscribeOptions ops;
+    ops.callback_queue = &callback_queue_;
+    ops.initByFullCallbackType<const geometry_msgs::Vector3 &>(
       wind_topic_, 1,
-      boost::bind(&GazeboQuadrotorAerodynamics::WindCallback, this, _1),
-      ros::VoidPtr(), &callback_queue_);
+      boost::bind(&QuadrotorAerodynamics::setWind, &model_, _1)
+    );
     wind_subscriber_ = node_handle_->subscribe(ops);
   }
 
   callback_queue_thread_ = boost::thread( boost::bind( &GazeboQuadrotorAerodynamics::QueueThread,this ) );
-
-  // get model parameters
-  ros::NodeHandle param(*node_handle_, param_namespace_);
-  param.getParam("C_wxy", drag_model_->parameters_.C_wxy);
-  param.getParam("C_wz",  drag_model_->parameters_.C_wz);
-  param.getParam("C_mxy", drag_model_->parameters_.C_mxy);
-  param.getParam("C_mz",  drag_model_->parameters_.C_mz);
-
-  std::cout << "Loaded the following quadrotor drag model parameters from namespace " << param.getNamespace() << ":" << std::endl;
-  std::cout << "C_wxy = " << drag_model_->parameters_.C_wxy << std::endl;
-  std::cout << "C_wz = "  << drag_model_->parameters_.C_wz << std::endl;
-  std::cout << "C_mxy = " << drag_model_->parameters_.C_mxy << std::endl;
-  std::cout << "C_mz = "  << drag_model_->parameters_.C_mz << std::endl;
 
   // New Mechanism for Updating every World Cycle
   // Listen to the update event. This event is broadcast every
@@ -142,20 +101,9 @@ void GazeboQuadrotorAerodynamics::Load(physics::ModelPtr _model, sdf::ElementPtr
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Callbacks
-void GazeboQuadrotorAerodynamics::WindCallback(const geometry_msgs::Vector3ConstPtr& wind)
-{
-  boost::mutex::scoped_lock lock(wind_mutex_);
-  wind_ = *wind;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // Update the controller
 void GazeboQuadrotorAerodynamics::Update()
 {
-  Vector3 force(0.0, 0.0, 0.0), torque(0.0, 0.0, 0.0);
-  boost::mutex::scoped_lock lock(wind_mutex_);
-
   // Get simulator time
   Time current_time = world->GetSimTime();
   Time dt = current_time - last_time_;
@@ -166,26 +114,18 @@ void GazeboQuadrotorAerodynamics::Update()
   // callback_queue_.callAvailable();
 
   // fill input vector u for drag model
-  velocity = link->GetRelativeLinearVel();
-  rate = link->GetRelativeAngularVel();
-  drag_model_->u[0] =  (velocity.x - wind_.x);
-  drag_model_->u[1] = -(velocity.y - wind_.y);
-  drag_model_->u[2] = -(velocity.z - wind_.z);
-  drag_model_->u[3] =  rate.x;
-  drag_model_->u[4] = -rate.y;
-  drag_model_->u[5] = -rate.z;
+  geometry_msgs::Twist twist;
+  fromVector(link->GetRelativeLinearVel(), twist.linear);
+  fromVector(link->GetRelativeAngularVel(), twist.angular);
+  model_.setTwist(twist);
 
-//  std::cout << "u = [ ";
-//  for(std::size_t i = 0; i < drag_model_->u.size(); ++i)
-//    std::cout << drag_model_->u[i] << " ";
-//  std::cout << "]" << std::endl;
+  // update the model
+  model_.update(dt.Double());
 
-  checknan(drag_model_->u, "drag model input");
-
-  // update drag model
-  quadrotorDrag(drag_model_->u.data(), drag_model_->parameters_, dt.Double(), drag_model_->y.data());
-  force  = force  - checknan(Vector3(drag_model_->y[0], -drag_model_->y[1], -drag_model_->y[2]), "drag model force");
-  torque = torque - checknan(Vector3(drag_model_->y[3], -drag_model_->y[4], -drag_model_->y[5]), "drag model torque");
+  // get wrench from model
+  Vector3 force, torque;
+  toVector(model_.getWrench().force, force);
+  toVector(model_.getWrench().torque, torque);
 
   // set force and torque in gazebo
   link->AddRelativeForce(force);
@@ -196,6 +136,7 @@ void GazeboQuadrotorAerodynamics::Update()
 // Reset the controller
 void GazeboQuadrotorAerodynamics::Reset()
 {
+  model_.reset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

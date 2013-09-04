@@ -53,19 +53,11 @@ GazeboRosBaro::~GazeboRosBaro()
 void GazeboRosBaro::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 {
   world = _model->GetWorld();
+  link = _model->GetLink();
+  link_name_ = link->GetName();
 
-  // load parameters
-  if (!_sdf->HasElement("robotNamespace"))
-    namespace_.clear();
-  else
-    namespace_ = _sdf->GetElement("robotNamespace")->GetValueString() + "/";
-
-  if (!_sdf->HasElement("bodyName"))
+  if (_sdf->HasElement("bodyName"))
   {
-    link = _model->GetLink();
-    link_name_ = link->GetName();
-  }
-  else {
     link_name_ = _sdf->GetElement("bodyName")->GetValueString();
     link = _model->GetLink(link_name_);
   }
@@ -76,32 +68,25 @@ void GazeboRosBaro::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     return;
   }
 
-  if (!_sdf->HasElement("frameId"))
-    frame_id_ = link->GetName();
-  else
-    frame_id_ = _sdf->GetElement("frameId")->GetValueString();
+  // default parameters
+  namespace_.clear();
+  frame_id_ = link->GetName();
+  height_topic_ = "pressure_height";
+  altimeter_topic_ = "altimeter";
+  elevation_ = DEFAULT_ELEVATION;
+  qnh_ = DEFAULT_QNH;
 
-  if (!_sdf->HasElement("topicName"))
-    height_topic_ = "pressure_height";
-  else
-    height_topic_ = _sdf->GetElement("topicName")->GetValueString();
+  // load parameters
+  if (_sdf->HasElement("robotNamespace"))     namespace_ = _sdf->GetElement("robotNamespace")->GetValueString();
+  if (_sdf->HasElement("frameId"))            frame_id_ = _sdf->GetElement("frameId")->GetValueString();
+  if (_sdf->HasElement("topicName"))          height_topic_ = _sdf->GetElement("topicName")->GetValueString();
+  if (_sdf->HasElement("altimeterTopicName")) altimeter_topic_ = _sdf->GetElement("altimeterTopicName")->GetValueString();
+  if (_sdf->HasElement("elevation"))          elevation_ = _sdf->GetElement("elevation")->GetValueDouble();
+  if (_sdf->HasElement("qnh"))                qnh_ = _sdf->GetElement("qnh")->GetValueDouble();
 
-  if (!_sdf->HasElement("altimeterTopicName"))
-    altimeter_topic_ = "altimeter";
-  else
-    altimeter_topic_ = _sdf->GetElement("altimeterTopicName")->GetValueString();
-
-  if (!_sdf->HasElement("elevation"))
-    elevation_ = DEFAULT_ELEVATION;
-  else
-    elevation_ = _sdf->GetElement("elevation")->GetValueDouble();
-
-  if (!_sdf->HasElement("qnh"))
-    qnh_ = DEFAULT_QNH;
-  else
-    qnh_ = _sdf->GetElement("qnh")->GetValueDouble();
-
+  // load sensor model
   sensor_model_.Load(_sdf);
+
   height_.header.frame_id = frame_id_;
 
   // start ros node
@@ -111,8 +96,9 @@ void GazeboRosBaro::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     char **argv = NULL;
     ros::init(argc,argv,"gazebo",ros::init_options::NoSigintHandler|ros::init_options::AnonymousName);
   }
-
   node_handle_ = new ros::NodeHandle(namespace_);
+
+  // advertise height
   if (!height_topic_.empty()) {
 #ifdef USE_MAV_MSGS
     height_publisher_ = node_handle_->advertise<mav_msgs::Height>(height_topic_, 10);
@@ -121,6 +107,7 @@ void GazeboRosBaro::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 #endif
   }
 
+  // advertise altimeter
   if (!altimeter_topic_.empty()) {
     altimeter_publisher_ = node_handle_->advertise<hector_uav_msgs::Altimeter>(altimeter_topic_, 10);
   }

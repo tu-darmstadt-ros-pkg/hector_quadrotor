@@ -15,6 +15,7 @@
   <depend package="roscpp"/>
   <depend package="gazebo"/>
   <depend package="hector_gazebo_plugins"/>
+  <depend package="hector_quadrotor_model"/>
 
   <depend package="geometry_msgs"/>
   <depend package="hector_uav_msgs"/>
