@@ -26,8 +26,8 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 
-#ifndef HECTOR_GAZEBO_PLUGINS_QUADROTOR_PROPULSION_H
-#define HECTOR_GAZEBO_PLUGINS_QUADROTOR_PROPULSION_H
+#ifndef HECTOR_QUADROTOR_GAZEBO_PLUGINS_QUADROTOR_PROPULSION_H
+#define HECTOR_QUADROTOR_GAZEBO_PLUGINS_QUADROTOR_PROPULSION_H
 
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/Time.hh>
@@ -36,17 +36,10 @@
 #include <ros/callback_queue.h>
 #include <ros/ros.h>
 
-#include <hector_uav_msgs/Supply.h>
-#include <hector_uav_msgs/MotorStatus.h>
-#include <hector_uav_msgs/MotorPWM.h>
-#include <geometry_msgs/Wrench.h>
+#include <hector_quadrotor_model/quadrotor_propulsion.h>
+#include <hector_gazebo_plugins/update_timer.h>
 
 #include <boost/thread.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
-#include <queue>
-
-#include <hector_gazebo_plugins/update_timer.h>
 
 namespace gazebo
 {
@@ -69,6 +62,8 @@ private:
   /// \brief The link referred to by this plugin
   physics::LinkPtr link;
 
+  hector_quadrotor_model::QuadrotorPropulsion model_;
+
   ros::NodeHandle* node_handle_;
   ros::CallbackQueue callback_queue_;
   boost::thread callback_queue_thread_;
@@ -80,15 +75,6 @@ private:
   ros::Publisher supply_publisher_;
   ros::Publisher motor_status_publisher_;
 
-  hector_uav_msgs::MotorPWMConstPtr motor_voltage_;
-  std::queue<hector_uav_msgs::MotorPWMConstPtr> new_motor_voltages_;
-  geometry_msgs::Wrench wrench_;
-  hector_uav_msgs::Supply supply_;
-  hector_uav_msgs::MotorStatus motor_status_;
-  void CommandCallback(const hector_uav_msgs::MotorPWMConstPtr&);
-
-  math::Vector3 velocity, rate;
-
   std::string body_name_;
   std::string namespace_;
   std::string param_namespace_;
@@ -97,19 +83,13 @@ private:
   std::string wrench_topic_;
   std::string supply_topic_;
   std::string status_topic_;
-  common::Time control_delay_;
-  common::Time control_tolerance_;
-
-  class PropulsionModel;
-  PropulsionModel *propulsion_model_;
+  ros::Duration control_delay_;
+  ros::Duration control_tolerance_;
 
   common::Time last_time_;
   common::Time last_trigger_time_;
-  common::Time last_control_time_;
   common::Time last_motor_status_time_;
-
-  boost::condition command_condition_;
-  boost::mutex command_mutex_;
+  common::Time last_supply_time_;
 
   // Pointer to the update event connection
   event::ConnectionPtr updateConnection;
@@ -119,4 +99,4 @@ private:
 
 }
 
-#endif // HECTOR_GAZEBO_PLUGINS_QUADROTOR_PROPULSION_H
+#endif // HECTOR_QUADROTOR_GAZEBO_PLUGINS_QUADROTOR_PROPULSION_H
