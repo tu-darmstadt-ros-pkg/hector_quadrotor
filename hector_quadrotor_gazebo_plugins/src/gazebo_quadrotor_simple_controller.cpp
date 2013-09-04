@@ -32,6 +32,8 @@
 
 #include <cmath>
 
+#include <geometry_msgs/Wrench.h>
+
 namespace gazebo {
 
 GazeboQuadrotorSimpleController::GazeboQuadrotorSimpleController()
@@ -61,6 +63,7 @@ void GazeboQuadrotorSimpleController::Load(physics::ModelPtr _model, sdf::Elemen
   velocity_topic_ = "cmd_vel";
   imu_topic_.clear();
   state_topic_.clear();
+  wrench_topic_ = "wrench_out";
   max_force_ = -1;
 
   // load parameters
@@ -68,6 +71,7 @@ void GazeboQuadrotorSimpleController::Load(physics::ModelPtr _model, sdf::Elemen
   if (_sdf->HasElement("topicName"))      velocity_topic_ = _sdf->GetElement("topicName")->GetValueString();
   if (_sdf->HasElement("imuTopic"))       imu_topic_ = _sdf->GetElement("imuTopic")->GetValueString();
   if (_sdf->HasElement("stateTopic"))     state_topic_ = _sdf->GetElement("stateTopic")->GetValueString();
+  if (_sdf->HasElement("wrenchTopic"))    wrench_topic_ = _sdf->GetElement("wrenchTopic")->GetValueString();
   if (_sdf->HasElement("maxForce"))       max_force_ = _sdf->GetElement("maxForce")->GetValueDouble();
 
   if (_sdf->HasElement("bodyName") && _sdf->GetElement("bodyName")->GetValue()) {
@@ -134,6 +138,16 @@ void GazeboQuadrotorSimpleController::Load(physics::ModelPtr _model, sdf::Elemen
     state_subscriber_ = node_handle_->subscribe(ops);
 
     ROS_INFO_NAMED("quadrotor_simple_controller", "Using state information on topic %s as source of state information.", state_topic_.c_str());
+  }
+
+  // publish wrench
+  if (!wrench_topic_.empty())
+  {
+    ros::AdvertiseOptions ops = ros::AdvertiseOptions::create<geometry_msgs::Wrench>(
+      wrench_topic_, 10,
+      ros::SubscriberStatusCallback(), ros::SubscriberStatusCallback(), ros::VoidConstPtr(), &callback_queue_
+    );
+    wrench_publisher_ = node_handle_->advertise(ops);
   }
 
   // callback_queue_thread_ = boost::thread( boost::bind( &GazeboQuadrotorSimpleController::CallbackQueueThread,this ) );
@@ -247,6 +261,18 @@ void GazeboQuadrotorSimpleController::Update()
   //    ROS_DEBUG_NAMED("quadrotor_simple_controller", "Force: [%g %g %g], Torque: [%g %g %g]", force.x, force.y, force.z, torque.x, torque.y, torque.z);
   //    lastDebugOutput = last_time.Double();
   //  }
+
+    // Publish wrench
+    if (wrench_publisher_) {
+      geometry_msgs::Wrench wrench;
+      wrench.force.x = force.x;
+      wrench.force.y = force.y;
+      wrench.force.z = force.z;
+      wrench.torque.x = torque.x;
+      wrench.torque.y = torque.y;
+      wrench.torque.z = torque.z;
+      wrench_publisher_.publish(wrench);
+    }
   }
 
   // set force and torque in gazebo
