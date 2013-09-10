@@ -24,7 +24,7 @@
       <topicName>pressure_height</topicName>
       <altimeterTopicName>altimeter</altimeterTopicName>
       <offset>0</offset>
-      <drift>0.1</drift>
+      <drift>10.0</drift>
       <gaussianNoise>0.1</gaussianNoise>
     </plugin>
 
