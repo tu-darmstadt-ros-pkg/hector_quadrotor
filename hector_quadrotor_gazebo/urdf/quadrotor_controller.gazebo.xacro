@@ -21,13 +21,20 @@
         <port><name>height</name><queue_size>10</queue_size></port>
         <port><name>motor_input</name><topic>input/motor</topic><queue_size>10</queue_size></port>
         <port><name>motor_output</name><topic>motor_pwm</topic><queue_size>10</queue_size></port>
+        <port><name>attitude_command</name><topic>command/attitude</topic><queue_size>1</queue_size></port>
         <port><name>attitude_input</name><topic>input/attitude</topic><queue_size>10</queue_size></port>
         <port><name>attitude_rate_input</name><topic>input/rate</topic><queue_size>10</queue_size></port>
+        <port><name>velocity_command</name><topic>command/velocity</topic><queue_size>1</queue_size></port>
         <port><name>velocity_input</name><topic>input/velocity</topic><queue_size>10</queue_size></port>
+        <port><name>position_command</name><topic>command/position</topic><queue_size>1</queue_size></port>
         <port><name>position_input</name><topic>input/position</topic><queue_size>10</queue_size></port>
+        <port><name>heading_command</name><topic>command/heading</topic><queue_size>1</queue_size></port>
         <port><name>heading_input</name><topic>input/heading</topic><queue_size>10</queue_size></port>
+        <port><name>heading_rate_command</name><topic>command/turnrate</topic><queue_size>1</queue_size></port>
         <port><name>heading_rate_input</name><topic>input/turnrate</topic><queue_size>10</queue_size></port>
+        <port><name>height_command</name><topic>command/height</topic><queue_size>1</queue_size></port>
         <port><name>height_input</name><topic>input/height</topic><queue_size>10</queue_size></port>
+        <port><name>height_rate_command</name><topic>command/climbrate</topic><queue_size>1</queue_size></port>
         <port><name>height_rate_input</name><topic>input/climbrate</topic><queue_size>10</queue_size></port>
         <port><name>height_rate_output</name><topic>output/climbrate</topic><queue_size>10</queue_size></port>
         <port><name>command_velocity_input</name><topic>input/cmd_vel</topic><queue_size>10</queue_size></port>
