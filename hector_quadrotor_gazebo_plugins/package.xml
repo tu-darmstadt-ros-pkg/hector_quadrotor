@@ -1,0 +1,42 @@
+<package>
+  <name>hector_quadrotor_gazebo_plugins</name>
+  <version>0.3.0</version>
+  <description>hector_quadrotor_gazebo_plugins provides gazebo plugins for using quadrotors in gazebo.
+     The hector_gazebo_ros_baro sensor plugin simulates an altimeter based on barometric pressure.
+     hector_quadrotor_simple_controller is a simple controller allowing to command the quadrotor's velocity
+     using a geometry_msgs/Twist message for teleoperation just by means of applying forces and torques to the model.</description>
+  <maintainer email="meyer@fsr.tu-darmstadt.de">Johannes Meyer</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://ros.org/wiki/hector_quadrotor_gazebo_plugins</url>
+  <url type="bugtracker">https://github.com/tu-darmstadt-ros-pkg/hector_quadrotor/issues</url>
+
+  <author email="meyer@fsr.tu-darmstadt.de">Johannes Meyer</author>
+
+  <!-- Dependencies which this package needs to build itself. -->
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Dependencies needed to compile this package. -->
+  <build_depend>roscpp</build_depend>
+  <build_depend>gazebo</build_depend>
+  <build_depend>hector_gazebo_plugins</build_depend>
+  <build_depend>hector_quadrotor_model</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>hector_uav_msgs</build_depend>
+
+  <!-- Dependencies needed after this package is compiled. -->
+  <run_depend>roscpp</run_depend>
+  <run_depend>gazebo_ros</run_depend>
+  <run_depend>hector_gazebo_plugins</run_depend>
+  <run_depend>hector_quadrotor_model</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>hector_uav_msgs</run_depend>
+
+  <!-- Dependencies needed only for running tests. -->
+
+  <export>
+    <gazebo_ros plugin_path="${prefix}/lib"/>
+  </export>
+
+</package>

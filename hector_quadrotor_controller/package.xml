@@ -1,0 +1,31 @@
+<package>
+  <name>hector_quadrotor_controller</name>
+  <version>0.3.0</version>
+  <description>hector_quadrotor_controller provides libraries and a node for quadrotor control.
+    This package is not required for flying a quadrotor in Gazebo if you are using the simple controller plugin from
+    the <a href="http://ros.org/wiki/hector_quadrotor_gazebo_plugins">hector_quadrotor_gazebo_plugins</a> package.</description>
+  <maintainer email="meyer@fsr.tu-darmstadt.de">Johannes Meyer</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://ros.org/wiki/hector_quadrotor_controller</url>
+  <url type="bugtracker">https://github.com/tu-darmstadt-ros-pkg/hector_quadrotor/issues</url>
+
+  <author email="meyer@fsr.tu-darmstadt.de">Johannes Meyer</author>
+
+  <!-- Dependencies which this package needs to build itself. -->
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Dependencies needed to compile this package. -->
+  <build_depend>roscpp</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>hector_uav_msgs</build_depend>
+
+  <!-- Dependencies needed after this package is compiled. -->
+  <run_depend>roscpp</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>hector_uav_msgs</run_depend>
+
+  <!-- Dependencies needed only for running tests. -->
+
+</package>

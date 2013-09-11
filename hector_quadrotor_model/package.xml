@@ -1,26 +1,27 @@
 <package>
-  <name>hector_uav_msgs</name>
+  <name>hector_quadrotor_model</name>
   <version>0.3.0</version>
-  <description>hector_uav_msgs is a message package that contains messages for UAV controller inputs and outputs and some sensor readings not covered by sensor_msgs.</description>
+  <description>hector_quadrotor_model provides libraries that model several aspects of quadrotor dynamics.</description>
   <maintainer email="meyer@fsr.tu-darmstadt.de">Johannes Meyer</maintainer>
 
   <license>BSD</license>
 
-  <url type="website">http://ros.org/wiki/hector_uav_msgs</url>
+  <url type="website">http://ros.org/wiki/hector_quadrotor_model</url>
   <url type="bugtracker">https://github.com/tu-darmstadt-ros-pkg/hector_quadrotor/issues</url>
 
   <author email="meyer@fsr.tu-darmstadt.de">Johannes Meyer</author>
+  <author email="sendobry@fsr.tu-darmstadt.de">Alexander Sendobry</author>
 
   <!-- Dependencies which this package needs to build itself. -->
   <buildtool_depend>catkin</buildtool_depend>
 
   <!-- Dependencies needed to compile this package. -->
-  <build_depend>message_generation</build_depend>
-  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>hector_uav_msgs</build_depend>
 
   <!-- Dependencies needed after this package is compiled. -->
-  <run_depend>message_runtime</run_depend>
-  <run_depend>std_msgs</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>hector_uav_msgs</run_depend>
 
   <!-- Dependencies needed only for running tests. -->
 
