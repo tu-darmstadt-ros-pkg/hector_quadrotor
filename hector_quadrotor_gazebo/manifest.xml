@@ -15,6 +15,7 @@
   <depend package="hector_sensors_gazebo"/>
   <depend package="hector_quadrotor_gazebo_plugins"/>
   <depend package="message_to_tf"/>
+  <depend package="robot_state_publisher"/>
 
 </package>
 
