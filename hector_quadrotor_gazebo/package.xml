@@ -24,6 +24,7 @@
   <run_depend>hector_sensors_gazebo</run_depend>
   <run_depend>hector_quadrotor_gazebo_plugins</run_depend>
   <run_depend>message_to_tf</run_depend>
+  <run_depend>robot_state_publisher</run_depend>
 
   <!-- Dependencies needed only for running tests. -->
 
