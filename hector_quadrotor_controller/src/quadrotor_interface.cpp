@@ -33,15 +33,41 @@
 namespace hector_quadrotor_controller {
 
 QuadrotorInterface::QuadrotorInterface()
-  : pose_(0), twist_(0), pose_command_(0), velocity_command_(0)
+  : pose_(0)
+  , twist_(0)
+  , imu_(0)
+  , motor_status_(0)
+  , pose_command_(0)
+  , twist_command_(0)
+  , wrench_command_(0)
+  , motor_command_(0)
+  , trajectory_command_(0)
 {}
 
-QuadrotorInterface::QuadrotorInterface(geometry_msgs::Pose &pose, geometry_msgs::Twist &twist, geometry_msgs::Pose &pose_command, geometry_msgs::Twist &velocity_command)
-  : pose_(&pose), twist_(&twist), pose_command_(&pose_command), velocity_command_(&velocity_command)
+QuadrotorInterface::QuadrotorInterface(
+    geometry_msgs::Pose &pose,
+    geometry_msgs::Twist &twist,
+    sensor_msgs::Imu &imu,
+    hector_uav_msgs::MotorStatus &motor_status,
+    geometry_msgs::Pose &pose_command,
+    geometry_msgs::Twist &twist_command,
+    geometry_msgs::Wrench &wrench_command,
+    hector_uav_msgs::MotorCommand &motor_command,
+    nav_msgs::Path &trajectory_command
+  )
+  : pose_(&pose)
+  , twist_(&twist)
+  , imu_(&imu)
+  , motor_status_(&motor_status)
+  , pose_command_(&pose_command)
+  , twist_command_(&twist_command)
+  , wrench_command_(&wrench_command)
+  , motor_command_(&motor_command)
+  , trajectory_command_(&trajectory_command)
 {
 }
 
-void PoseStateHandle::getEulerRPY(double &roll, double &pitch, double &yaw) const
+void PoseHandle::getEulerRPY(double &roll, double &pitch, double &yaw) const
 {
   const geometry_msgs::Quaternion::_w_type& w = pose_->orientation.w;
   const geometry_msgs::Quaternion::_x_type& x = pose_->orientation.x;
@@ -52,7 +78,7 @@ void PoseStateHandle::getEulerRPY(double &roll, double &pitch, double &yaw) cons
   yaw   =  atan2(2.*x*y + 2.*w*z, x*x + w*w - z*z - y*y);
 }
 
-double PoseStateHandle::getYaw() const
+double PoseHandle::getYaw() const
 {
   const geometry_msgs::Quaternion::_w_type& w = pose_->orientation.w;
   const geometry_msgs::Quaternion::_x_type& x = pose_->orientation.x;
@@ -61,11 +87,23 @@ double PoseStateHandle::getYaw() const
   return atan2(2.*x*y + 2.*w*z, x*x + w*w - z*z - y*y);
 }
 
-double HeadingHandle::getCommand() const {
+void HorizontalPositionCommandHandle::getError(double &x, double &y) const
+{
+  getCommand(x, y);
+  x -= getPose().position.x;
+  y -= getPose().position.y;
+}
+
+double HeightCommandHandle::getError() const
+{
+  return getCommand() - getPose().position.z;
+}
+
+double HeadingCommandHandle::getCommand() const {
   return atan2(command_->orientation.z, command_->orientation.w) * 2.;
 }
 
-double HeadingHandle::getError() const {
+double HeadingCommandHandle::getError() const {
   static const double M_2PI = 2.0 * M_PI;
   double error = getCommand() - getYaw() + M_PI;
   error -= floor(error / M_2PI) * M_2PI;

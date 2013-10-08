@@ -32,23 +32,35 @@
 #include <hardware_interface/robot_hw.h>
 #include <hector_quadrotor_controller/quadrotor_interface.h>
 
+#include <nav_msgs/Odometry.h>
+
 namespace hector_quadrotor_controller {
 
 using namespace hardware_interface;
 
-class QuadrotorHardware : public RobotHW
+class QuadrotorHardware : public RobotHW, public QuadrotorInterface
 {
 public:
   QuadrotorHardware();
-  ~QuadrotorHardware();
+  virtual ~QuadrotorHardware();
+
+  void setState(const nav_msgs::Odometry &state)
+  {
+    pose_ = state.pose.pose;
+    twist_ = state.twist.twist;
+  }
 
 protected:
   geometry_msgs::Pose pose_;
   geometry_msgs::Twist twist_;
-  geometry_msgs::Pose pose_command_;
-  geometry_msgs::Twist velocity_command_;
+  sensor_msgs::Imu imu_;
+  hector_uav_msgs::MotorStatus motor_status_;
 
-  QuadrotorInterface interface_;
+  geometry_msgs::Pose pose_command_;
+  geometry_msgs::Twist twist_command_;
+  geometry_msgs::Wrench wrench_command_;
+  hector_uav_msgs::MotorCommand motor_command_;
+  nav_msgs::Path trajectory_command_;
 };
 
 } // namespace hector_quadrotor_controller

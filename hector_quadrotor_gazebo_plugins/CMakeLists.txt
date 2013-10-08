@@ -7,13 +7,10 @@ project(hector_quadrotor_gazebo_plugins)
 find_package(catkin REQUIRED COMPONENTS roscpp hector_gazebo_plugins hector_quadrotor_model geometry_msgs hector_uav_msgs)
 include_directories(include ${catkin_INCLUDE_DIRS})
 
-## Find gazebo
-include (FindPkgConfig)
-if (PKG_CONFIG_FOUND)
-  pkg_check_modules(GAZEBO gazebo)
-endif()
-include_directories(${GAZEBO_INCLUDE_DIRS})
+# Depend on system install of Gazebo
+find_package(gazebo REQUIRED)
 link_directories(${GAZEBO_LIBRARY_DIRS})
+include_directories(${GAZEBO_INCLUDE_DIRS})
 
 ## Find hector_quadrotor_model optional libraries
 if(TARGET hector_quadrotor_propulsion)

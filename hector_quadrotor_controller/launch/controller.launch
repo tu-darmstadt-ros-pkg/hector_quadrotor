@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="hector_quadrotor_controller" type="pose_controller" name="pose_controller" output="screen">
+    <rosparam file="$(find hector_quadrotor_controller)/params/pose_controller.yaml" />
+  </node>
+</launch>

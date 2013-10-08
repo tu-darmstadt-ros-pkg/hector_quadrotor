@@ -35,6 +35,8 @@
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Twist.h>
 
+#include <ros/subscriber.h>
+
 namespace hector_quadrotor_controller {
 
 using namespace controller_interface;
@@ -45,21 +47,25 @@ public:
   bool init(QuadrotorInterface* interface, ros::NodeHandle& root_nh, ros::NodeHandle &controller_nh);
   void reset();
 
+  void commandCallback(const geometry_msgs::Pose& command);
+
   void starting(const ros::Time& time);
   void update(const ros::Time& time, const ros::Duration& period);
   void stopping(const ros::Time& time);
 
 private:
-  PoseHandle pose_;
-  VelocityHandle velocity_;
+  PoseCommandHandle pose_;
+  VelocityCommandHandle velocity_;
 
   struct parameters {
+    bool enabled;
     double k_p;
     double k_i;
     double k_d;
     double limit_i;
     double limit_output;
   };
+  void initParameters(parameters &param, const ros::NodeHandle &param_nh);
 
   struct {
     parameters xy;
@@ -68,16 +74,22 @@ private:
   } parameters_;
 
   struct state {
-    double i;
+    state();
+    double p, i, d;
+    double derivative;
   };
 
   struct {
-    state xy;
+    state x;
+    state y;
     state z;
     state yaw;
   } state_;
 
+  double updatePID(double error, double derivative, state &state, const parameters &param, const ros::Duration& period);
+
   ros::Time start_time_;
+  ros::Subscriber subscriber_;
 };
 
 } // namespace hector_quadrotor_controller

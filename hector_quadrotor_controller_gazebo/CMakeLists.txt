@@ -1,20 +1,51 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(hector_quadrotor_controller)
+project(hector_quadrotor_controller_gazebo)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp geometry_msgs sensor_msgs nav_msgs hector_uav_msgs hardware_interface controller_interface)
+find_package(catkin REQUIRED COMPONENTS
+  gazebo_ros_control
+  hector_quadrotor_controller
+)
 include_directories(include ${catkin_INCLUDE_DIRS})
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
+
+# Depend on system install of Gazebo
+find_package(gazebo REQUIRED)
+link_directories(${GAZEBO_LIBRARY_DIRS})
+include_directories(${GAZEBO_INCLUDE_DIRS})
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
 # catkin_python_setup()
 
+#######################################
+## Declare ROS messages and services ##
+#######################################
+
+## Generate messages in the 'msg' folder
+# add_message_files(
+#   FILES
+#   Message1.msg
+#   Message2.msg
+# )
+
+## Generate services in the 'srv' folder
+# add_service_files(
+#   FILES
+#   Service1.srv
+#   Service2.srv
+# )
+
+## Generate added messages and services with any dependencies listed here
+# generate_messages(
+#   DEPENDENCIES
+#   std_msgs  # Or other packages containing msgs
+# )
 
 ###################################
 ## catkin specific configuration ##
@@ -26,32 +57,22 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-    INCLUDE_DIRS include
-    LIBRARIES
-    CATKIN_DEPENDS roscpp geometry_msgs sensor_msgs nav_msgs hector_uav_msgs hardware_interface controller_interface
-    DEPENDS
+  INCLUDE_DIRS include
+  LIBRARIES hector_quadrotor_controller_gazebo
+  CATKIN_DEPENDS gazebo_ros_control hector_quadrotor_controller
+#  DEPENDS system_lib
 )
 
 ###########
 ## Build ##
 ###########
 
-add_library(quadrotor_controller src/quadrotor_interface.cpp src/quadrotor_hardware.cpp)
-target_link_libraries(quadrotor_controller ${geometry_msgs_LIBRARIES})
-
-add_library(pose_controller src/pose_controller.cpp)
-target_link_libraries(pose_controller quadrotor_controller)
-
-add_executable(pose_controller_node src/pose_controller_node.cpp)
-target_link_libraries(pose_controller_node pose_controller ${catkin_LIBRARIES})
-set_target_properties(pose_controller_node PROPERTIES OUTPUT_NAME pose_controller)
-
-add_executable(test_trajectory src/test_trajectory.cpp)
-target_link_libraries(test_trajectory ${catkin_LIBRARIES})
-
-## Add cmake target dependencies of the executable/library
-## as an example, message headers may need to be generated before nodes
-# add_dependencies(@{name}_node @{name}_generate_messages_cpp)
+add_library(hector_quadrotor_controller_gazebo
+  src/quadrotor_hardware_gazebo.cpp
+)
+target_link_libraries(hector_quadrotor_controller_gazebo
+  ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES}
+)
 
 #############
 ## Install ##
@@ -68,7 +89,7 @@ target_link_libraries(test_trajectory ${catkin_LIBRARIES})
 # )
 
 ## Mark executables and/or libraries for installation
-install(TARGETS test_trajectory
+install(TARGETS hector_quadrotor_controller_gazebo
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -88,3 +109,15 @@ install(TARGETS test_trajectory
 #   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 # )
 
+#############
+## Testing ##
+#############
+
+## Add gtest based cpp test target and link libraries
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_hector_quadrotor_controller_gazebo.cpp)
+# if(TARGET ${PROJECT_NAME}-test)
+#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
+# endif()
+
+## Add folders to be run by python nosetests
+# catkin_add_nosetests(test)

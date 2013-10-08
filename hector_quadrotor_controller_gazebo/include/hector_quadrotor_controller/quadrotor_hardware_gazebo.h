@@ -26,43 +26,60 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 
-#include <hector_quadrotor_controller/quadrotor_hardware.h>
-#include <hector_quadrotor_controller/pose_controller.h>
+#ifndef HECTOR_QUADROTOR_CONTROLLER_QUADROTOR_HARDWARE_GAZEBO_H
+#define HECTOR_QUADROTOR_CONTROLLER_QUADROTOR_HARDWARE_GAZEBO_H
 
-#include <ros/ros.h>
+#include <gazebo_ros_control/robot_hw_sim.h>
+#include <hector_quadrotor_controller/quadrotor_interface.h>
 
-using namespace hector_quadrotor_controller;
+#include <geometry_msgs/Pose.h>
+#include <geometry_msgs/Twist.h>
+#include <sensor_msgs/Imu.h>
+#include <geometry_msgs/Wrench.h>
+#include <hector_uav_msgs/MotorCommand.h>
+#include <nav_msgs/Path.h>
 
-QuadrotorHardware hw;
-PoseController pose_controller;
-//TrajectoryController trajectory_controller;
+#include <ros/node_handle.h>
 
-int main(int argc, char **argv)
+namespace hector_quadrotor_controller {
+
+using namespace hardware_interface;
+using namespace gazebo_ros_control;
+
+class QuadrotorHardwareSim : public RobotHWSim, public QuadrotorInterface
 {
-  // initialize ROS node, publishers and subscribers
-  ros::init(argc, argv, "pose_controller");
-  ros::NodeHandle nh;
-  ros::NodeHandle controller_nh("~/pose");
-  ros::Subscriber stateSubscriber = nh.subscribe("state", 1, &QuadrotorHardware::setState, &hw);
-  ros::Publisher commandPublisher = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1, false);
+public:
+  QuadrotorHardwareSim();
+  virtual ~QuadrotorHardwareSim();
 
-  // initialize controller
-  QuadrotorInterface *interface = hw.get<QuadrotorInterface>();
-  if (!pose_controller.init(interface, nh, controller_nh))
-  {
-    ROS_ERROR("Failed to initialize controller!");
-    return 1;
-  }
+  virtual bool initSim(
+      ros::NodeHandle model_nh,
+      gazebo::physics::ModelPtr parent_model,
+      std::vector<transmission_interface::TransmissionInfo> transmissions);
 
-  // run control loop
-  double p_control_rate = 10.0;
-  controller_nh.getParam("frequency", p_control_rate);
-  ros::Rate rate(p_control_rate);
-  while(ros::ok()) {
-    ros::spinOnce();
-    pose_controller.updateRequest(ros::Time::now(), rate.cycleTime());
-    commandPublisher.publish(interface->getHandle<VelocityCommandHandle>().getCommand());
-    rate.sleep();
-  }
-  return 0;
-}
+  virtual void readSim(ros::Time time, ros::Duration period);
+
+  virtual void writeSim(ros::Time time, ros::Duration period);
+
+protected:
+  geometry_msgs::Pose pose_;
+  geometry_msgs::Twist twist_;
+  sensor_msgs::Imu imu_;
+  hector_uav_msgs::MotorStatus motor_status_;
+
+  geometry_msgs::Pose pose_command_;
+  geometry_msgs::Twist twist_command_;
+  geometry_msgs::Wrench wrench_command_;
+  hector_uav_msgs::MotorCommand motor_command_;
+  nav_msgs::Path trajectory_command_;
+
+  gazebo::physics::ModelPtr parent_model;
+
+  ros::Subscriber stateSubscriber;
+  ros::Publisher commandVelocityPublisher;
+  ros::Publisher wrenchPublisher;
+};
+
+} // namespace hector_quadrotor_controller
+
+#endif // HECTOR_QUADROTOR_CONTROLLER_QUADROTOR_HARDWARE_GAZEBO_H

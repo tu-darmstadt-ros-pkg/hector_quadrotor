@@ -26,43 +26,40 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 
-#include <hector_quadrotor_controller/quadrotor_hardware.h>
-#include <hector_quadrotor_controller/pose_controller.h>
+#include <hector_quadrotor_controller/quadrotor_hardware_gazebo.h>
 
-#include <ros/ros.h>
+namespace hector_quadrotor_controller {
 
-using namespace hector_quadrotor_controller;
-
-QuadrotorHardware hw;
-PoseController pose_controller;
-//TrajectoryController trajectory_controller;
-
-int main(int argc, char **argv)
+QuadrotorHardwareSim::QuadrotorHardwareSim()
+  : QuadrotorInterface(pose_, twist_, imu_, motor_status_, pose_command_, twist_command_, wrench_command_, motor_command_, trajectory_command_)
 {
-  // initialize ROS node, publishers and subscribers
-  ros::init(argc, argv, "pose_controller");
-  ros::NodeHandle nh;
-  ros::NodeHandle controller_nh("~/pose");
-  ros::Subscriber stateSubscriber = nh.subscribe("state", 1, &QuadrotorHardware::setState, &hw);
-  ros::Publisher commandPublisher = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1, false);
-
-  // initialize controller
-  QuadrotorInterface *interface = hw.get<QuadrotorInterface>();
-  if (!pose_controller.init(interface, nh, controller_nh))
-  {
-    ROS_ERROR("Failed to initialize controller!");
-    return 1;
-  }
-
-  // run control loop
-  double p_control_rate = 10.0;
-  controller_nh.getParam("frequency", p_control_rate);
-  ros::Rate rate(p_control_rate);
-  while(ros::ok()) {
-    ros::spinOnce();
-    pose_controller.updateRequest(ros::Time::now(), rate.cycleTime());
-    commandPublisher.publish(interface->getHandle<VelocityCommandHandle>().getCommand());
-    rate.sleep();
-  }
-  return 0;
+  this->registerInterface(static_cast<QuadrotorInterface *>(this));
 }
+
+QuadrotorHardwareSim::~QuadrotorHardwareSim()
+{
+
+}
+
+bool QuadrotorHardwareSim::initSim(
+    ros::NodeHandle model_nh,
+    gazebo::physics::ModelPtr parent_model,
+    std::vector<transmission_interface::TransmissionInfo> transmissions)
+{
+
+}
+
+void QuadrotorHardwareSim::readSim(ros::Time time, ros::Duration period)
+{
+
+}
+
+void QuadrotorHardwareSim::writeSim(ros::Time time, ros::Duration period)
+{
+
+}
+
+} // namespace hector_quadrotor_controller
+
+#include <pluginlib/class_list_macros.h>
+PLUGINLIB_EXPORT_CLASS(hector_quadrotor_controller::QuadrotorHardwareSim, gazebo_ros_control::RobotHWSim)
