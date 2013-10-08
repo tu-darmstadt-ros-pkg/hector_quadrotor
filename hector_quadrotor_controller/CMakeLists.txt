@@ -4,7 +4,7 @@ project(hector_quadrotor_controller)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp geometry_msgs hector_uav_msgs)
+find_package(catkin REQUIRED COMPONENTS roscpp geometry_msgs hector_uav_msgs hardware_interface controller_interface)
 include_directories(include ${catkin_INCLUDE_DIRS})
 
 ## System dependencies are found with CMake's conventions
@@ -26,9 +26,9 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-    INCLUDE_DIRS # include
+    INCLUDE_DIRS include
     LIBRARIES
-    CATKIN_DEPENDS roscpp geometry_msgs hector_uav_msgs
+    CATKIN_DEPENDS roscpp geometry_msgs hector_uav_msgs hardware_interface controller_interface
     DEPENDS
 )
 
@@ -36,12 +36,16 @@ catkin_package(
 ## Build ##
 ###########
 
-## Declare a cpp library
-# add_library(@{name}
-#   src/${PROJECT_NAME}/@name.cpp
-# )
+add_library(quadrotor_controller src/quadrotor_interface.cpp src/quadrotor_hardware.cpp)
+target_link_libraries(quadrotor_controller ${geometry_msgs_LIBRARIES})
 
-## Declare a cpp executable
+add_library(pose_controller src/pose_controller.cpp)
+target_link_libraries(pose_controller quadrotor_controller)
+
+add_executable(pose_controller_node src/pose_controller_node.cpp)
+target_link_libraries(pose_controller_node pose_controller ${catkin_LIBRARIES})
+set_target_properties(pose_controller_node PROPERTIES OUTPUT_NAME pose_controller)
+
 add_executable(test_trajectory src/test_trajectory.cpp)
 target_link_libraries(test_trajectory ${catkin_LIBRARIES})
 
