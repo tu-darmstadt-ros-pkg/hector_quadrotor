@@ -34,8 +34,8 @@
 using namespace hector_quadrotor_controller;
 
 QuadrotorHardware hw;
-PoseController pose_controller;
-//TrajectoryController trajectory_controller;
+ControllerBase *pose_controller;
+//ControllerBase *trajectory_controller;
 
 int main(int argc, char **argv)
 {
@@ -48,7 +48,9 @@ int main(int argc, char **argv)
 
   // initialize controller
   QuadrotorInterface *interface = hw.get<QuadrotorInterface>();
-  if (!pose_controller.init(interface, nh, controller_nh))
+  pose_controller = new PoseController();
+  std::set<std::string> claimed_resources;
+  if (!pose_controller->initRequest(&hw, nh, controller_nh, claimed_resources))
   {
     ROS_ERROR("Failed to initialize controller!");
     return 1;
@@ -60,7 +62,7 @@ int main(int argc, char **argv)
   ros::Rate rate(p_control_rate);
   while(ros::ok()) {
     ros::spinOnce();
-    pose_controller.updateRequest(ros::Time::now(), rate.cycleTime());
+    pose_controller->updateRequest(ros::Time::now(), rate.cycleTime());
     commandPublisher.publish(interface->getHandle<VelocityCommandHandle>().getCommand());
     rate.sleep();
   }

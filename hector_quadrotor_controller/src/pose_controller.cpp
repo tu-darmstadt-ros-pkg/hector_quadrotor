@@ -75,10 +75,13 @@ PoseController::state::state()
 {
 }
 
-void PoseController::commandCallback(const geometry_msgs::Pose& command)
+void PoseController::commandCallback(const geometry_msgs::PoseStamped& command)
 {
-  pose_.setCommand(command);
-  if (!isRunning()) this->startRequest(ros::Time::now());
+  pose_.setCommand(command.pose);
+
+  ros::Time start_time = command.header.stamp;
+  if (start_time.isZero()) start_time = ros::Time::now();
+  if (!isRunning()) this->startRequest(start_time);
 }
 
 void PoseController::starting(const ros::Time &time)

@@ -41,6 +41,8 @@
      <node name="pose_estimation" pkg="hector_quadrotor_pose_estimation" type="hector_quadrotor_pose_estimation" output="screen" />
    </group>
 
+   <include file="$(find hector_quadrotor_controller)/launch/controller.launch" />
+
    <arg name="motors" default="robbe_2827-34_epp1045" />
    <rosparam command="load" file="$(find hector_quadrotor_model)/param/quadrotor_aerodynamics.yaml" />
    <rosparam command="load" file="$(find hector_quadrotor_model)/param/$(arg motors).yaml" />

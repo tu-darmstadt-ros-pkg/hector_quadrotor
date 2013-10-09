@@ -2,11 +2,11 @@ frequency: 10.0
 type: hector_quadrotor_controller/PoseController
 pose:
   xy:
-    p: 1.0
+    k_p: 1.0
     limit_output: 5.0
   z:
-    p: 1.0
+    k_p: 1.0
     limit_output: 3.0
   yaw:
-    p: 1.0
+    k_p: 1.0
     limit_output: 0.5

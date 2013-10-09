@@ -32,7 +32,7 @@
 #include <controller_interface/controller.h>
 #include <hector_quadrotor_controller/quadrotor_interface.h>
 
-#include <geometry_msgs/Pose.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
 
 #include <ros/subscriber.h>
@@ -47,7 +47,7 @@ public:
   bool init(QuadrotorInterface* interface, ros::NodeHandle& root_nh, ros::NodeHandle &controller_nh);
   void reset();
 
-  void commandCallback(const geometry_msgs::Pose& command);
+  void commandCallback(const geometry_msgs::PoseStamped& command);
 
   void starting(const ros::Time& time);
   void update(const ros::Time& time, const ros::Duration& period);
