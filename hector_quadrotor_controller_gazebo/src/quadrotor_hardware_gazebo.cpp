@@ -31,7 +31,6 @@
 namespace hector_quadrotor_controller {
 
 QuadrotorHardwareSim::QuadrotorHardwareSim()
-  : QuadrotorInterface(pose_, twist_, imu_, motor_status_, pose_command_, twist_command_, wrench_command_, motor_command_, trajectory_command_)
 {
   this->registerInterface(static_cast<QuadrotorInterface *>(this));
 }
@@ -46,17 +45,38 @@ bool QuadrotorHardwareSim::initSim(
     gazebo::physics::ModelPtr parent_model,
     std::vector<transmission_interface::TransmissionInfo> transmissions)
 {
+  // init subscribers and publishers (should be intra-process)
 
+  // TODO
 }
 
 void QuadrotorHardwareSim::readSim(ros::Time time, ros::Duration period)
 {
-
+  // just call all available subscriber callbacks
+  callback_queue_.callAvailable();
 }
 
 void QuadrotorHardwareSim::writeSim(ros::Time time, ros::Duration period)
 {
+  // publish command as low-level as possible:
 
+  MotorCommandHandle motor = getHandle<MotorCommandHandle>();
+  if (publisher_motor_command_ && motor.available()) {
+    publisher_motor_command_.publish(motor.getCommand());
+    return;
+  }
+
+  WrenchCommandHandle wrench = getHandle<WrenchCommandHandle>();
+  if (publisher_wrench_command_ && wrench.available()) {
+    publisher_wrench_command_.publish(wrench.getCommand());
+    return;
+  }
+
+  TwistCommandHandle twist = getHandle<TwistCommandHandle>();
+  if (publisher_twist_command_ && twist.available()) {
+    publisher_twist_command_.publish(twist.getCommand());
+    return;
+  }
 }
 
 } // namespace hector_quadrotor_controller

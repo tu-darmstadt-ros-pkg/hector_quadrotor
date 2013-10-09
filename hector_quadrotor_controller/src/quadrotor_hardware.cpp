@@ -31,7 +31,6 @@
 namespace hector_quadrotor_controller {
 
 QuadrotorHardware::QuadrotorHardware()
-  : QuadrotorInterface(pose_, twist_, imu_, motor_status_, pose_command_, twist_command_, wrench_command_, motor_command_, trajectory_command_)
 {
   this->registerInterface(static_cast<QuadrotorInterface *>(this));
 }

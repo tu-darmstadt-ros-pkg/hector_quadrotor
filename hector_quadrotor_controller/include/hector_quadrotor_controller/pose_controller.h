@@ -55,7 +55,7 @@ public:
 
 private:
   PoseCommandHandle pose_;
-  VelocityCommandHandle velocity_;
+  TwistCommandHandle twist_;
 
   struct parameters {
     bool enabled;

@@ -32,14 +32,10 @@
 #include <gazebo_ros_control/robot_hw_sim.h>
 #include <hector_quadrotor_controller/quadrotor_interface.h>
 
-#include <geometry_msgs/Pose.h>
-#include <geometry_msgs/Twist.h>
-#include <sensor_msgs/Imu.h>
-#include <geometry_msgs/Wrench.h>
-#include <hector_uav_msgs/MotorCommand.h>
-#include <nav_msgs/Path.h>
+#include <nav_msgs/Odometry.h>
 
 #include <ros/node_handle.h>
+#include <ros/callback_queue.h>
 
 namespace hector_quadrotor_controller {
 
@@ -52,6 +48,27 @@ public:
   QuadrotorHardwareSim();
   virtual ~QuadrotorHardwareSim();
 
+  virtual const ros::Time &getTimestamp() { return header_.stamp; }
+
+  virtual geometry_msgs::Pose *getPose()                 { return &pose_; }
+  virtual geometry_msgs::Twist *getTwist()               { return &twist_; }
+  virtual sensor_msgs::Imu *getSensorImu()               { return &imu_; }
+  virtual hector_uav_msgs::MotorStatus *getMotorStatus() { return &motor_status_; }
+
+  void stateCallback(const nav_msgs::Odometry &state) {
+    header_ = state.header;
+    pose_ = state.pose.pose;
+    twist_ = state.twist.twist;
+  }
+
+  void imuCallback(const sensor_msgs::Imu &imu) {
+    imu_ = imu;
+  }
+
+  void motorStatusCallback(const hector_uav_msgs::MotorStatus &motor_status) {
+    motor_status_ = motor_status;
+  }
+
   virtual bool initSim(
       ros::NodeHandle model_nh,
       gazebo::physics::ModelPtr parent_model,
@@ -62,22 +79,19 @@ public:
   virtual void writeSim(ros::Time time, ros::Duration period);
 
 protected:
+  std_msgs::Header header_;
   geometry_msgs::Pose pose_;
   geometry_msgs::Twist twist_;
   sensor_msgs::Imu imu_;
   hector_uav_msgs::MotorStatus motor_status_;
 
-  geometry_msgs::Pose pose_command_;
-  geometry_msgs::Twist twist_command_;
-  geometry_msgs::Wrench wrench_command_;
-  hector_uav_msgs::MotorCommand motor_command_;
-  nav_msgs::Path trajectory_command_;
-
   gazebo::physics::ModelPtr parent_model;
 
-  ros::Subscriber stateSubscriber;
-  ros::Publisher commandVelocityPublisher;
-  ros::Publisher wrenchPublisher;
+  ros::CallbackQueue callback_queue_;
+  ros::Subscriber subscriber_state_;
+  ros::Publisher publisher_twist_command_;
+  ros::Publisher publisher_wrench_command_;
+  ros::Publisher publisher_motor_command_;
 };
 
 } // namespace hector_quadrotor_controller

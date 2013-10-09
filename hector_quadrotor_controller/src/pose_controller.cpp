@@ -35,8 +35,8 @@ bool PoseController::init(QuadrotorInterface *interface, ros::NodeHandle &root_n
 {
   // get interface handles
   pose_ = interface->getHandle<PoseCommandHandle>();
-  velocity_ = interface->getHandle<VelocityCommandHandle>();
-  interface->claim(velocity_.getName());
+  twist_ = interface->getHandle<TwistCommandHandle>();
+  interface->claim(twist_.getName());
 
   // subscribe to commanded pose
   subscriber_ = root_nh.subscribe("command/pose", 1, &PoseController::commandCallback, this);
@@ -101,8 +101,8 @@ void PoseController::update(const ros::Time& time, const ros::Duration& period)
   // horizontal position
   double error_n, error_w;
   HorizontalPositionCommandHandle(pose_).getError(error_n, error_w);
-  double command_n = updatePID(error_n, velocity_.getTwist().linear.x, state_.x, parameters_.xy, period);
-  double command_w = updatePID(error_w, velocity_.getTwist().linear.y, state_.y, parameters_.xy, period);
+  double command_n = updatePID(error_n, twist_.twist().linear.x, state_.x, parameters_.xy, period);
+  double command_w = updatePID(error_w, twist_.twist().linear.y, state_.y, parameters_.xy, period);
 
   // transform to body coordinates (yaw only)
   double yaw = pose_.getYaw();
@@ -110,13 +110,13 @@ void PoseController::update(const ros::Time& time, const ros::Duration& period)
   command.linear.y = -sin(yaw) * command_n + cos(yaw) * command_w;
 
   // height
-  command.linear.z = updatePID(HeightCommandHandle(pose_).getError(), velocity_.getTwist().linear.z, state_.z, parameters_.z, period);
+  command.linear.z = updatePID(HeightCommandHandle(pose_).getError(), twist_.twist().linear.z, state_.z, parameters_.z, period);
 
   // yaw angle
-  command.angular.z = updatePID(HeadingCommandHandle(pose_).getError(), velocity_.getTwist().angular.z, state_.yaw, parameters_.yaw, period);
+  command.angular.z = updatePID(HeadingCommandHandle(pose_).getError(), twist_.twist().angular.z, state_.yaw, parameters_.yaw, period);
 
   // set output
-  velocity_.setCommand(command);
+  twist_.setCommand(command);
 }
 
 template <typename T> inline T& checknan(T& value)

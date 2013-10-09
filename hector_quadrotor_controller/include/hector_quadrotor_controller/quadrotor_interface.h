@@ -47,238 +47,262 @@ class QuadrotorInterface : public HardwareInterface
 {
 public:
   QuadrotorInterface();
-  QuadrotorInterface(
-    geometry_msgs::Pose &pose,
-    geometry_msgs::Twist &twist,
-    sensor_msgs::Imu &imu,
-    hector_uav_msgs::MotorStatus &motor_status,
-    geometry_msgs::Pose &pose_command,
-    geometry_msgs::Twist &twist_command,
-    geometry_msgs::Wrench &wrench_command,
-    hector_uav_msgs::MotorCommand &motor_command,
-    nav_msgs::Path &trajectory_command
-  );
-  template <typename CommandHandleType> CommandHandleType getHandle() const;
+  virtual ~QuadrotorInterface();
 
-  void setPoseCommand(const geometry_msgs::Pose &command)
-  {
-    *pose_command_ = command;
-  }
+  template <typename HandleType> HandleType getHandle() { return HandleType(this); }
 
-  void setTwistCommand(const geometry_msgs::Twist &command)
-  {
-    *twist_command_ = command;
-  }
+  virtual void setPoseCommand(const geometry_msgs::Pose &command)     { if (getPoseCommand())       *getPoseCommand() = command; }
+  virtual void setTwistCommand(const geometry_msgs::Twist &command)   { if (getTwistCommand())      *getTwistCommand() = command; }
+  virtual void setTrajectoryCommand(const nav_msgs::Path &trajectory) { if (getTrajectoryCommand()) *getTrajectoryCommand() = trajectory; }
 
-  void setTrajectoryCommand(const nav_msgs::Path &trajectory)
-  {
-    *trajectory_command_ = trajectory;
-  }
+  virtual geometry_msgs::Pose *getPose()                   { return 0; }
+  virtual geometry_msgs::Twist *getTwist()                 { return 0; }
+  virtual sensor_msgs::Imu *getSensorImu()                 { return 0; }
+  virtual hector_uav_msgs::MotorStatus *getMotorStatus()   { return 0; }
+
+  virtual nav_msgs::Path *getTrajectoryCommand()           { return &trajectory_command_; }
+  virtual geometry_msgs::Pose *getPoseCommand()            { return &pose_command_; }
+  virtual geometry_msgs::Twist *getTwistCommand()          { return &twist_command_; }
+  virtual geometry_msgs::Wrench *getWrenchCommand()        { return &wrench_command_; }
+  virtual hector_uav_msgs::MotorCommand *getMotorCommand() { return &motor_command_; }
 
 private:
-  geometry_msgs::Pose *pose_;
-  geometry_msgs::Twist *twist_;
-  sensor_msgs::Imu *imu_;
-  hector_uav_msgs::MotorStatus *motor_status_;
-
-  geometry_msgs::Pose *pose_command_;
-  geometry_msgs::Twist *twist_command_;
-  geometry_msgs::Wrench *wrench_command_;
-  hector_uav_msgs::MotorCommand *motor_command_;
-  nav_msgs::Path *trajectory_command_;
+  nav_msgs::Path trajectory_command_;
+  geometry_msgs::Pose pose_command_;
+  geometry_msgs::Twist twist_command_;
+  geometry_msgs::Wrench wrench_command_;
+  hector_uav_msgs::MotorCommand motor_command_;
 };
-template <typename CommandHandleType> CommandHandleType QuadrotorInterface::getHandle() const { return CommandHandleType(); }
 
 class PoseHandle
 {
 public:
-  PoseHandle() : pose_(0) {}
-  PoseHandle(geometry_msgs::Pose& pose) : pose_(&pose) {}
+  PoseHandle() : interface_(0) {}
+  PoseHandle(QuadrotorInterface *interface) : interface_(interface) {}
 
   static std::string getName() { return "pose"; }
-  const geometry_msgs::Pose& getPose() const { return *pose_; }
+  const geometry_msgs::Pose& pose() const { return *(interface_->getPose()); }
 
   void getEulerRPY(double &roll, double &pitch, double &yaw) const;
   double getYaw() const;
 
 protected:
-  geometry_msgs::Pose *pose_;
+  QuadrotorInterface *interface_;
 };
-template<> inline PoseHandle QuadrotorInterface::getHandle<PoseHandle>() const { return PoseHandle(*pose_); }
 
-class VelocityHandle
+class TwistHandle
 {
 public:
-  VelocityHandle() : twist_(0) {}
-  VelocityHandle(geometry_msgs::Twist& twist) : twist_(&twist) {}
+  TwistHandle() : interface_(0) {}
+  TwistHandle(QuadrotorInterface *interface) : interface_(interface) {}
 
-  static std::string getName() { return "velocity"; }
-  const geometry_msgs::Twist& getTwist() const { return *twist_; }
+  static std::string getName() { return "twist"; }
+  const geometry_msgs::Twist& twist() const { return *(interface_->getTwist()); }
 
 protected:
-  geometry_msgs::Twist *twist_;
+  QuadrotorInterface *interface_;
 };
-template<> inline VelocityHandle QuadrotorInterface::getHandle<VelocityHandle>() const { return VelocityHandle(*twist_); }
 
-class StateHandle : public PoseHandle, public VelocityHandle
+class StateHandle : public PoseHandle, public TwistHandle
 {
 public:
   StateHandle() {}
-  StateHandle(geometry_msgs::Pose& pose, geometry_msgs::Twist& twist) : PoseHandle(pose), VelocityHandle(twist) {}
+  StateHandle(QuadrotorInterface *interface) : PoseHandle(interface), TwistHandle(interface) {}
   static std::string getName() { return "state"; }
 };
-template<> inline StateHandle QuadrotorInterface::getHandle<StateHandle>() const { return StateHandle(*pose_, *twist_); }
 
 class PoseCommandHandle : public PoseHandle
 {
 public:
-  PoseCommandHandle() : command_(0) {}
-  PoseCommandHandle(const PoseHandle& state, geometry_msgs::Pose& command) : PoseHandle(state), command_(&command) {}
+  PoseCommandHandle() {}
+  PoseCommandHandle(QuadrotorInterface *interface) : PoseHandle(interface) {}
 
-  void setCommand(const geometry_msgs::Pose& command) { *command_ = command; }
-  void getCommand(geometry_msgs::Pose& command) const { command = *command_; }
-  const geometry_msgs::Pose& getCommand() const { return *command_; }
+  bool available() const { return interface_->getPoseCommand(); }
 
-protected:
-  geometry_msgs::Pose *command_;
+  void setCommand(const geometry_msgs::Pose& command) { *(interface_->getPoseCommand()) = command; }
+  bool getCommand(geometry_msgs::Pose& command) const {
+    if (!available()) return false;
+    command = *(interface_->getPoseCommand());
+    return true;
+  }
+  const geometry_msgs::Pose& getCommand() const { return *(interface_->getPoseCommand()); }
 };
-template<> inline PoseCommandHandle QuadrotorInterface::getHandle<PoseCommandHandle>() const { return PoseCommandHandle(PoseHandle(*pose_), *pose_command_); }
 
 class HorizontalPositionCommandHandle : public PoseCommandHandle
 {
 public:
   HorizontalPositionCommandHandle() {}
   HorizontalPositionCommandHandle(const PoseCommandHandle& other) : PoseCommandHandle(other) {}
-  HorizontalPositionCommandHandle(const PoseHandle& state, geometry_msgs::Pose& command) : PoseCommandHandle(state, command) {}
+  HorizontalPositionCommandHandle(QuadrotorInterface *interface) : PoseCommandHandle(interface) {}
 
   static std::string getName() { return "pose.position.xy"; }
   void setCommand(double x, double y)
   {
-    command_->position.x = x;
-    command_->position.y = y;
+    interface_->getPoseCommand()->position.x = x;
+    interface_->getPoseCommand()->position.y = y;
   }
   void getCommand(geometry_msgs::Point& command) const {
-    command.x = command_->position.x;
-    command.y = command_->position.y;
+    command.x = interface_->getPoseCommand()->position.x;
+    command.y = interface_->getPoseCommand()->position.y;
   }
   void getCommand(double &x, double &y) const {
-    x = command_->position.x;
-    y = command_->position.y;
+    x = interface_->getPoseCommand()->position.x;
+    y = interface_->getPoseCommand()->position.y;
   }
 
   void getError(double &x, double &y) const;
 };
-template<> inline HorizontalPositionCommandHandle QuadrotorInterface::getHandle<HorizontalPositionCommandHandle>() const { return HorizontalPositionCommandHandle(PoseHandle(*pose_), *pose_command_); }
 
 class HeightCommandHandle : public PoseCommandHandle
 {
 public:
   HeightCommandHandle() {}
   HeightCommandHandle(const PoseCommandHandle& other) : PoseCommandHandle(other) {}
-  HeightCommandHandle(const PoseHandle& state, geometry_msgs::Pose& command) : PoseCommandHandle(state, command) {}
+  HeightCommandHandle(QuadrotorInterface *interface) : PoseCommandHandle(interface) {}
 
   static std::string getName() { return "pose.position.z"; }
   void setCommand(double command)
   {
-    command_->position.z = command;
+    interface_->getPoseCommand()->position.z = command;
   }
   double getCommand() const {
-    return command_->position.z;
+    return (interface_->getPoseCommand())->position.z;
   }
 
   double getError() const;
 };
-template<> inline HeightCommandHandle QuadrotorInterface::getHandle<HeightCommandHandle>() const { return HeightCommandHandle(PoseHandle(*pose_), *pose_command_); }
 
 class HeadingCommandHandle : public PoseCommandHandle
 {
 public:
   HeadingCommandHandle() {}
   HeadingCommandHandle(const PoseCommandHandle& other) : PoseCommandHandle(other) {}
-  HeadingCommandHandle(const PoseHandle& state, geometry_msgs::Pose& command) : PoseCommandHandle(state, command) {}
+  HeadingCommandHandle(QuadrotorInterface *interface) : PoseCommandHandle(interface) {}
 
   std::string getName() { return "pose.orientation.yaw"; }
   void setCommand(double command)
   {
-    command_->orientation.x = 0.0;
-    command_->orientation.y = 0.0;
-    command_->orientation.z = sin(command/2.);
-    command_->orientation.w = cos(command/2.);
+    interface_->getPoseCommand()->orientation.x = 0.0;
+    interface_->getPoseCommand()->orientation.y = 0.0;
+    interface_->getPoseCommand()->orientation.z = sin(command/2.);
+    interface_->getPoseCommand()->orientation.w = cos(command/2.);
   }
   double getCommand() const;
   double getError() const;
 };
-template<> inline HeadingCommandHandle QuadrotorInterface::getHandle<HeadingCommandHandle>() const { return HeadingCommandHandle(PoseHandle(*pose_), *pose_command_); }
 
-class VelocityCommandHandle : public VelocityHandle
+class TwistCommandHandle : public TwistHandle
 {
 public:
-  VelocityCommandHandle() : command_(0) {}
-  VelocityCommandHandle(const VelocityHandle& state, geometry_msgs::Twist& command) : VelocityHandle(state), command_(&command) {}
+  TwistCommandHandle() {}
+  TwistCommandHandle(QuadrotorInterface *interface) : TwistHandle(interface) {}
 
-  void setCommand(const geometry_msgs::Twist& command) { *command_ = command; }
-  const geometry_msgs::Twist& getCommand() const { return *command_; }
+  bool available() const { return interface_->getTwistCommand(); }
 
-protected:
-  geometry_msgs::Twist *command_;
+  void setCommand(const geometry_msgs::Twist& command) { *(interface_->getTwistCommand()) = command; }
+  bool getCommand(geometry_msgs::Twist& command) const {
+    if (!available()) return false;
+    command = *(interface_->getTwistCommand());
+    return true;
+  }
+  const geometry_msgs::Twist& getCommand() const { return *(interface_->getTwistCommand()); }
 };
-template<> inline VelocityCommandHandle QuadrotorInterface::getHandle<VelocityCommandHandle>() const { return VelocityCommandHandle(VelocityHandle(*twist_), *twist_command_); }
 
-class HorizontalVelocityCommandHandle : public VelocityCommandHandle
+class HorizontalVelocityCommandHandle : public TwistCommandHandle
 {
 public:
   HorizontalVelocityCommandHandle() {}
-  HorizontalVelocityCommandHandle(const VelocityCommandHandle& other) : VelocityCommandHandle(other) {}
-  HorizontalVelocityCommandHandle(const VelocityHandle& state, geometry_msgs::Twist& command) : VelocityCommandHandle(state, command) {}
+  HorizontalVelocityCommandHandle(const TwistCommandHandle& other) : TwistCommandHandle(other) {}
+  HorizontalVelocityCommandHandle(QuadrotorInterface *interface) : TwistCommandHandle(interface) {}
 
-  static std::string getName() { return "velocity.linear.xy"; }
+  static std::string getName() { return "twist.linear.xy"; }
   void setCommand(double x, double y)
   {
-    command_->linear.x = x;
-    command_->linear.y = y;
+    interface_->getTwistCommand()->linear.x = x;
+    interface_->getTwistCommand()->linear.y = y;
   }
   void getCommand(double &x, double &y) const {
-    x = command_->linear.x;
-    y = command_->linear.y;
+    x = interface_->getTwistCommand()->linear.x;
+    y = interface_->getTwistCommand()->linear.y;
   }
 };
-template<> inline HorizontalVelocityCommandHandle QuadrotorInterface::getHandle<HorizontalVelocityCommandHandle>() const { return HorizontalVelocityCommandHandle(VelocityHandle(*twist_), *twist_command_); }
 
-class VerticalVelocityCommandHandle : public VelocityCommandHandle
+class VerticalVelocityCommandHandle : public TwistCommandHandle
 {
 public:
   VerticalVelocityCommandHandle() {}
-  VerticalVelocityCommandHandle(const VelocityCommandHandle& other) : VelocityCommandHandle(other) {}
-  VerticalVelocityCommandHandle(const VelocityHandle& state, geometry_msgs::Twist& command) : VelocityCommandHandle(state, command) {}
+  VerticalVelocityCommandHandle(const TwistCommandHandle& other) : TwistCommandHandle(other) {}
+  VerticalVelocityCommandHandle(QuadrotorInterface *interface) : TwistCommandHandle(interface) {}
 
-  static std::string getName() { return "velocity.linear.z"; }
+  static std::string getName() { return "twist.linear.z"; }
   void setCommand(double command)
   {
-    command_->linear.z = command;
+    if (!interface_->getTwistCommand()) return;
+    interface_->getTwistCommand()->linear.z = command;
   }
   double getCommand() const {
-    return command_->linear.z;
+    return interface_->getTwistCommand()->linear.z;
   }
 };
-template<> inline VerticalVelocityCommandHandle QuadrotorInterface::getHandle<VerticalVelocityCommandHandle>() const { return VerticalVelocityCommandHandle(VelocityHandle(*twist_), *twist_command_); }
 
-class AngularVelocityCommandHandle : public VelocityCommandHandle
+class AngularVelocityCommandHandle : public TwistCommandHandle
 {
 public:
   AngularVelocityCommandHandle() {}
-  AngularVelocityCommandHandle(const VelocityCommandHandle& other) : VelocityCommandHandle(other) {}
-  AngularVelocityCommandHandle(const VelocityHandle& state, geometry_msgs::Twist& command) : VelocityCommandHandle(state, command) {}
+  AngularVelocityCommandHandle(const TwistCommandHandle& other) : TwistCommandHandle(other) {}
+  AngularVelocityCommandHandle(QuadrotorInterface *interface) : TwistCommandHandle(interface) {}
 
-  static std::string getName() { return "velocity.angular.z"; }
+  static std::string getName() { return "twist.angular.z"; }
   void setCommand(double command)
   {
-    command_->angular.z = command;
+    interface_->getTwistCommand()->angular.z = command;
   }
   double getCommand() const {
-    return command_->angular.z;
+    return interface_->getTwistCommand()->angular.z;
   }
 };
-template<> inline AngularVelocityCommandHandle QuadrotorInterface::getHandle<AngularVelocityCommandHandle>() const { return AngularVelocityCommandHandle(VelocityHandle(*twist_), *twist_command_); }
+
+class WrenchCommandHandle
+{
+public:
+  WrenchCommandHandle() : interface_(0) {}
+  WrenchCommandHandle(QuadrotorInterface *interface) : interface_(interface) {}
+
+  static std::string getName() { return "wrench"; }
+  bool available() const { return interface_->getWrenchCommand(); }
+
+  void setCommand(const geometry_msgs::Wrench& command) { *(interface_->getWrenchCommand()) = command; }
+  bool getCommand(geometry_msgs::Wrench& command) const {
+    if (!available()) return false;
+    command = *(interface_->getWrenchCommand());
+    return true;
+  }
+  const geometry_msgs::Wrench& getCommand() const { return *(interface_->getWrenchCommand()); }
+
+protected:
+  QuadrotorInterface *interface_;
+};
+
+class MotorCommandHandle
+{
+public:
+  MotorCommandHandle() : interface_(0) {}
+  MotorCommandHandle(QuadrotorInterface *interface) : interface_(interface) {}
+
+  static std::string getName() { return "motor"; }
+  bool available() const { return interface_->getMotorCommand(); }
+
+  void setCommand(const hector_uav_msgs::MotorCommand& command) { *(interface_->getMotorCommand()) = command; }
+  bool getCommand(hector_uav_msgs::MotorCommand& command) const {
+    if (!available()) return false;
+    command = *(interface_->getMotorCommand());
+    return true;
+  }
+  const hector_uav_msgs::MotorCommand& getCommand() const { return *(interface_->getMotorCommand()); }
+
+protected:
+  QuadrotorInterface *interface_;
+};
 
 } // namespace hector_quadrotor_controller
 

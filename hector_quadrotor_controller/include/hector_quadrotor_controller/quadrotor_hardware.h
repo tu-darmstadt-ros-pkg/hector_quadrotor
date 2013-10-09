@@ -50,17 +50,16 @@ public:
     twist_ = state.twist.twist;
   }
 
+  virtual geometry_msgs::Pose *getPose()                 { return &pose_; }
+  virtual geometry_msgs::Twist *getTwist()               { return &twist_; }
+  virtual sensor_msgs::Imu *getSensorImu()               { return &imu_; }
+  virtual hector_uav_msgs::MotorStatus *getMotorStatus() { return &motor_status_; }
+
 protected:
   geometry_msgs::Pose pose_;
   geometry_msgs::Twist twist_;
   sensor_msgs::Imu imu_;
   hector_uav_msgs::MotorStatus motor_status_;
-
-  geometry_msgs::Pose pose_command_;
-  geometry_msgs::Twist twist_command_;
-  geometry_msgs::Wrench wrench_command_;
-  hector_uav_msgs::MotorCommand motor_command_;
-  nav_msgs::Path trajectory_command_;
 };
 
 } // namespace hector_quadrotor_controller
