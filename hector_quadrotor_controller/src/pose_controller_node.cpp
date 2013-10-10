@@ -35,7 +35,6 @@ using namespace hector_quadrotor_controller;
 
 QuadrotorHardware hw;
 ControllerBase *pose_controller;
-//ControllerBase *trajectory_controller;
 
 int main(int argc, char **argv)
 {

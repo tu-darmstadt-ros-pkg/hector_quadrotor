@@ -41,19 +41,17 @@ namespace hector_quadrotor_controller {
 //  , twist_command_(0)
 //  , wrench_command_(0)
 //  , motor_command_(0)
-//  , trajectory_command_(0)
 //{}
 
 //QuadrotorInterface::QuadrotorInterface(
-//    geometry_msgs::Pose &pose,
-//    geometry_msgs::Twist &twist,
+//    command_Pose &pose,
+//    command_Twist &twist,
 //    sensor_msgs::Imu &imu,
 //    hector_uav_msgs::MotorStatus &motor_status,
-//    geometry_msgs::Pose &pose_command,
-//    geometry_msgs::Twist &twist_command,
-//    geometry_msgs::Wrench &wrench_command,
+//    command_Pose &pose_command,
+//    command_Twist &twist_command,
+//    command_Wrench &wrench_command,
 //    hector_uav_msgs::MotorCommand &motor_command,
-//    nav_msgs::Path &trajectory_command
 //  )
 //  : pose_(&pose)
 //  , twist_(&twist)
@@ -63,7 +61,6 @@ namespace hector_quadrotor_controller {
 //  , twist_command_(&twist_command)
 //  , wrench_command_(&wrench_command)
 //  , motor_command_(&motor_command)
-//  , trajectory_command_(&trajectory_command)
 //{
 //}
 
@@ -75,10 +72,10 @@ QuadrotorInterface::~QuadrotorInterface()
 
 void PoseHandle::getEulerRPY(double &roll, double &pitch, double &yaw) const
 {
-  const geometry_msgs::Quaternion::_w_type& w = pose().orientation.w;
-  const geometry_msgs::Quaternion::_x_type& x = pose().orientation.x;
-  const geometry_msgs::Quaternion::_y_type& y = pose().orientation.y;
-  const geometry_msgs::Quaternion::_z_type& z = pose().orientation.z;
+  const Quaternion::_w_type& w = pose().orientation.w;
+  const Quaternion::_x_type& x = pose().orientation.x;
+  const Quaternion::_y_type& y = pose().orientation.y;
+  const Quaternion::_z_type& z = pose().orientation.z;
   roll  =  atan2(2.*y*z + 2.*w*x, z*z - y*y - x*x + w*w);
   pitch = -asin(2.*x*z - 2.*w*y);
   yaw   =  atan2(2.*x*y + 2.*w*z, x*x + w*w - z*z - y*y);
@@ -86,10 +83,10 @@ void PoseHandle::getEulerRPY(double &roll, double &pitch, double &yaw) const
 
 double PoseHandle::getYaw() const
 {
-  const geometry_msgs::Quaternion::_w_type& w = pose().orientation.w;
-  const geometry_msgs::Quaternion::_x_type& x = pose().orientation.x;
-  const geometry_msgs::Quaternion::_y_type& y = pose().orientation.y;
-  const geometry_msgs::Quaternion::_z_type& z = pose().orientation.z;
+  const Quaternion::_w_type& w = pose().orientation.w;
+  const Quaternion::_x_type& x = pose().orientation.x;
+  const Quaternion::_y_type& y = pose().orientation.y;
+  const Quaternion::_z_type& z = pose().orientation.z;
   return atan2(2.*x*y + 2.*w*z, x*x + w*w - z*z - y*y);
 }
 
@@ -105,9 +102,37 @@ double HeightCommandHandle::getError() const
   return getCommand() - pose().position.z;
 }
 
+void HeadingCommandHandle::setCommand(double command)
+{
+  if (quaternion_) {
+    quaternion_->x = 0.0;
+    quaternion_->y = 0.0;
+    quaternion_->z = sin(command / 2.);
+    quaternion_->w = cos(command / 2.);
+  }
+  if (command_) {
+    *command_ = command;
+  }
+}
+
 double HeadingCommandHandle::getCommand() const {
-  geometry_msgs::Pose *command = interface_->getPoseCommand();
-  return atan2(command->orientation.z, command->orientation.w) * 2.;
+  if (command_) return *command_;
+  return atan2(quaternion_->z, quaternion_->w) * 2.;
+}
+
+bool HeadingCommandHandle::update(Pose& command) const {
+  if (quaternion_) {
+    command.orientation = *quaternion_;
+    return true;
+  }
+  if (command_) {
+    command.orientation.x = 0.0;
+    command.orientation.y = 0.0;
+    command.orientation.z = sin(*command_ / 2.);
+    command.orientation.x = cos(*command_ / 2.);
+    return true;
+  }
+  return false;
 }
 
 double HeadingCommandHandle::getError() const {

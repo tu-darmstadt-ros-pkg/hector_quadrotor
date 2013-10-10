@@ -38,8 +38,19 @@ bool PoseController::init(QuadrotorInterface *interface, ros::NodeHandle &root_n
   twist_ = interface->getHandle<TwistCommandHandle>();
   interface->claim(twist_.getName());
 
-  // subscribe to commanded pose
-  subscriber_ = root_nh.subscribe("command/pose", 1, &PoseController::commandCallback, this);
+  // subscribe to commanded pose and velocity
+  ros::SubscribeOptions pose_subscribe_options = ros::SubscribeOptions::create<geometry_msgs::PoseStamped>(
+    "command/pose", 1,
+    boost::bind(&PoseController::poseCommandCallback, this, _1),
+    ros::VoidConstPtr(), 0 // &callback_queue_
+  );
+  pose_subscriber_ = root_nh.subscribe(pose_subscribe_options);
+  ros::SubscribeOptions twist_subscribe_options = ros::SubscribeOptions::create<geometry_msgs::TwistStamped>(
+    "command/twist", 1,
+    boost::bind(&PoseController::twistCommandCallback, this, _1),
+    ros::VoidConstPtr(), 0 // &callback_queue_
+  );
+  twist_subscriber_ = root_nh.subscribe(twist_subscribe_options);
 
   // get parameters
   initParameters(parameters_.xy,  ros::NodeHandle(controller_nh, "xy"));
@@ -75,11 +86,20 @@ PoseController::state::state()
 {
 }
 
-void PoseController::commandCallback(const geometry_msgs::PoseStamped& command)
+void PoseController::poseCommandCallback(const geometry_msgs::PoseStampedConstPtr& command)
 {
-  pose_.setCommand(command.pose);
+  pose_command_ = command;
 
-  ros::Time start_time = command.header.stamp;
+  ros::Time start_time = command->header.stamp;
+  if (start_time.isZero()) start_time = ros::Time::now();
+  if (!isRunning()) this->startRequest(start_time);
+}
+
+void PoseController::twistCommandCallback(const geometry_msgs::TwistStampedConstPtr& command)
+{
+  twist_command_ = command;
+
+  ros::Time start_time = command->header.stamp;
   if (start_time.isZero()) start_time = ros::Time::now();
   if (!isRunning()) this->startRequest(start_time);
 }
@@ -96,27 +116,52 @@ void PoseController::stopping(const ros::Time &time)
 
 void PoseController::update(const ros::Time& time, const ros::Duration& period)
 {
-  geometry_msgs::Twist command;
+  Twist output;
 
-  // horizontal position
+  // execute available callbacks in the callback queue (is this real-time safe?)
+//  callback_queue_.callAvailable();
+
+  // stop if no pose command is available
+  if (!pose_command_) {
+    stopRequest(time);
+    return;
+  }
+
+  // check command timeout
+  // TODO
+  Pose command = pose_command_->pose;
+
+
+  // control horizontal position
   double error_n, error_w;
-  HorizontalPositionCommandHandle(pose_).getError(error_n, error_w);
+  HorizontalPositionCommandHandle(pose_, &command.position).getError(error_n, error_w);
   double command_n = updatePID(error_n, twist_.twist().linear.x, state_.x, parameters_.xy, period);
   double command_w = updatePID(error_w, twist_.twist().linear.y, state_.y, parameters_.xy, period);
 
   // transform to body coordinates (yaw only)
   double yaw = pose_.getYaw();
-  command.linear.x =  cos(yaw) * command_n + sin(yaw) * command_w;
-  command.linear.y = -sin(yaw) * command_n + cos(yaw) * command_w;
+  output.linear.x =  cos(yaw) * command_n + sin(yaw) * command_w;
+  output.linear.y = -sin(yaw) * command_n + cos(yaw) * command_w;
 
-  // height
-  command.linear.z = updatePID(HeightCommandHandle(pose_).getError(), twist_.twist().linear.z, state_.z, parameters_.z, period);
+  // control height
+  output.linear.z = updatePID(HeightCommandHandle(pose_, &command.position.z).getError(), twist_.twist().linear.z, state_.z, parameters_.z, period);
 
-  // yaw angle
-  command.angular.z = updatePID(HeadingCommandHandle(pose_).getError(), twist_.twist().angular.z, state_.yaw, parameters_.yaw, period);
+  // control yaw angle
+  output.angular.z = updatePID(HeadingCommandHandle(pose_, &command.orientation).getError(), twist_.twist().angular.z, state_.yaw, parameters_.yaw, period);
 
-  // set output
-  twist_.setCommand(command);
+  // add twist command if available
+  if (twist_command_)
+  {
+    output.linear.x  += twist_command_->twist.linear.x;
+    output.linear.y  += twist_command_->twist.linear.y;
+    output.linear.z  += twist_command_->twist.linear.z;
+    output.angular.x += twist_command_->twist.angular.x;
+    output.angular.y += twist_command_->twist.angular.y;
+    output.angular.z += twist_command_->twist.angular.z;
+  }
+
+  // set twist output
+  twist_.setCommand(output);
 }
 
 template <typename T> inline T& checknan(T& value)

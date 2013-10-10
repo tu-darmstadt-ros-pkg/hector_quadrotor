@@ -50,10 +50,10 @@ public:
 
   virtual const ros::Time &getTimestamp() { return header_.stamp; }
 
-  virtual geometry_msgs::Pose *getPose()                 { return &pose_; }
-  virtual geometry_msgs::Twist *getTwist()               { return &twist_; }
-  virtual sensor_msgs::Imu *getSensorImu()               { return &imu_; }
-  virtual hector_uav_msgs::MotorStatus *getMotorStatus() { return &motor_status_; }
+  virtual Pose *getPose()               { return &pose_; }
+  virtual Twist *getTwist()             { return &twist_; }
+  virtual Imu *getSensorImu()           { return &imu_; }
+  virtual MotorStatus *getMotorStatus() { return &motor_status_; }
 
   void stateCallback(const nav_msgs::Odometry &state) {
     header_ = state.header;
@@ -80,10 +80,10 @@ public:
 
 protected:
   std_msgs::Header header_;
-  geometry_msgs::Pose pose_;
-  geometry_msgs::Twist twist_;
-  sensor_msgs::Imu imu_;
-  hector_uav_msgs::MotorStatus motor_status_;
+  Pose pose_;
+  Twist twist_;
+  Imu imu_;
+  MotorStatus motor_status_;
 
   gazebo::physics::ModelPtr parent_model;
 

@@ -33,9 +33,10 @@
 #include <hector_quadrotor_controller/quadrotor_interface.h>
 
 #include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/Twist.h>
+#include <geometry_msgs/TwistStamped.h>
 
 #include <ros/subscriber.h>
+#include <ros/callback_queue.h>
 
 namespace hector_quadrotor_controller {
 
@@ -47,15 +48,20 @@ public:
   bool init(QuadrotorInterface* interface, ros::NodeHandle& root_nh, ros::NodeHandle &controller_nh);
   void reset();
 
-  void commandCallback(const geometry_msgs::PoseStamped& command);
+  void poseCommandCallback(const geometry_msgs::PoseStampedConstPtr& pose_command);
+  void twistCommandCallback(const geometry_msgs::TwistStampedConstPtr& twist_command);
 
   void starting(const ros::Time& time);
   void update(const ros::Time& time, const ros::Duration& period);
   void stopping(const ros::Time& time);
 
 private:
-  PoseCommandHandle pose_;
+  PoseHandle pose_;
   TwistCommandHandle twist_;
+
+  ros::Time start_time_;
+  geometry_msgs::PoseStampedConstPtr pose_command_;
+  geometry_msgs::TwistStampedConstPtr twist_command_;
 
   struct parameters {
     bool enabled;
@@ -88,8 +94,9 @@ private:
 
   double updatePID(double error, double derivative, state &state, const parameters &param, const ros::Duration& period);
 
-  ros::Time start_time_;
-  ros::Subscriber subscriber_;
+//  ros::CallbackQueue callback_queue_;
+  ros::Subscriber pose_subscriber_;
+  ros::Subscriber twist_subscriber_;
 };
 
 } // namespace hector_quadrotor_controller

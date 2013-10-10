@@ -37,11 +37,20 @@
 #include <sensor_msgs/Imu.h>
 #include <hector_uav_msgs/MotorStatus.h>
 #include <hector_uav_msgs/MotorCommand.h>
-#include <nav_msgs/Path.h>
 
 namespace hector_quadrotor_controller {
 
 using namespace hardware_interface;
+
+using geometry_msgs::Pose;
+using geometry_msgs::Point;
+using geometry_msgs::Quaternion;
+using geometry_msgs::Twist;
+using geometry_msgs::Vector3;
+using geometry_msgs::Wrench;
+using sensor_msgs::Imu;
+using hector_uav_msgs::MotorStatus;
+using hector_uav_msgs::MotorCommand;
 
 class QuadrotorInterface : public HardwareInterface
 {
@@ -51,56 +60,57 @@ public:
 
   template <typename HandleType> HandleType getHandle() { return HandleType(this); }
 
-  virtual void setPoseCommand(const geometry_msgs::Pose &command)     { if (getPoseCommand())       *getPoseCommand() = command; }
-  virtual void setTwistCommand(const geometry_msgs::Twist &command)   { if (getTwistCommand())      *getTwistCommand() = command; }
-  virtual void setTrajectoryCommand(const nav_msgs::Path &trajectory) { if (getTrajectoryCommand()) *getTrajectoryCommand() = trajectory; }
+//  virtual void setPoseCommand(const Pose &command)     { if (getPoseCommand())   *getPoseCommand() = command; }
+//  virtual void setTwistCommand(const Twist &command)   { if (getTwistCommand())  *getTwistCommand() = command; }
+//  virtual void setWrenchCommand(const Twist &command)  { if (getWrenchCommand()) *getWrenchCommand() = command; }
+//  virtual void setMotorCommand(const Twist &command)   { if (getMotorCommand())  *getMotorCommand() = command; }
 
-  virtual geometry_msgs::Pose *getPose()                   { return 0; }
-  virtual geometry_msgs::Twist *getTwist()                 { return 0; }
-  virtual sensor_msgs::Imu *getSensorImu()                 { return 0; }
-  virtual hector_uav_msgs::MotorStatus *getMotorStatus()   { return 0; }
+  virtual Pose *getPose()                 { return 0; }
+  virtual Twist *getTwist()               { return 0; }
+  virtual Imu *getSensorImu()             { return 0; }
+  virtual MotorStatus *getMotorStatus()   { return 0; }
 
-  virtual nav_msgs::Path *getTrajectoryCommand()           { return &trajectory_command_; }
-  virtual geometry_msgs::Pose *getPoseCommand()            { return &pose_command_; }
-  virtual geometry_msgs::Twist *getTwistCommand()          { return &twist_command_; }
-  virtual geometry_msgs::Wrench *getWrenchCommand()        { return &wrench_command_; }
-  virtual hector_uav_msgs::MotorCommand *getMotorCommand() { return &motor_command_; }
+  virtual Pose *getPoseCommand()          { return &pose_command_; }
+  virtual Twist *getTwistCommand()        { return &twist_command_; }
+  virtual Wrench *getWrenchCommand()      { return &wrench_command_; }
+  virtual MotorCommand *getMotorCommand() { return &motor_command_; }
 
 private:
-  nav_msgs::Path trajectory_command_;
-  geometry_msgs::Pose pose_command_;
-  geometry_msgs::Twist twist_command_;
-  geometry_msgs::Wrench wrench_command_;
-  hector_uav_msgs::MotorCommand motor_command_;
+  Pose pose_command_;
+  Twist twist_command_;
+  Wrench wrench_command_;
+  MotorCommand motor_command_;
 };
 
 class PoseHandle
 {
 public:
-  PoseHandle() : interface_(0) {}
-  PoseHandle(QuadrotorInterface *interface) : interface_(interface) {}
+  PoseHandle() : pose_(0) {}
+  PoseHandle(QuadrotorInterface *interface) : pose_(interface->getPose()) {}
+  PoseHandle(const Pose *pose) : pose_(pose) {}
 
   static std::string getName() { return "pose"; }
-  const geometry_msgs::Pose& pose() const { return *(interface_->getPose()); }
+  const Pose& pose() const { return *pose_; }
 
   void getEulerRPY(double &roll, double &pitch, double &yaw) const;
   double getYaw() const;
 
 protected:
-  QuadrotorInterface *interface_;
+  const Pose *pose_;
 };
 
 class TwistHandle
 {
 public:
-  TwistHandle() : interface_(0) {}
-  TwistHandle(QuadrotorInterface *interface) : interface_(interface) {}
+  TwistHandle() : twist_(0) {}
+  TwistHandle(QuadrotorInterface *interface) : twist_(interface->getTwistCommand()) {}
+  TwistHandle(const Twist *twist) : twist_(twist) {}
 
   static std::string getName() { return "twist"; }
-  const geometry_msgs::Twist& twist() const { return *(interface_->getTwist()); }
+  const Twist& twist() const { return *twist_; }
 
 protected:
-  QuadrotorInterface *interface_;
+  const Twist *twist_;
 };
 
 class StateHandle : public PoseHandle, public TwistHandle
@@ -108,200 +118,260 @@ class StateHandle : public PoseHandle, public TwistHandle
 public:
   StateHandle() {}
   StateHandle(QuadrotorInterface *interface) : PoseHandle(interface), TwistHandle(interface) {}
+  StateHandle(const Pose *pose, const Twist *twist) : PoseHandle(pose), TwistHandle(twist) {}
+
   static std::string getName() { return "state"; }
 };
 
 class PoseCommandHandle : public PoseHandle
 {
 public:
-  PoseCommandHandle() {}
-  PoseCommandHandle(QuadrotorInterface *interface) : PoseHandle(interface) {}
+  PoseCommandHandle() : command_(0) {}
+  PoseCommandHandle(QuadrotorInterface *interface) : PoseHandle(interface), command_(interface->getPoseCommand()) {}
+  PoseCommandHandle(const PoseHandle &pose, Pose* command) : PoseHandle(pose), command_(command) {}
 
-  bool available() const { return interface_->getPoseCommand(); }
+  bool available() const { return command_ != 0; }
 
-  void setCommand(const geometry_msgs::Pose& command) { *(interface_->getPoseCommand()) = command; }
-  bool getCommand(geometry_msgs::Pose& command) const {
+  const Pose& getCommand() const { return *command_; }
+  void setCommand(const Pose& command) { *command_ = command; }
+
+  bool update(Pose& command) const {
     if (!available()) return false;
-    command = *(interface_->getPoseCommand());
+    command = *command_;
     return true;
   }
-  const geometry_msgs::Pose& getCommand() const { return *(interface_->getPoseCommand()); }
+
+protected:
+  Pose *command_;
 };
 
 class HorizontalPositionCommandHandle : public PoseCommandHandle
 {
 public:
-  HorizontalPositionCommandHandle() {}
-  HorizontalPositionCommandHandle(const PoseCommandHandle& other) : PoseCommandHandle(other) {}
-  HorizontalPositionCommandHandle(QuadrotorInterface *interface) : PoseCommandHandle(interface) {}
+  HorizontalPositionCommandHandle() : command_(0) {}
+  HorizontalPositionCommandHandle(const PoseCommandHandle& other) : PoseCommandHandle(other), command_(&(PoseCommandHandle::command_->position)) {}
+  HorizontalPositionCommandHandle(QuadrotorInterface *interface) : PoseCommandHandle(interface), command_(&(PoseCommandHandle::command_->position)) {}
+  HorizontalPositionCommandHandle(const PoseHandle &pose, Point* command) : PoseCommandHandle(pose, 0), command_(command) {}
 
   static std::string getName() { return "pose.position.xy"; }
+  bool available() const { return command_ != 0; }
+
+  const Point& getCommand() const { return *command_; }
+  void getCommand(double &x, double &y) const {
+    x = command_->x;
+    y = command_->y;
+  }
   void setCommand(double x, double y)
   {
-    interface_->getPoseCommand()->position.x = x;
-    interface_->getPoseCommand()->position.y = y;
+    command_->x = x;
+    command_->y = y;
   }
-  void getCommand(geometry_msgs::Point& command) const {
-    command.x = interface_->getPoseCommand()->position.x;
-    command.y = interface_->getPoseCommand()->position.y;
-  }
-  void getCommand(double &x, double &y) const {
-    x = interface_->getPoseCommand()->position.x;
-    y = interface_->getPoseCommand()->position.y;
+
+  bool update(Pose& command) const {
+    if (!available()) return false;
+    getCommand(command.position.x, command.position.y);
+    return true;
   }
 
   void getError(double &x, double &y) const;
+
+protected:
+  Point *command_;
 };
 
 class HeightCommandHandle : public PoseCommandHandle
 {
 public:
-  HeightCommandHandle() {}
-  HeightCommandHandle(const PoseCommandHandle& other) : PoseCommandHandle(other) {}
-  HeightCommandHandle(QuadrotorInterface *interface) : PoseCommandHandle(interface) {}
+  HeightCommandHandle() : command_(0) {}
+  HeightCommandHandle(const PoseCommandHandle& other) : PoseCommandHandle(other), command_(&(PoseCommandHandle::command_->position.z)) {}
+  HeightCommandHandle(QuadrotorInterface *interface) : PoseCommandHandle(interface), command_(&(PoseCommandHandle::command_->position.z)) {}
+  HeightCommandHandle(const PoseHandle &pose, double *command) : PoseCommandHandle(pose, 0), command_(command) {}
 
   static std::string getName() { return "pose.position.z"; }
-  void setCommand(double command)
-  {
-    interface_->getPoseCommand()->position.z = command;
-  }
-  double getCommand() const {
-    return (interface_->getPoseCommand())->position.z;
+  bool available() const { return command_ != 0; }
+
+  double getCommand() const { return *command_; }
+  void setCommand(double command) { *command_ = command; }
+
+  bool update(Pose& command) const {
+    if (!available()) return false;
+    command.position.z = getCommand();
+    return true;
   }
 
   double getError() const;
+
+protected:
+  double *command_;
 };
 
 class HeadingCommandHandle : public PoseCommandHandle
 {
 public:
-  HeadingCommandHandle() {}
-  HeadingCommandHandle(const PoseCommandHandle& other) : PoseCommandHandle(other) {}
-  HeadingCommandHandle(QuadrotorInterface *interface) : PoseCommandHandle(interface) {}
+  HeadingCommandHandle() : command_(0) {}
+  HeadingCommandHandle(const PoseCommandHandle& other) : PoseCommandHandle(other), command_(0), quaternion_(&(PoseCommandHandle::command_->orientation)) {}
+  HeadingCommandHandle(QuadrotorInterface *interface) : PoseCommandHandle(interface), command_(0), quaternion_(&(PoseCommandHandle::command_->orientation)) {}
+  HeadingCommandHandle(const PoseHandle &pose, double *command) : PoseCommandHandle(pose, 0), command_(command), quaternion_(0) {}
+  HeadingCommandHandle(const PoseHandle &pose, Quaternion *quaternion) : PoseCommandHandle(pose, 0), command_(0), quaternion_(quaternion) {}
 
   std::string getName() { return "pose.orientation.yaw"; }
-  void setCommand(double command)
-  {
-    interface_->getPoseCommand()->orientation.x = 0.0;
-    interface_->getPoseCommand()->orientation.y = 0.0;
-    interface_->getPoseCommand()->orientation.z = sin(command/2.);
-    interface_->getPoseCommand()->orientation.w = cos(command/2.);
-  }
+  bool available() const { return (command_ != 0) || (quaternion_ != 0); }
+
   double getCommand() const;
+  void setCommand(double command);
+
+  bool update(Pose& command) const;
   double getError() const;
+
+protected:
+  double *command_;
+  Quaternion *quaternion_;
 };
 
 class TwistCommandHandle : public TwistHandle
 {
 public:
-  TwistCommandHandle() {}
-  TwistCommandHandle(QuadrotorInterface *interface) : TwistHandle(interface) {}
+  TwistCommandHandle() : command_(0) {}
+  TwistCommandHandle(QuadrotorInterface *interface) : TwistHandle(interface), command_(interface->getTwistCommand()) {}
+  TwistCommandHandle(const TwistHandle &twist, Twist* command) : TwistHandle(twist), command_(command) {}
 
-  bool available() const { return interface_->getTwistCommand(); }
+  bool available() const { return command_ != 0; }
 
-  void setCommand(const geometry_msgs::Twist& command) { *(interface_->getTwistCommand()) = command; }
-  bool getCommand(geometry_msgs::Twist& command) const {
+  const Twist& getCommand() const { return *command_; }
+  void setCommand(const Twist& command) { *command_ = command; }
+
+  bool update(Twist& command) const {
     if (!available()) return false;
-    command = *(interface_->getTwistCommand());
+    command = *command_;
     return true;
   }
-  const geometry_msgs::Twist& getCommand() const { return *(interface_->getTwistCommand()); }
+
+protected:
+  Twist *command_;
 };
 
 class HorizontalVelocityCommandHandle : public TwistCommandHandle
 {
 public:
-  HorizontalVelocityCommandHandle() {}
-  HorizontalVelocityCommandHandle(const TwistCommandHandle& other) : TwistCommandHandle(other) {}
-  HorizontalVelocityCommandHandle(QuadrotorInterface *interface) : TwistCommandHandle(interface) {}
+  HorizontalVelocityCommandHandle() : command_(0) {}
+  HorizontalVelocityCommandHandle(const TwistCommandHandle& other) : TwistCommandHandle(other), command_(&(TwistCommandHandle::command_->linear)) {}
+  HorizontalVelocityCommandHandle(QuadrotorInterface *interface) : TwistCommandHandle(interface), command_(&(TwistCommandHandle::command_->linear)) {}
+  HorizontalVelocityCommandHandle(const TwistHandle &twist, Vector3* command) : TwistCommandHandle(twist, 0), command_(command) {}
 
-  static std::string getName() { return "twist.linear.xy"; }
+  static std::string getName() { return "twist.position.xy"; }
+  bool available() const { return command_ != 0; }
+
+  const Vector3& getCommand() const { return *command_; }
+  void getCommand(double &x, double &y) const {
+    x = command_->x;
+    y = command_->y;
+  }
   void setCommand(double x, double y)
   {
-    interface_->getTwistCommand()->linear.x = x;
-    interface_->getTwistCommand()->linear.y = y;
+    command_->x = x;
+    command_->y = y;
   }
-  void getCommand(double &x, double &y) const {
-    x = interface_->getTwistCommand()->linear.x;
-    y = interface_->getTwistCommand()->linear.y;
+
+  bool update(Twist& command) const {
+    if (!available()) return false;
+    getCommand(command.linear.x, command.linear.y);
+    return true;
   }
+
+protected:
+  Vector3 *command_;
 };
 
 class VerticalVelocityCommandHandle : public TwistCommandHandle
 {
 public:
-  VerticalVelocityCommandHandle() {}
-  VerticalVelocityCommandHandle(const TwistCommandHandle& other) : TwistCommandHandle(other) {}
-  VerticalVelocityCommandHandle(QuadrotorInterface *interface) : TwistCommandHandle(interface) {}
+  VerticalVelocityCommandHandle() : command_(0) {}
+  VerticalVelocityCommandHandle(const TwistCommandHandle& other) : TwistCommandHandle(other), command_(&(TwistCommandHandle::command_->linear.z)) {}
+  VerticalVelocityCommandHandle(QuadrotorInterface *interface) : TwistCommandHandle(interface), command_(&(TwistCommandHandle::command_->linear.z)) {}
+  VerticalVelocityCommandHandle(const TwistHandle &twist, double* command) : TwistCommandHandle(twist, 0), command_(command) {}
 
   static std::string getName() { return "twist.linear.z"; }
-  void setCommand(double command)
-  {
-    if (!interface_->getTwistCommand()) return;
-    interface_->getTwistCommand()->linear.z = command;
+  bool available() const { return command_ != 0; }
+
+  double getCommand() const { return *command_; }
+  void setCommand(double command) { *command_ = command; }
+
+  bool update(Twist& command) const {
+    if (!available()) return false;
+    command.linear.z = getCommand();
+    return true;
   }
-  double getCommand() const {
-    return interface_->getTwistCommand()->linear.z;
-  }
+
+protected:
+  double *command_;
 };
 
 class AngularVelocityCommandHandle : public TwistCommandHandle
 {
 public:
-  AngularVelocityCommandHandle() {}
-  AngularVelocityCommandHandle(const TwistCommandHandle& other) : TwistCommandHandle(other) {}
-  AngularVelocityCommandHandle(QuadrotorInterface *interface) : TwistCommandHandle(interface) {}
+  AngularVelocityCommandHandle() : command_(0) {}
+  AngularVelocityCommandHandle(const TwistCommandHandle& other) : TwistCommandHandle(other), command_(&(TwistCommandHandle::command_->angular.z)) {}
+  AngularVelocityCommandHandle(QuadrotorInterface *interface) : TwistCommandHandle(interface), command_(&(TwistCommandHandle::command_->angular.z)) {}
+  AngularVelocityCommandHandle(const TwistHandle &twist, double* command) : TwistCommandHandle(twist, 0), command_(command) {}
 
   static std::string getName() { return "twist.angular.z"; }
-  void setCommand(double command)
-  {
-    interface_->getTwistCommand()->angular.z = command;
+  bool available() const { return command_ != 0; }
+
+  double getCommand() const { return *command_; }
+  void setCommand(double command) { *command_ = command; }
+
+  bool update(Twist& command) const {
+    if (!available()) return false;
+    command.linear.z = getCommand();
+    return true;
   }
-  double getCommand() const {
-    return interface_->getTwistCommand()->angular.z;
-  }
+
+protected:
+  double *command_;
 };
 
 class WrenchCommandHandle
 {
 public:
-  WrenchCommandHandle() : interface_(0) {}
-  WrenchCommandHandle(QuadrotorInterface *interface) : interface_(interface) {}
+  WrenchCommandHandle() : command_(0) {}
+  WrenchCommandHandle(QuadrotorInterface *interface) : command_(interface->getWrenchCommand()) {}
 
   static std::string getName() { return "wrench"; }
-  bool available() const { return interface_->getWrenchCommand(); }
+  bool available() const { return command_ != 0; }
 
-  void setCommand(const geometry_msgs::Wrench& command) { *(interface_->getWrenchCommand()) = command; }
-  bool getCommand(geometry_msgs::Wrench& command) const {
+  void setCommand(const Wrench& command) { *command_ = command; }
+  const Wrench& getCommand() const { return *command_; }
+
+  bool update(Wrench& command) const {
     if (!available()) return false;
-    command = *(interface_->getWrenchCommand());
+    command = *command_;
     return true;
   }
-  const geometry_msgs::Wrench& getCommand() const { return *(interface_->getWrenchCommand()); }
 
 protected:
-  QuadrotorInterface *interface_;
+  Wrench *command_;
 };
 
 class MotorCommandHandle
 {
 public:
-  MotorCommandHandle() : interface_(0) {}
-  MotorCommandHandle(QuadrotorInterface *interface) : interface_(interface) {}
+  MotorCommandHandle() : command_(0) {}
+  MotorCommandHandle(QuadrotorInterface *interface) : command_(interface->getMotorCommand()) {}
 
   static std::string getName() { return "motor"; }
-  bool available() const { return interface_->getMotorCommand(); }
+  bool available() const { return command_ != 0; }
 
-  void setCommand(const hector_uav_msgs::MotorCommand& command) { *(interface_->getMotorCommand()) = command; }
-  bool getCommand(hector_uav_msgs::MotorCommand& command) const {
+  void setCommand(const MotorCommand& command) { *command_ = command; }
+  const MotorCommand& getCommand() const { return *command_; }
+
+  bool update(MotorCommand& command) const {
     if (!available()) return false;
-    command = *(interface_->getMotorCommand());
+    command = *command_;
     return true;
   }
-  const hector_uav_msgs::MotorCommand& getCommand() const { return *(interface_->getMotorCommand()); }
 
 protected:
-  QuadrotorInterface *interface_;
+  MotorCommand *command_;
 };
 
 } // namespace hector_quadrotor_controller
