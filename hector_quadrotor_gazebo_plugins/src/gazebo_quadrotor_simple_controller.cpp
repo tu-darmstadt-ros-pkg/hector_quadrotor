@@ -66,7 +66,7 @@ void GazeboQuadrotorSimpleController::Load(physics::ModelPtr _model, sdf::Elemen
   wrench_topic_ = "wrench_out";
   max_force_ = -1;
 
-  // load parameters
+  // load parameters from sdf
   if (_sdf->HasElement("robotNamespace")) namespace_ = _sdf->GetElement("robotNamespace")->Get<std::string>();
   if (_sdf->HasElement("topicName"))      velocity_topic_ = _sdf->GetElement("topicName")->Get<std::string>();
   if (_sdf->HasElement("imuTopic"))       imu_topic_ = _sdf->GetElement("imuTopic")->Get<std::string>();
@@ -105,8 +105,10 @@ void GazeboQuadrotorSimpleController::Load(physics::ModelPtr _model, sdf::Elemen
     ros::init(argc,argv,"gazebo",ros::init_options::NoSigintHandler|ros::init_options::AnonymousName);
   }
   node_handle_ = new ros::NodeHandle(namespace_);
+  ros::NodeHandle param_handle(*node_handle_, "controller");
 
   // subscribe command
+  param_handle.getParam("velocity_topic", velocity_topic_);
   if (!velocity_topic_.empty())
   {
     ros::SubscribeOptions ops = ros::SubscribeOptions::create<geometry_msgs::Twist>(
@@ -117,6 +119,7 @@ void GazeboQuadrotorSimpleController::Load(physics::ModelPtr _model, sdf::Elemen
   }
 
   // subscribe imu
+  param_handle.getParam("imu_topic", imu_topic_);
   if (!imu_topic_.empty())
   {
     ros::SubscribeOptions ops = ros::SubscribeOptions::create<sensor_msgs::Imu>(
@@ -129,6 +132,7 @@ void GazeboQuadrotorSimpleController::Load(physics::ModelPtr _model, sdf::Elemen
   }
 
   // subscribe state
+  param_handle.getParam("state_topic", state_topic_);
   if (!state_topic_.empty())
   {
     ros::SubscribeOptions ops = ros::SubscribeOptions::create<nav_msgs::Odometry>(
@@ -141,6 +145,7 @@ void GazeboQuadrotorSimpleController::Load(physics::ModelPtr _model, sdf::Elemen
   }
 
   // advertise wrench
+  param_handle.getParam("wrench_topic", wrench_topic_);
   if (!wrench_topic_.empty())
   {
     ros::AdvertiseOptions ops = ros::AdvertiseOptions::create<geometry_msgs::Wrench>(

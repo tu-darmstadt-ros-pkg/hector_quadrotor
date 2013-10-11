@@ -5,9 +5,9 @@ xmlns:xacro="http://ros.org/wiki/xacro"
 >
 
   <!-- Quadrotor Pose Estimation Plugin -->
-  <xacro:macro name="quadrotor_pose_estimation">
+  <xacro:macro name="quadrotor_rtt_pose_estimation">
     <gazebo>
-      <plugin name="quadrotor_pose_estimation" filename="libgazebo_rtt_plugin.so">
+      <plugin name="quadrotor_rtt_pose_estimation" filename="libgazebo_rtt_plugin.so">
         <updateRate>100.0</updateRate>
         <import>rtt_hector_pose_estimation</import>
         <component>hector_pose_estimation::PoseEstimationTaskContext</component>

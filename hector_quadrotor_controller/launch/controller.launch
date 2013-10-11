@@ -1,6 +1,7 @@
 <launch>
-  <node pkg="hector_quadrotor_controller" type="pose_controller" name="pose_controller" output="screen">
-    <remap from="state" to="ground_truth/state" />
-    <rosparam file="$(find hector_quadrotor_controller)/params/pose_controller.yaml" />
-  </node>
+  <rosparam file="$(find hector_quadrotor_controller)/params/pose_controller.yaml" />
+
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"
+    args="pose"
+  />
 </launch>

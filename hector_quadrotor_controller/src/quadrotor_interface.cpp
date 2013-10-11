@@ -32,43 +32,33 @@
 
 namespace hector_quadrotor_controller {
 
-//QuadrotorInterface::QuadrotorInterface()
-//  : pose_(0)
-//  , twist_(0)
-//  , imu_(0)
-//  , motor_status_(0)
-//  , pose_command_(0)
-//  , twist_command_(0)
-//  , wrench_command_(0)
-//  , motor_command_(0)
-//{}
-
-//QuadrotorInterface::QuadrotorInterface(
-//    command_Pose &pose,
-//    command_Twist &twist,
-//    sensor_msgs::Imu &imu,
-//    hector_uav_msgs::MotorStatus &motor_status,
-//    command_Pose &pose_command,
-//    command_Twist &twist_command,
-//    command_Wrench &wrench_command,
-//    hector_uav_msgs::MotorCommand &motor_command,
-//  )
-//  : pose_(&pose)
-//  , twist_(&twist)
-//  , imu_(&imu)
-//  , motor_status_(&motor_status)
-//  , pose_command_(&pose_command)
-//  , twist_command_(&twist_command)
-//  , wrench_command_(&wrench_command)
-//  , motor_command_(&motor_command)
-//{
-//}
-
 QuadrotorInterface::QuadrotorInterface()
 {}
 
 QuadrotorInterface::~QuadrotorInterface()
 {}
+
+bool QuadrotorInterface::enabled(const CommandHandle *handle) const
+{
+  if (!handle) return false;
+  std::string resource = handle->getName();
+  return enabled_.count(resource) > 0;
+}
+
+bool QuadrotorInterface::start(const CommandHandle *handle)
+{
+  if (!handle) return false;
+  std::string resource = handle->getName();
+  enabled_[resource] = handle;
+}
+
+void QuadrotorInterface::stop(const CommandHandle *handle)
+{
+  if (!handle) return;
+  std::string resource = handle->getName();
+  std::map<std::string, const CommandHandle *>::iterator it = enabled_.lower_bound(resource);
+  if (it != enabled_.end() && it->second == handle) enabled_.erase(it);
+}
 
 void PoseHandle::getEulerRPY(double &roll, double &pitch, double &yaw) const
 {

@@ -37,8 +37,9 @@
 #include <ros/node_handle.h>
 #include <ros/callback_queue.h>
 
-namespace hector_quadrotor_controller {
+namespace hector_quadrotor_controller_gazebo {
 
+using namespace hector_quadrotor_controller;
 using namespace hardware_interface;
 using namespace gazebo_ros_control;
 
@@ -55,20 +56,6 @@ public:
   virtual Imu *getSensorImu()           { return &imu_; }
   virtual MotorStatus *getMotorStatus() { return &motor_status_; }
 
-  void stateCallback(const nav_msgs::Odometry &state) {
-    header_ = state.header;
-    pose_ = state.pose.pose;
-    twist_ = state.twist.twist;
-  }
-
-  void imuCallback(const sensor_msgs::Imu &imu) {
-    imu_ = imu;
-  }
-
-  void motorStatusCallback(const hector_uav_msgs::MotorStatus &motor_status) {
-    motor_status_ = motor_status;
-  }
-
   virtual bool initSim(
       ros::NodeHandle model_nh,
       gazebo::physics::ModelPtr parent_model,
@@ -78,6 +65,11 @@ public:
 
   virtual void writeSim(ros::Time time, ros::Duration period);
 
+private:
+  void stateCallback(const nav_msgs::OdometryConstPtr &state);
+  void imuCallback(const sensor_msgs::ImuConstPtr &imu);
+  void motorStatusCallback(const hector_uav_msgs::MotorStatusConstPtr &motor_status);
+
 protected:
   std_msgs::Header header_;
   Pose pose_;
@@ -85,15 +77,19 @@ protected:
   Imu imu_;
   MotorStatus motor_status_;
 
+  enum { MODE_TWIST, MODE_WRENCH, MODE_MOTOR } mode_;
+
   gazebo::physics::ModelPtr parent_model;
 
   ros::CallbackQueue callback_queue_;
   ros::Subscriber subscriber_state_;
+  ros::Subscriber subscriber_imu_;
+  ros::Subscriber subscriber_motor_status_;
   ros::Publisher publisher_twist_command_;
   ros::Publisher publisher_wrench_command_;
   ros::Publisher publisher_motor_command_;
 };
 
-} // namespace hector_quadrotor_controller
+} // namespace hector_quadrotor_controller_gazebo
 
 #endif // HECTOR_QUADROTOR_CONTROLLER_QUADROTOR_HARDWARE_GAZEBO_H

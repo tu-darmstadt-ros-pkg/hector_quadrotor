@@ -108,10 +108,13 @@ void PoseController::starting(const ros::Time &time)
 {
   reset();
   start_time_ = time;
+
+  twist_.start();
 }
 
 void PoseController::stopping(const ros::Time &time)
 {
+  twist_.stop();
 }
 
 void PoseController::update(const ros::Time& time, const ros::Duration& period)
@@ -130,7 +133,6 @@ void PoseController::update(const ros::Time& time, const ros::Duration& period)
   // check command timeout
   // TODO
   Pose command = pose_command_->pose;
-
 
   // control horizontal position
   double error_n, error_w;

@@ -1,13 +1,16 @@
-option(USE_GROUND_TRUTH_FOR_CONTROL "Use the ground truth state as input for the controller" ON)
-if(USE_GROUND_TRUTH_FOR_CONTROL)
-  set(CONTROL_STATE_TOPIC "ground_truth/state")
-  set(CONTROL_IMU_TOPIC "raw_imu")
-else()
-  set(CONTROL_STATE_TOPIC "state")
-  set(CONTROL_IMU_TOPIC "imu")
-endif()
+# This CMakeLists.txt configures the plugins used for the quadrotor model.
+set(MODEL_PLUGINS)
 
+# configuration
+option(USE_RTT "Use a quadrotor controller implemented as Orocos RTT component to control the quadrotor." OFF)
 option(USE_POSE_ESTIMATION "Use hector_pose_estimation to estimate the pose of the quadrotor." OFF)
+option(USE_PROPULSION_PLUGIN "Use a model of the quadrotor propulsion system" OFF)
+option(USE_AERODYNAMICS_PLUGIN "Use a model of the quadrotor aerodynamics" OFF)
+
+# sensor plugins
+list(APPEND MODEL_PLUGINS quadrotor_sensors)
+
+# pose estimation plugin
 if(USE_POSE_ESTIMATION)
   rosbuild_find_ros_package(gazebo_rtt_plugin)
   rosbuild_find_ros_package(rtt_hector_pose_estimation)
@@ -23,10 +26,22 @@ if(USE_POSE_ESTIMATION)
 endif()
 
 if(USE_POSE_ESTIMATION)
-  set(URDF "${URDF}  <xacro:quadrotor_pose_estimation/>\n")
+  list(APPEND MODEL_PLUGINS quadrotor_rtt_pose_estimation)
+  set(CONTROL_STATE_TOPIC "state")
+  set(CONTROL_IMU_TOPIC "imu")
+else()
+  set(CONTROL_STATE_TOPIC "ground_truth/state")
+  set(CONTROL_IMU_TOPIC "raw_imu")
 endif()
 
-option(USE_PROPULSION_PLUGIN "Use a model of the quadrotor propulsion system" OFF)
+# controller plugin
+if(USE_RTT)
+  list(APPEND MODEL_PLUGINS "quadrotor_rtt_controller state_topic=\"${CONTROL_STATE_TOPIC}\" imu_topic=\"${CONTROL_IMU_TOPIC}\"")
+else()
+  list(APPEND MODEL_PLUGINS quadrotor_controller)
+endif()
+
+# propulsion plugin
 if(USE_PROPULSION_PLUGIN)
   rosbuild_find_ros_package(gazebo_rtt_plugin)
   rosbuild_find_ros_package(hector_quadrotor_gazebo_plugins)
@@ -41,13 +56,12 @@ if(USE_PROPULSION_PLUGIN)
 endif()
 
 if(USE_PROPULSION_PLUGIN)
-  set(URDF "${URDF}  <xacro:quadrotor_controller state_topic=\"${CONTROL_STATE_TOPIC}\" imu_topic=\"${CONTROL_IMU_TOPIC}\"/>\n")
-  set(URDF "${URDF}  <xacro:quadrotor_propulsion/>\n")
+  list(APPEND MODEL_PLUGINS quadrotor_propulsion)
 else()
-  set(URDF "${URDF}  <xacro:quadrotor_simple_controller state_topic=\"${CONTROL_STATE_TOPIC}\" imu_topic=\"${CONTROL_IMU_TOPIC}\"/>\n")
+  list(APPEND MODEL_PLUGINS "quadrotor_simple_controller state_topic=\"${CONTROL_STATE_TOPIC}\" imu_topic=\"${CONTROL_IMU_TOPIC}\"")
 endif()
 
-option(USE_AERODYNAMICS_PLUGIN "Use a model of the quadrotor aerodynamics" OFF)
+# aerodynamics plugin
 if(USE_AERODYNAMICS_PLUGIN)
   rosbuild_find_ros_package(hector_quadrotor_gazebo_plugins)
 
@@ -60,8 +74,13 @@ if(USE_AERODYNAMICS_PLUGIN)
 endif()
 
 if(USE_AERODYNAMICS_PLUGIN)
-  set(URDF "${URDF}  <xacro:quadrotor_aerodynamics/>\n")
+  list(APPEND MODEL_PLUGINS quadrotor_aerodynamics)
 endif()
 
+# write urdf
+set(MODEL_PLUGINS_URDF)
+foreach(PLUGIN ${MODEL_PLUGINS})
+  set(MODEL_PLUGINS_URDF "${MODEL_PLUGINS_URDF}  <xacro:${PLUGIN} />\n")
+endforeach()
 configure_file(quadrotor_plugins.gazebo.xacro.in ${PROJECT_SOURCE_DIR}/urdf/quadrotor_plugins.gazebo.xacro @ONLY)
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${PROJECT_SOURCE_DIR}/urdf/quadrotor_plugins.gazebo.xacro)

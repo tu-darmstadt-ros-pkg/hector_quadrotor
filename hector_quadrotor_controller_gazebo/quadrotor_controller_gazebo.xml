@@ -1,5 +1,5 @@
-<library path="lib/libquadrotor_controller_gazebo">
-  <class name="hector_quadrotor_controller/QuadrotorHardwareSim" type="hector_quadrotor_controller::QuadrotorHardwareSim" base_class_type="gazebo_ros_control::RobotHWSim">
+<library path="lib/libhector_quadrotor_controller_gazebo">
+  <class name="hector_quadrotor_controller_gazebo/QuadrotorHardwareSim" type="hector_quadrotor_controller_gazebo::QuadrotorHardwareSim" base_class_type="gazebo_ros_control::RobotHWSim">
   <description>
     This class represents the quadrotor hardware in Gazebo for the gazebo_ros_control plugin.
   </description>

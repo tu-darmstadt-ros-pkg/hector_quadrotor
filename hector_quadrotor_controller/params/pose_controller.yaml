@@ -1,12 +1,15 @@
-frequency: 10.0
-type: hector_quadrotor_controller/PoseController
+controller:
+    mode: twist
+
 pose:
-  xy:
-    k_p: 1.0
-    limit_output: 5.0
-  z:
-    k_p: 1.0
-    limit_output: 3.0
-  yaw:
-    k_p: 1.0
-    limit_output: 0.5
+    frequency: 10.0
+    type: hector_quadrotor_controller/PoseController
+    xy:
+        k_p: 1.0
+        limit_output: 5.0
+    z:
+        k_p: 1.0
+        limit_output: 3.0
+    yaw:
+        k_p: 1.0
+        limit_output: 0.5

@@ -27,7 +27,7 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
     INCLUDE_DIRS include
-    LIBRARIES
+    LIBRARIES quadrotor_controller
     CATKIN_DEPENDS roscpp geometry_msgs sensor_msgs nav_msgs hector_uav_msgs hardware_interface controller_interface
     DEPENDS
 )
@@ -45,9 +45,6 @@ target_link_libraries(pose_controller quadrotor_controller)
 add_executable(pose_controller_node src/pose_controller_node.cpp)
 target_link_libraries(pose_controller_node pose_controller ${catkin_LIBRARIES})
 set_target_properties(pose_controller_node PROPERTIES OUTPUT_NAME pose_controller)
-
-add_executable(test_trajectory src/test_trajectory.cpp)
-target_link_libraries(test_trajectory ${catkin_LIBRARIES})
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -68,7 +65,7 @@ target_link_libraries(test_trajectory ${catkin_LIBRARIES})
 # )
 
 ## Mark executables and/or libraries for installation
-install(TARGETS test_trajectory
+install(TARGETS quadrotor_controller pose_controller pose_controller_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -88,3 +85,9 @@ install(TARGETS test_trajectory
 #   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 # )
 
+######################
+## Additional tools ##
+######################
+
+add_executable(test_trajectory src/test_trajectory.cpp)
+target_link_libraries(test_trajectory ${catkin_LIBRARIES})

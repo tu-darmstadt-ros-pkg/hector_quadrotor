@@ -28,7 +28,7 @@
 
 #include <hector_quadrotor_controller/quadrotor_hardware_gazebo.h>
 
-namespace hector_quadrotor_controller {
+namespace hector_quadrotor_controller_gazebo {
 
 QuadrotorHardwareSim::QuadrotorHardwareSim()
 {
@@ -45,9 +45,78 @@ bool QuadrotorHardwareSim::initSim(
     gazebo::physics::ModelPtr parent_model,
     std::vector<transmission_interface::TransmissionInfo> transmissions)
 {
-  // init subscribers and publishers (should be intra-process)
+  ros::SubscribeOptions sops;
+  ros::AdvertiseOptions aops;
+  ros::NodeHandle param_nh(model_nh, "controller");
 
-  // TODO
+  // subscribe state
+  std::string state_topic = "state";
+  if (param_nh.getParam("state_topic", state_topic)) {
+      gzlog << "[hector_quadrotor_controller_gazebo] Using topic " << state_topic << " as state input for control" << std::endl;
+  }
+  sops = ros::SubscribeOptions::create<nav_msgs::Odometry>(state_topic, 1, boost::bind(&QuadrotorHardwareSim::stateCallback, this, _1), ros::VoidConstPtr(), &callback_queue_);
+  subscriber_state_ = model_nh.subscribe(sops);
+
+  // subscribe imu
+  std::string imu_topic = "imu";
+  if (param_nh.getParam("imu_topic", imu_topic)) {
+      gzlog << "[hector_quadrotor_controller_gazebo] Using topic " << imu_topic << " as imu input for control" << std::endl;
+  }
+  sops = ros::SubscribeOptions::create<sensor_msgs::Imu>(imu_topic, 1, boost::bind(&QuadrotorHardwareSim::imuCallback, this, _1), ros::VoidConstPtr(), &callback_queue_);
+  subscriber_imu_ = model_nh.subscribe(sops);
+
+  // subscribe motor_status
+  sops = ros::SubscribeOptions::create<hector_uav_msgs::MotorStatus>("motor_status", 1, boost::bind(&QuadrotorHardwareSim::motorStatusCallback, this, _1), ros::VoidConstPtr(), &callback_queue_);
+  subscriber_motor_status_ = model_nh.subscribe(sops);
+
+  // set controller mode
+  std::string mode = "twist";
+  param_nh.getParam("mode", mode);
+  if (mode == "twist") {
+    mode_ = MODE_TWIST;
+    gzlog << "[hector_quadrotor_controller_gazebo] Running in TWIST mode" << std::endl;
+  } else if (mode == "wrench") {
+    mode_ = MODE_WRENCH;
+    gzlog << "[hector_quadrotor_controller_gazebo] Running in WRENCH mode" << std::endl;
+  } else if (mode == "motor") {
+    mode_ = MODE_MOTOR;
+    gzlog << "[hector_quadrotor_controller_gazebo] Running in MOTOR mode" << std::endl;
+  } else {
+    gzerr << "[hector_quadrotor_controller_gazebo] Unknown mode string '" << mode << "'" << std::endl;
+    return false;
+  }
+
+  // publish twist
+  if (mode_ == MODE_TWIST) {
+    aops = ros::AdvertiseOptions::create<geometry_msgs::Twist>("cmd_vel", 1, ros::SubscriberStatusCallback(), ros::SubscriberStatusCallback(), ros::VoidConstPtr(), &callback_queue_);
+    publisher_twist_command_ = model_nh.advertise(aops);
+  }
+
+  // publish wrench
+  if (mode_ == MODE_WRENCH) {
+    aops = ros::AdvertiseOptions::create<geometry_msgs::Wrench>("command/wrench", 1, ros::SubscriberStatusCallback(), ros::SubscriberStatusCallback(), ros::VoidConstPtr(), &callback_queue_);
+    publisher_wrench_command_ = model_nh.advertise(aops);
+  }
+
+  // publish motor command
+  if (mode_ == MODE_MOTOR) {
+    aops = ros::AdvertiseOptions::create<hector_uav_msgs::MotorCommand>("command/motor", 1, ros::SubscriberStatusCallback(), ros::SubscriberStatusCallback(), ros::VoidConstPtr(), &callback_queue_);
+    publisher_motor_command_ = model_nh.advertise(aops);
+  }
+}
+
+void QuadrotorHardwareSim::stateCallback(const nav_msgs::OdometryConstPtr &state) {
+  header_ = state->header;
+  pose_ = state->pose.pose;
+  twist_ = state->twist.twist;
+}
+
+void QuadrotorHardwareSim::imuCallback(const sensor_msgs::ImuConstPtr &imu) {
+  imu_ = *imu;
+}
+
+void QuadrotorHardwareSim::motorStatusCallback(const hector_uav_msgs::MotorStatusConstPtr &motor_status) {
+  motor_status_ = *motor_status;
 }
 
 void QuadrotorHardwareSim::readSim(ros::Time time, ros::Duration period)
@@ -58,28 +127,26 @@ void QuadrotorHardwareSim::readSim(ros::Time time, ros::Duration period)
 
 void QuadrotorHardwareSim::writeSim(ros::Time time, ros::Duration period)
 {
-  // publish command as low-level as possible:
-
-  MotorCommandHandle motor = getHandle<MotorCommandHandle>();
-  if (publisher_motor_command_ && motor.available()) {
-    publisher_motor_command_.publish(motor.getCommand());
+  TwistCommandHandle twist = getHandle<TwistCommandHandle>();
+  if (mode_ == MODE_TWIST && publisher_twist_command_ && twist.enabled()) {
+    publisher_twist_command_.publish(twist.getCommand());
     return;
   }
 
   WrenchCommandHandle wrench = getHandle<WrenchCommandHandle>();
-  if (publisher_wrench_command_ && wrench.available()) {
+  if (mode_ == MODE_WRENCH && wrench.enabled()) {
     publisher_wrench_command_.publish(wrench.getCommand());
     return;
   }
 
-  TwistCommandHandle twist = getHandle<TwistCommandHandle>();
-  if (publisher_twist_command_ && twist.available()) {
-    publisher_twist_command_.publish(twist.getCommand());
+  MotorCommandHandle motor = getHandle<MotorCommandHandle>();
+  if (mode_ == MODE_MOTOR && motor.enabled()) {
+    publisher_motor_command_.publish(motor.getCommand());
     return;
   }
 }
 
-} // namespace hector_quadrotor_controller
+} // namespace hector_quadrotor_controller_gazebo
 
 #include <pluginlib/class_list_macros.h>
-PLUGINLIB_EXPORT_CLASS(hector_quadrotor_controller::QuadrotorHardwareSim, gazebo_ros_control::RobotHWSim)
+PLUGINLIB_EXPORT_CLASS(hector_quadrotor_controller_gazebo::QuadrotorHardwareSim, gazebo_ros_control::RobotHWSim)
