@@ -68,6 +68,7 @@ add_library(hector_quadrotor_pose_estimation_node
   src/pose_estimation_node.cpp
 )
 target_link_libraries(hector_quadrotor_pose_estimation_node ${catkin_LIBRARIES})
+add_dependencies(hector_quadrotor_pose_estimation_node hector_uav_msgs_generate_messages_cpp)
 
 add_library(hector_quadrotor_pose_estimation_nodelet
   src/pose_estimation_nodelet.cpp
