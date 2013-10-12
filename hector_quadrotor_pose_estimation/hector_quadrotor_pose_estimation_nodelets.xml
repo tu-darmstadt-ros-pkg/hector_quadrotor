@@ -1,0 +1,8 @@
+<library path="lib/libhector_quadrotor_pose_estimation_nodelet">
+  <class name="hector_quadrotor_pose_estimation/QuadrotorPoseEstimationNodelet" type="hector_quadrotor_pose_estimation::QuadrotorPoseEstimationNodelet" base_class_type="nodelet::Nodelet">
+  <description>
+    This nodelet implements a pose estimation filter which uses hector_uav_msgs/Altimeter messages as input for barometric height.
+  </description>
+  </class>
+</library>
+

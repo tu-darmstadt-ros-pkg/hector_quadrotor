@@ -1,0 +1,20 @@
+<package>
+  <description brief="hector_quadrotor_pose_estimation">
+
+     hector_quadrotor_pose_estimation
+
+  </description>
+  <author>Johannes Meyer</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/hector_quadrotor_pose_estimation</url>
+  <depend package="hector_pose_estimation"/>
+  <depend package="hector_uav_msgs"/>
+  <depend package="nodelet"/>
+
+  <export>
+    <nodelet plugin="${prefix}/hector_quadrotor_pose_estimation_nodelets.xml"/>
+  </export>
+</package>
+
+
