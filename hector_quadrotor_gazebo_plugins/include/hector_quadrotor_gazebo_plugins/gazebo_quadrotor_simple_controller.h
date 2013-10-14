@@ -37,6 +37,7 @@
 #include <geometry_msgs/Twist.h>
 #include <sensor_msgs/Imu.h>
 #include <nav_msgs/Odometry.h>
+#include <std_srvs/Empty.h>
 
 #include <hector_gazebo_plugins/update_timer.h>
 
@@ -68,6 +69,9 @@ private:
   ros::Subscriber state_subscriber_;
   ros::Publisher wrench_publisher_;
 
+  ros::ServiceServer engage_service_server_;
+  ros::ServiceServer shutdown_service_server_;
+
   // void CallbackQueueThread();
   // boost::mutex lock_;
   // boost::thread callback_queue_thread_;
@@ -76,6 +80,9 @@ private:
   void VelocityCallback(const geometry_msgs::TwistConstPtr&);
   void ImuCallback(const sensor_msgs::ImuConstPtr&);
   void StateCallback(const nav_msgs::OdometryConstPtr&);
+
+  bool EngageCallback(std_srvs::Empty::Request&, std_srvs::Empty::Response&);
+  bool ShutdownCallback(std_srvs::Empty::Request&, std_srvs::Empty::Response&);
 
   ros::Time state_stamp;
   math::Pose pose;
@@ -88,6 +95,9 @@ private:
   std::string state_topic_;
   std::string wrench_topic_;
   double max_force_;
+
+  bool running_;
+  bool auto_engage_;
 
   class PIDController {
   public:

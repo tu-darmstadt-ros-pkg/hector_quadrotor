@@ -65,6 +65,7 @@ void GazeboQuadrotorSimpleController::Load(physics::ModelPtr _model, sdf::Elemen
   state_topic_.clear();
   wrench_topic_ = "wrench_out";
   max_force_ = -1;
+  auto_engage_ = true;
 
   // load parameters from sdf
   if (_sdf->HasElement("robotNamespace")) namespace_ = _sdf->GetElement("robotNamespace")->Get<std::string>();
@@ -73,6 +74,7 @@ void GazeboQuadrotorSimpleController::Load(physics::ModelPtr _model, sdf::Elemen
   if (_sdf->HasElement("stateTopic"))     state_topic_ = _sdf->GetElement("stateTopic")->Get<std::string>();
   if (_sdf->HasElement("wrenchTopic"))    wrench_topic_ = _sdf->GetElement("wrenchTopic")->Get<std::string>();
   if (_sdf->HasElement("maxForce"))       max_force_ = _sdf->GetElement("maxForce")->Get<double>();
+  if (_sdf->HasElement("autoEngage"))     auto_engage_ = _sdf->GetElement("autoEngage")->Get<bool>();
 
   if (_sdf->HasElement("bodyName") && _sdf->GetElement("bodyName")->GetValue()) {
     link_name_ = _sdf->GetElement("bodyName")->Get<std::string>();
@@ -155,6 +157,21 @@ void GazeboQuadrotorSimpleController::Load(physics::ModelPtr _model, sdf::Elemen
     wrench_publisher_ = node_handle_->advertise(ops);
   }
 
+  // engage/shutdown service servers
+  {
+    ros::AdvertiseServiceOptions ops = ros::AdvertiseServiceOptions::create<std_srvs::Empty>(
+      "engage", boost::bind(&GazeboQuadrotorSimpleController::EngageCallback, this, _1, _2),
+      ros::VoidConstPtr(), &callback_queue_
+    );
+    engage_service_server_ = node_handle_->advertiseService(ops);
+
+    ops = ros::AdvertiseServiceOptions::create<std_srvs::Empty>(
+      "shutdown", boost::bind(&GazeboQuadrotorSimpleController::ShutdownCallback, this, _1, _2),
+      ros::VoidConstPtr(), &callback_queue_
+    );
+    shutdown_service_server_ = node_handle_->advertiseService(ops);
+  }
+
   // callback_queue_thread_ = boost::thread( boost::bind( &GazeboQuadrotorSimpleController::CallbackQueueThread,this ) );
 
 
@@ -205,6 +222,18 @@ void GazeboQuadrotorSimpleController::StateCallback(const nav_msgs::OdometryCons
   }
 }
 
+bool GazeboQuadrotorSimpleController::EngageCallback(std_srvs::Empty::Request &, std_srvs::Empty::Response &)
+{
+  ROS_INFO_NAMED("quadrotor_simple_controller", "Engaging motors!");
+  running_ = true;
+}
+
+bool GazeboQuadrotorSimpleController::ShutdownCallback(std_srvs::Empty::Request &, std_srvs::Empty::Response &)
+{
+  ROS_INFO_NAMED("quadrotor_simple_controller", "Shutting down motors!");
+  running_ = false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Update the controller
 void GazeboQuadrotorSimpleController::Update()
@@ -247,16 +276,26 @@ void GazeboQuadrotorSimpleController::Update()
     // update controllers
     force.Set(0.0, 0.0, 0.0);
     torque.Set(0.0, 0.0, 0.0);
-    double pitch_command =  controllers_.velocity_x.update(velocity_command_.linear.x, velocity_xy.x, acceleration_xy.x, dt) / gravity;
-    double roll_command  = -controllers_.velocity_y.update(velocity_command_.linear.y, velocity_xy.y, acceleration_xy.y, dt) / gravity;
-    torque.x = inertia.x *  controllers_.roll.update(roll_command, euler.x, angular_velocity_body.x, dt);
-    torque.y = inertia.y *  controllers_.pitch.update(pitch_command, euler.y, angular_velocity_body.y, dt);
-    // torque.x = inertia.x *  controllers_.roll.update(-velocity_command_.linear.y/gravity, euler.x, angular_velocity_body.x, dt);
-    // torque.y = inertia.y *  controllers_.pitch.update(velocity_command_.linear.x/gravity, euler.y, angular_velocity_body.y, dt);
-    torque.z = inertia.z *  controllers_.yaw.update(velocity_command_.angular.z, angular_velocity.z, 0, dt);
-    force.z  = mass      * (controllers_.velocity_z.update(velocity_command_.linear.z,  velocity.z, acceleration.z, dt) + load_factor * gravity);
-    if (max_force_ > 0.0 && force.z > max_force_) force.z = max_force_;
-    if (force.z < 0.0) force.z = 0.0;
+    if (running_) {
+      double pitch_command =  controllers_.velocity_x.update(velocity_command_.linear.x, velocity_xy.x, acceleration_xy.x, dt) / gravity;
+      double roll_command  = -controllers_.velocity_y.update(velocity_command_.linear.y, velocity_xy.y, acceleration_xy.y, dt) / gravity;
+      torque.x = inertia.x *  controllers_.roll.update(roll_command, euler.x, angular_velocity_body.x, dt);
+      torque.y = inertia.y *  controllers_.pitch.update(pitch_command, euler.y, angular_velocity_body.y, dt);
+      // torque.x = inertia.x *  controllers_.roll.update(-velocity_command_.linear.y/gravity, euler.x, angular_velocity_body.x, dt);
+      // torque.y = inertia.y *  controllers_.pitch.update(velocity_command_.linear.x/gravity, euler.y, angular_velocity_body.y, dt);
+      torque.z = inertia.z *  controllers_.yaw.update(velocity_command_.angular.z, angular_velocity.z, 0, dt);
+      force.z  = mass      * (controllers_.velocity_z.update(velocity_command_.linear.z,  velocity.z, acceleration.z, dt) + load_factor * gravity);
+      if (max_force_ > 0.0 && force.z > max_force_) force.z = max_force_;
+      if (force.z < 0.0) force.z = 0.0;
+
+    } else {
+      controllers_.roll.reset();
+      controllers_.pitch.reset();
+      controllers_.yaw.reset();
+      controllers_.velocity_x.reset();
+      controllers_.velocity_y.reset();
+      controllers_.velocity_z.reset();
+    }
 
   //  static double lastDebugOutput = 0.0;
   //  if (last_time.Double() - lastDebugOutput > 0.1) {
@@ -266,6 +305,17 @@ void GazeboQuadrotorSimpleController::Update()
   //    ROS_DEBUG_NAMED("quadrotor_simple_controller", "Force: [%g %g %g], Torque: [%g %g %g]", force.x, force.y, force.z, torque.x, torque.y, torque.z);
   //    lastDebugOutput = last_time.Double();
   //  }
+
+    // Auto engage/shutdown
+    if (auto_engage_) {
+      if (!running_ && velocity_command_.linear.z > 0.1) {
+        running_ = true;
+        ROS_INFO_NAMED("quadrotor_simple_controller", "Engaging motors!");
+      } else if (running_ && force.z == 0.0 && velocity_command_.linear.z < 0.1 && (velocity.z > -0.1 && velocity.z < 0.1)) {
+        running_ = false;
+        ROS_INFO_NAMED("quadrotor_simple_controller", "Shutting down motors!");
+      }
+    }
 
     // Publish wrench
     if (wrench_publisher_) {
@@ -306,6 +356,8 @@ void GazeboQuadrotorSimpleController::Reset()
   acceleration.Set();
   euler.Set();
   state_stamp = ros::Time();
+
+  running_ = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
