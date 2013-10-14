@@ -57,8 +57,10 @@ public:
   virtual MotorStatus *getMotorStatus() { return &motor_status_; }
 
   virtual bool initSim(
+      const std::string& robot_namespace,
       ros::NodeHandle model_nh,
       gazebo::physics::ModelPtr parent_model,
+      const urdf::Model *const urdf_model,
       std::vector<transmission_interface::TransmissionInfo> transmissions);
 
   virtual void readSim(ros::Time time, ros::Duration period);
