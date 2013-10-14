@@ -254,6 +254,17 @@ void GazeboQuadrotorSimpleController::Update()
       velocity = link->GetWorldLinearVel();
     }
 
+    // Auto engage/shutdown
+    if (auto_engage_) {
+      if (!running_ && velocity_command_.linear.z > 0.1) {
+        running_ = true;
+        ROS_INFO_NAMED("quadrotor_simple_controller", "Engaging motors!");
+      } else if (running_ && controllers_.velocity_z.i < -1.0 && velocity_command_.linear.z < 0.1 && (velocity.z > -0.1 && velocity.z < 0.1)) {
+        running_ = false;
+        ROS_INFO_NAMED("quadrotor_simple_controller", "Shutting down motors!");
+      }
+    }
+
   //  static Time lastDebug;
   //  if ((world->GetSimTime() - lastDebug).Double() > 0.5) {
   //    ROS_DEBUG_STREAM_NAMED("quadrotor_simple_controller", "Velocity:         gazebo = [" << link->GetWorldLinearVel()   << "], state = [" << velocity << "]");
@@ -305,17 +316,6 @@ void GazeboQuadrotorSimpleController::Update()
   //    ROS_DEBUG_NAMED("quadrotor_simple_controller", "Force: [%g %g %g], Torque: [%g %g %g]", force.x, force.y, force.z, torque.x, torque.y, torque.z);
   //    lastDebugOutput = last_time.Double();
   //  }
-
-    // Auto engage/shutdown
-    if (auto_engage_) {
-      if (!running_ && velocity_command_.linear.z > 0.1) {
-        running_ = true;
-        ROS_INFO_NAMED("quadrotor_simple_controller", "Engaging motors!");
-      } else if (running_ && force.z == 0.0 && velocity_command_.linear.z < 0.1 && (velocity.z > -0.1 && velocity.z < 0.1)) {
-        running_ = false;
-        ROS_INFO_NAMED("quadrotor_simple_controller", "Shutting down motors!");
-      }
-    }
 
     // Publish wrench
     if (wrench_publisher_) {
