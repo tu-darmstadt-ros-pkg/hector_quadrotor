@@ -38,6 +38,7 @@ catkin_package(
 
 add_library(quadrotor_controller src/quadrotor_interface.cpp src/quadrotor_hardware.cpp)
 target_link_libraries(quadrotor_controller ${geometry_msgs_LIBRARIES})
+add_dependencies(quadrotor_controller hector_uav_msgs_generate_messages_cpp)
 
 add_library(pose_controller src/pose_controller.cpp)
 target_link_libraries(pose_controller quadrotor_controller)
