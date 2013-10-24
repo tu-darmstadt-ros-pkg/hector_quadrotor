@@ -53,7 +53,7 @@
       <bodyName>base_link</bodyName>
       <topicName>ground_truth/state</topicName>
       <gaussianNoise>0.0</gaussianNoise>
-      <frameName>map</frameName>
+      <frameName>world</frameName>
     </plugin>
 
   </gazebo>

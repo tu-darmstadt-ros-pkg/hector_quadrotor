@@ -31,15 +31,12 @@
    <arg name="use_ground_truth_for_tf" default="true" />
    <node name="ground_truth_to_tf" pkg="message_to_tf" type="message_to_tf" output="screen">
      <param name="odometry_topic" value="ground_truth/state" />
-     <param name="frame_id" value="/nav" />
+     <param name="frame_id" value="/world" />
      <param name="tf_prefix" value="$(arg tf_prefix)/ground_truth" unless="$(arg use_ground_truth_for_tf)" />
    </node>
    <group unless="$(arg use_ground_truth_for_tf)">
-     <!-- <node name="state_to_tf" pkg="message_to_tf" type="message_to_tf" output="screen">
-       <param name="odometry_topic" value="state" />
-       <param name="frame_id" value="nav" />
-     </node> -->
      <node name="pose_estimation" pkg="hector_quadrotor_pose_estimation" type="hector_quadrotor_pose_estimation" output="screen" />
+     <node pkg="tf" type="static_transform_broadcaster" name="world_nav_broadcaster" args="0 0 0 0 0 0 /world $(arg tf_prefix)/nav 100" />
    </group>
 
    <!-- spawn controller -->
