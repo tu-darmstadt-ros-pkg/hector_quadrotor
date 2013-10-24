@@ -54,7 +54,7 @@ bool QuadrotorHardwareSim::initSim(
   // subscribe state
   std::string state_topic = "state";
   if (param_nh.getParam("state_topic", state_topic)) {
-      gzlog << "[hector_quadrotor_controller_gazebo] Using topic " << state_topic << " as state input for control" << std::endl;
+      gzlog << "[hector_quadrotor_controller_gazebo] Using topic '" << state_topic << "' as state input for control" << std::endl;
   }
   sops = ros::SubscribeOptions::create<nav_msgs::Odometry>(state_topic, 1, boost::bind(&QuadrotorHardwareSim::stateCallback, this, _1), ros::VoidConstPtr(), &callback_queue_);
   subscriber_state_ = model_nh.subscribe(sops);
@@ -62,7 +62,7 @@ bool QuadrotorHardwareSim::initSim(
   // subscribe imu
   std::string imu_topic = "imu";
   if (param_nh.getParam("imu_topic", imu_topic)) {
-      gzlog << "[hector_quadrotor_controller_gazebo] Using topic " << imu_topic << " as imu input for control" << std::endl;
+      gzlog << "[hector_quadrotor_controller_gazebo] Using topic '" << imu_topic << "' as imu input for control" << std::endl;
   }
   sops = ros::SubscribeOptions::create<sensor_msgs::Imu>(imu_topic, 1, boost::bind(&QuadrotorHardwareSim::imuCallback, this, _1), ros::VoidConstPtr(), &callback_queue_);
   subscriber_imu_ = model_nh.subscribe(sops);
@@ -105,6 +105,8 @@ bool QuadrotorHardwareSim::initSim(
     aops = ros::AdvertiseOptions::create<hector_uav_msgs::MotorCommand>("command/motor", 1, ros::SubscriberStatusCallback(), ros::SubscriberStatusCallback(), ros::VoidConstPtr(), &callback_queue_);
     publisher_motor_command_ = model_nh.advertise(aops);
   }
+
+  return true;
 }
 
 void QuadrotorHardwareSim::stateCallback(const nav_msgs::OdometryConstPtr &state) {
