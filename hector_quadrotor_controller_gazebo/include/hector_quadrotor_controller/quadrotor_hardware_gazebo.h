@@ -79,7 +79,7 @@ protected:
   Imu imu_;
   MotorStatus motor_status_;
 
-  enum { MODE_TWIST, MODE_WRENCH, MODE_MOTOR } mode_;
+  enum { MODE_AUTO, MODE_TWIST, MODE_WRENCH, MODE_MOTOR } mode_;
 
   gazebo::physics::ModelPtr parent_model;
 

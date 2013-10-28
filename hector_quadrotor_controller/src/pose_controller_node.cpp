@@ -46,12 +46,18 @@ int main(int argc, char **argv)
   ros::Publisher commandPublisher = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1, false);
 
   // initialize controller
-  TwistCommandHandle command = hw.get<QuadrotorInterface>()->getHandle<TwistCommandHandle>();
   pose_controller = new PoseController();
   std::set<std::string> claimed_resources;
   if (!pose_controller->initRequest(&hw, nh, controller_nh, claimed_resources))
   {
     ROS_ERROR("Failed to initialize controller!");
+    return 1;
+  }
+
+  boost::shared_ptr<TwistCommandHandle> command = hw.get<QuadrotorInterface>()->getOutput<TwistCommandHandle>();
+  if (!command)
+  {
+    ROS_ERROR("Could not connect to twist output!");
     return 1;
   }
 
@@ -62,8 +68,8 @@ int main(int argc, char **argv)
   while(ros::ok()) {
     ros::spinOnce();
     pose_controller->updateRequest(ros::Time::now(), rate.cycleTime());
-    if (command.available())
-      commandPublisher.publish(command.getCommand());
+    if (command->connected())
+      commandPublisher.publish(command->getCommand());
     rate.sleep();
   }
   return 0;

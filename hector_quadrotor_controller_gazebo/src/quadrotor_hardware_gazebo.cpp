@@ -72,9 +72,12 @@ bool QuadrotorHardwareSim::initSim(
   subscriber_motor_status_ = model_nh.subscribe(sops);
 
   // set controller mode
-  std::string mode = "twist";
+  std::string mode = "auto";
   param_nh.getParam("mode", mode);
-  if (mode == "twist") {
+  if (mode == "auto") {
+    mode_ = MODE_AUTO;
+    gzlog << "[hector_quadrotor_controller_gazebo] Running in AUTO mode" << std::endl;
+  } else if (mode == "twist") {
     mode_ = MODE_TWIST;
     gzlog << "[hector_quadrotor_controller_gazebo] Running in TWIST mode" << std::endl;
   } else if (mode == "wrench") {
@@ -89,19 +92,19 @@ bool QuadrotorHardwareSim::initSim(
   }
 
   // publish twist
-  if (mode_ == MODE_TWIST) {
+  if (mode_ == MODE_AUTO || mode_ == MODE_TWIST) {
     aops = ros::AdvertiseOptions::create<geometry_msgs::Twist>("cmd_vel", 1, ros::SubscriberStatusCallback(), ros::SubscriberStatusCallback(), ros::VoidConstPtr(), &callback_queue_);
     publisher_twist_command_ = model_nh.advertise(aops);
   }
 
   // publish wrench
-  if (mode_ == MODE_WRENCH) {
+  if (mode_ == MODE_AUTO || mode_ == MODE_WRENCH) {
     aops = ros::AdvertiseOptions::create<geometry_msgs::Wrench>("command/wrench", 1, ros::SubscriberStatusCallback(), ros::SubscriberStatusCallback(), ros::VoidConstPtr(), &callback_queue_);
     publisher_wrench_command_ = model_nh.advertise(aops);
   }
 
   // publish motor command
-  if (mode_ == MODE_MOTOR) {
+  if (mode_ == MODE_AUTO || mode_ == MODE_MOTOR) {
     aops = ros::AdvertiseOptions::create<hector_uav_msgs::MotorCommand>("command/motor", 1, ros::SubscriberStatusCallback(), ros::SubscriberStatusCallback(), ros::VoidConstPtr(), &callback_queue_);
     publisher_motor_command_ = model_nh.advertise(aops);
   }
@@ -131,21 +134,21 @@ void QuadrotorHardwareSim::readSim(ros::Time time, ros::Duration period)
 
 void QuadrotorHardwareSim::writeSim(ros::Time time, ros::Duration period)
 {
-  TwistCommandHandle twist = getHandle<TwistCommandHandle>();
-  if (mode_ == MODE_TWIST && publisher_twist_command_ && twist.enabled()) {
-    publisher_twist_command_.publish(twist.getCommand());
+  const MotorCommand* motor = getCommand<MotorCommandHandle>();
+  if ((mode_ == MODE_AUTO || mode_ == MODE_MOTOR) && motor) {
+    publisher_motor_command_.publish(*motor);
     return;
   }
 
-  WrenchCommandHandle wrench = getHandle<WrenchCommandHandle>();
-  if (mode_ == MODE_WRENCH && wrench.enabled()) {
-    publisher_wrench_command_.publish(wrench.getCommand());
+  const Wrench* wrench = getCommand<WrenchCommandHandle>();
+  if ((mode_ == MODE_AUTO || mode_ == MODE_WRENCH) && wrench) {
+    publisher_wrench_command_.publish(*wrench);
     return;
   }
 
-  MotorCommandHandle motor = getHandle<MotorCommandHandle>();
-  if (mode_ == MODE_MOTOR && motor.enabled()) {
-    publisher_motor_command_.publish(motor.getCommand());
+  const Twist* twist = getCommand<TwistCommandHandle>();
+  if ((mode_ == MODE_AUTO || mode_ == MODE_TWIST) && twist) {
+    publisher_twist_command_.publish(*twist);
     return;
   }
 }

@@ -56,12 +56,13 @@ public:
   void stopping(const ros::Time& time);
 
 private:
-  PoseHandle pose_;
-  TwistCommandHandle twist_;
+  boost::shared_ptr<PoseCommandHandle> pose_input_;
+  boost::shared_ptr<TwistCommandHandle> twist_input_;
+  boost::shared_ptr<TwistCommandHandle> twist_output_;
 
   ros::Time start_time_;
-  geometry_msgs::PoseStampedConstPtr pose_command_;
-  geometry_msgs::TwistStampedConstPtr twist_command_;
+  geometry_msgs::PoseStamped pose_command_;
+  geometry_msgs::TwistStamped twist_command_;
 
   struct parameters {
     bool enabled;

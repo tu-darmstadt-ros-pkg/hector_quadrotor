@@ -60,6 +60,11 @@ void QuadrotorInterface::stop(const CommandHandle *handle)
   if (it != enabled_.end() && it->second == handle) enabled_.erase(it);
 }
 
+const Pose *QuadrotorInterface::getPoseCommand()          const { return getCommand<PoseCommandHandle>(); }
+const Twist *QuadrotorInterface::getTwistCommand()        const { return getCommand<TwistCommandHandle>(); }
+const Wrench *QuadrotorInterface::getWrenchCommand()      const { return getCommand<WrenchCommandHandle>(); }
+const MotorCommand *QuadrotorInterface::getMotorCommand() const { return getCommand<MotorCommandHandle>(); }
+
 void PoseHandle::getEulerRPY(double &roll, double &pitch, double &yaw) const
 {
   const Quaternion::_w_type& w = pose().orientation.w;
@@ -94,32 +99,33 @@ double HeightCommandHandle::getError() const
 
 void HeadingCommandHandle::setCommand(double command)
 {
-  if (quaternion_) {
-    quaternion_->x = 0.0;
-    quaternion_->y = 0.0;
-    quaternion_->z = sin(command / 2.);
-    quaternion_->w = cos(command / 2.);
+  if (get()) {
+    get()->x = 0.0;
+    get()->y = 0.0;
+    get()->z = sin(command / 2.);
+    get()->w = cos(command / 2.);
   }
-  if (command_) {
-    *command_ = command;
+
+  if (scalar_) {
+    *scalar_ = command;
   }
 }
 
 double HeadingCommandHandle::getCommand() const {
-  if (command_) return *command_;
-  return atan2(quaternion_->z, quaternion_->w) * 2.;
+  if (scalar_) return *scalar_;
+  return atan2(get()->z, get()->w) * 2.;
 }
 
 bool HeadingCommandHandle::update(Pose& command) const {
-  if (quaternion_) {
-    command.orientation = *quaternion_;
+  if (get()) {
+    command.orientation = *get();
     return true;
   }
-  if (command_) {
+  if (scalar_) {
     command.orientation.x = 0.0;
     command.orientation.y = 0.0;
-    command.orientation.z = sin(*command_ / 2.);
-    command.orientation.x = cos(*command_ / 2.);
+    command.orientation.z = sin(*scalar_ / 2.);
+    command.orientation.x = cos(*scalar_ / 2.);
     return true;
   }
   return false;
