@@ -56,9 +56,9 @@ public:
   void stopping(const ros::Time& time);
 
 private:
-  boost::shared_ptr<PoseCommandHandle> pose_input_;
-  boost::shared_ptr<TwistCommandHandle> twist_input_;
-  boost::shared_ptr<TwistCommandHandle> twist_output_;
+  PoseCommandHandlePtr pose_input_;
+  TwistCommandHandlePtr twist_input_;
+  TwistCommandHandlePtr twist_output_;
 
   ros::Time start_time_;
   geometry_msgs::PoseStamped pose_command_;

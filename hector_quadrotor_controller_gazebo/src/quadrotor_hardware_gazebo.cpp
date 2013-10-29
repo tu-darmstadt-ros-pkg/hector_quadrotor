@@ -134,19 +134,19 @@ void QuadrotorHardwareSim::readSim(ros::Time time, ros::Duration period)
 
 void QuadrotorHardwareSim::writeSim(ros::Time time, ros::Duration period)
 {
-  const MotorCommand* motor = getCommand<MotorCommandHandle>();
+  const MotorCommand* motor = getCommand<MotorCommandHandle>("motor");
   if ((mode_ == MODE_AUTO || mode_ == MODE_MOTOR) && motor) {
     publisher_motor_command_.publish(*motor);
     return;
   }
 
-  const Wrench* wrench = getCommand<WrenchCommandHandle>();
+  const Wrench* wrench = getCommand<WrenchCommandHandle>("wrench");
   if ((mode_ == MODE_AUTO || mode_ == MODE_WRENCH) && wrench) {
     publisher_wrench_command_.publish(*wrench);
     return;
   }
 
-  const Twist* twist = getCommand<TwistCommandHandle>();
+  const Twist* twist = getCommand<TwistCommandHandle>("twist");
   if ((mode_ == MODE_AUTO || mode_ == MODE_TWIST) && twist) {
     publisher_twist_command_.publish(*twist);
     return;

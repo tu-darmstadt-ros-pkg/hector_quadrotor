@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  boost::shared_ptr<TwistCommandHandle> command = hw.get<QuadrotorInterface>()->getOutput<TwistCommandHandle>();
+  boost::shared_ptr<TwistCommandHandle> command = hw.get<QuadrotorInterface>()->getOutput<TwistCommandHandle>("twist");
   if (!command)
   {
     ROS_ERROR("Could not connect to twist output!");

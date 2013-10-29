@@ -60,10 +60,10 @@ void QuadrotorInterface::stop(const CommandHandle *handle)
   if (it != enabled_.end() && it->second == handle) enabled_.erase(it);
 }
 
-const Pose *QuadrotorInterface::getPoseCommand()          const { return getCommand<PoseCommandHandle>(); }
-const Twist *QuadrotorInterface::getTwistCommand()        const { return getCommand<TwistCommandHandle>(); }
-const Wrench *QuadrotorInterface::getWrenchCommand()      const { return getCommand<WrenchCommandHandle>(); }
-const MotorCommand *QuadrotorInterface::getMotorCommand() const { return getCommand<MotorCommandHandle>(); }
+const Pose *QuadrotorInterface::getPoseCommand()          const { return getCommand<PoseCommandHandle>("pose/pose"); }
+const Twist *QuadrotorInterface::getTwistCommand()        const { return getCommand<TwistCommandHandle>("twist"); }
+const Wrench *QuadrotorInterface::getWrenchCommand()      const { return getCommand<WrenchCommandHandle>("wrench"); }
+const MotorCommand *QuadrotorInterface::getMotorCommand() const { return getCommand<MotorCommandHandle>("motor"); }
 
 void PoseHandle::getEulerRPY(double &roll, double &pitch, double &yaw) const
 {
