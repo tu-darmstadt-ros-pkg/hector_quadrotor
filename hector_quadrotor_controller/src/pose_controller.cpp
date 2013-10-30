@@ -90,7 +90,7 @@ PoseController::state::state()
 void PoseController::poseCommandCallback(const geometry_msgs::PoseStampedConstPtr& command)
 {
   pose_command_ = *command;
-  if (!(pose_input_->get())) *pose_input_ = &(pose_command_.pose);
+  if (!(pose_input_->connected())) *pose_input_ = &(pose_command_.pose);
 
   ros::Time start_time = command->header.stamp;
   if (start_time.isZero()) start_time = ros::Time::now();
@@ -100,7 +100,7 @@ void PoseController::poseCommandCallback(const geometry_msgs::PoseStampedConstPt
 void PoseController::twistCommandCallback(const geometry_msgs::TwistStampedConstPtr& command)
 {
   twist_command_ = *command;
-  if (!(twist_input_->get())) *twist_input_ = &(twist_command_.twist);
+  if (!(twist_input_->connected())) *twist_input_ = &(twist_command_.twist);
 
   ros::Time start_time = command->header.stamp;
   if (start_time.isZero()) start_time = ros::Time::now();
@@ -110,8 +110,6 @@ void PoseController::twistCommandCallback(const geometry_msgs::TwistStampedConst
 void PoseController::starting(const ros::Time &time)
 {
   reset();
-  start_time_ = time;
-
   twist_output_->start();
 }
 
@@ -127,9 +125,8 @@ void PoseController::update(const ros::Time& time, const ros::Duration& period)
   // execute available callbacks in the callback queue (is this real-time safe?)
 //  callback_queue_.callAvailable();
 
-  // stop if no pose command is available
+  // return if no pose command is available
   if (!(pose_input_->connected())) {
-    stopRequest(time);
     return;
   }
 

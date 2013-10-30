@@ -60,7 +60,6 @@ private:
   TwistCommandHandlePtr twist_input_;
   TwistCommandHandlePtr twist_output_;
 
-  ros::Time start_time_;
   geometry_msgs::PoseStamped pose_command_;
   geometry_msgs::TwistStamped twist_command_;
 
