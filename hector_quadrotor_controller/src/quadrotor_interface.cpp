@@ -60,7 +60,21 @@ void QuadrotorInterface::stop(const CommandHandle *handle)
   if (it != enabled_.end() && it->second == handle) enabled_.erase(it);
 }
 
-const Pose *QuadrotorInterface::getPoseCommand()          const { return getCommand<PoseCommandHandle>("pose/pose"); }
+void QuadrotorInterface::disconnect(const CommandHandle *handle)
+{
+  if (!handle) return;
+  std::string resource = handle->getName();
+  if (inputs_.count(resource)) {
+    const CommandHandlePtr& input = inputs_.at(resource);
+    if (input.get() != handle) input->reset();
+  }
+  if (outputs_.count(resource)) {
+    const CommandHandlePtr& output = outputs_.at(resource);
+    if (output.get() != handle) output->reset();
+  }
+}
+
+const Pose *QuadrotorInterface::getPoseCommand()          const { return getCommand<PoseCommandHandle>("pose"); }
 const Twist *QuadrotorInterface::getTwistCommand()        const { return getCommand<TwistCommandHandle>("twist"); }
 const Wrench *QuadrotorInterface::getWrenchCommand()      const { return getCommand<WrenchCommandHandle>("wrench"); }
 const MotorCommand *QuadrotorInterface::getMotorCommand() const { return getCommand<MotorCommandHandle>("motor"); }

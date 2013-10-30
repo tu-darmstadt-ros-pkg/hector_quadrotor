@@ -34,7 +34,7 @@ namespace hector_quadrotor_controller {
 bool PoseController::init(QuadrotorInterface *interface, ros::NodeHandle &root_nh, ros::NodeHandle &controller_nh)
 {
   // get interface handles
-  pose_input_   = interface->addInput<PoseCommandHandle>("pose/pose");
+  pose_input_   = interface->addInput<PoseCommandHandle>("pose");
   twist_input_  = interface->addInput<TwistCommandHandle>("pose/twist");
   twist_output_ = interface->addOutput<TwistCommandHandle>("twist");
   interface->claim(twist_output_->getName());

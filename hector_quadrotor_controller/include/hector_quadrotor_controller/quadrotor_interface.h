@@ -134,6 +134,8 @@ public:
   bool start(const CommandHandle *handle);
   void stop(const CommandHandle *handle);
 
+  void disconnect(const CommandHandle *handle);
+
 private:
 //  typedef std::list< CommandHandlePtr > HandleList;
 //  std::map<const std::type_info *, HandleList> inputs_;
@@ -149,6 +151,7 @@ public:
   PoseHandle() : pose_(0) {}
   PoseHandle(QuadrotorInterface *interface) : pose_(interface->getPose()) {}
   PoseHandle(const Pose *pose) : pose_(pose) {}
+  virtual ~PoseHandle() {}
 
   const Pose& pose() const { return *pose_; }
 
@@ -166,6 +169,7 @@ public:
   TwistHandle() : twist_(0) {}
   TwistHandle(QuadrotorInterface *interface) : twist_(interface->getTwist()) {}
   TwistHandle(const Twist *twist) : twist_(twist) {}
+  virtual ~TwistHandle() {}
 
   const Twist& twist() const { return *twist_; }
 
@@ -180,6 +184,7 @@ public:
   StateHandle() {}
   StateHandle(QuadrotorInterface *interface) : PoseHandle(interface), TwistHandle(interface) {}
   StateHandle(const Pose *pose, const Twist *twist) : PoseHandle(pose), TwistHandle(twist) {}
+  virtual ~StateHandle() {}
 };
 typedef boost::shared_ptr<PoseHandle> PoseHandlePtr;
 
@@ -192,10 +197,13 @@ public:
 
   virtual const std::string& getName() const { return name_; }
   virtual bool connected() const = 0;
+  virtual void reset() = 0;
 
-  bool enabled() { return interface_->enabled(this); }
-  bool start()   { return interface_->start(this); }
-  void stop()    { interface_->stop(this); }
+  bool enabled()    { return interface_->enabled(this); }
+  bool start()      { return interface_->start(this); }
+  void stop()       { interface_->stop(this); }
+
+  bool disconnect() { interface_->disconnect(this); }
 
   template <typename T> T* ownData(T* data) { my_.reset(data); return data; }
 
@@ -227,9 +235,11 @@ public:
   PoseCommandHandle() : command_(0) {}
   PoseCommandHandle(QuadrotorInterface *interface, const std::string& name) : PoseHandle(interface), CommandHandle(interface, name), command_(0) {}
   PoseCommandHandle(const PoseHandle &pose, Pose* command) : PoseHandle(pose) { *this = command; }
+  virtual ~PoseCommandHandle() {}
 
 //  std::string getName() const { return "pose"; }
   bool connected() const { return get(); }
+  void reset() { command_ = 0; }
 
   using CommandHandle::operator=;
   PoseCommandHandle& operator=(Pose *source) { command_ = source; return *this; }
@@ -259,9 +269,11 @@ public:
   HorizontalPositionCommandHandle(const PoseCommandHandle& other) : PoseCommandHandle(other), command_(0) {}
   HorizontalPositionCommandHandle(QuadrotorInterface *interface, const std::string& name) : PoseCommandHandle(interface, name), command_(0) {}
   HorizontalPositionCommandHandle(const PoseHandle &pose, Point* command) : PoseCommandHandle(pose, 0) { *this = command; }
+  virtual ~HorizontalPositionCommandHandle() {}
 
 //  std::string getName() const { return "pose.position.xy"; }
   bool connected() const { return get(); }
+  void reset() { command_ = 0; }
 
   HorizontalPositionCommandHandle& operator=(Pose *source) { PoseCommandHandle::operator=(source); command_ = 0; return *this; }
   HorizontalPositionCommandHandle& operator=(Point *source) { command_ = source; return *this; }
@@ -301,9 +313,11 @@ public:
   HeightCommandHandle(const PoseCommandHandle& other) : PoseCommandHandle(other), command_(0) {}
   HeightCommandHandle(QuadrotorInterface *interface, const std::string& name) : PoseCommandHandle(interface, name), command_(0) {}
   HeightCommandHandle(const PoseHandle &pose, double *command) : PoseCommandHandle(pose, 0) { *this = command; }
+  virtual ~HeightCommandHandle() {}
 
 //  std::string getName() const { return "pose.position.z"; }
   bool connected() const { return get(); }
+  void reset() { command_ = 0; }
 
   HeightCommandHandle& operator=(Pose *source) { PoseCommandHandle::operator=(source); command_ = 0; return *this; }
   HeightCommandHandle& operator=(double *source) { command_ = source; return *this; }
@@ -336,9 +350,11 @@ public:
   HeadingCommandHandle(QuadrotorInterface *interface, const std::string& name) : PoseCommandHandle(interface, name), command_(0), scalar_(0) {}
   // HeadingCommandHandle(const PoseHandle &pose, double *command) : PoseCommandHandle(pose, 0) { *this = value_; }
   HeadingCommandHandle(const PoseHandle &pose, Quaternion *quaternion) : PoseCommandHandle(pose, 0) { *this = command_; }
+  virtual ~HeadingCommandHandle() {}
 
 //  std::string getName() const { return "pose.orientation.yaw"; }
   bool connected() const { return (command_ != 0) || get(); }
+  void reset() { command_ = 0; }
 
   HeadingCommandHandle& operator=(Pose *source) { PoseCommandHandle::operator=(source); command_ = 0; return *this; }
   // HeadingCommandHandle& operator=(double *source) { command_ = 0; scalar_ = source; return *this; }
@@ -366,9 +382,11 @@ public:
   TwistCommandHandle() : command_(0) {}
   TwistCommandHandle(QuadrotorInterface *interface, const std::string& name) : TwistHandle(interface), CommandHandle(interface, name), command_(0) {}
   TwistCommandHandle(const TwistHandle &twist, Twist* command) : TwistHandle(twist) { *this = command; }
+  virtual ~TwistCommandHandle() {}
 
 //  std::string getName() const { return "twist"; }
   bool connected() const { return get(); }
+  void reset() { command_ = 0; }
 
   TwistCommandHandle& operator=(Twist *source) { command_ = source; return *this; }
   ValueType *get() const { return command_; }
@@ -397,9 +415,11 @@ public:
   HorizontalVelocityCommandHandle(const TwistCommandHandle& other) : TwistCommandHandle(other), command_(0) {}
   HorizontalVelocityCommandHandle(QuadrotorInterface *interface, const std::string& name) : TwistCommandHandle(interface, name), command_(0) {}
   HorizontalVelocityCommandHandle(const TwistHandle &twist, Vector3* command) : TwistCommandHandle(twist, 0) { *this = command; }
+  virtual ~HorizontalVelocityCommandHandle() {}
 
 //  std::string getName() const { return "twist.position.xy"; }
   bool connected() const { return get(); }
+  void reset() { command_ = 0; }
 
   HorizontalVelocityCommandHandle& operator=(Twist *source) { TwistCommandHandle::operator=(source); command_ = 0; return *this; }
   HorizontalVelocityCommandHandle& operator=(Vector3 *source) { command_ = source; return *this; }
@@ -437,9 +457,11 @@ public:
   VerticalVelocityCommandHandle(const TwistCommandHandle& other) : TwistCommandHandle(other), command_(0) {}
   VerticalVelocityCommandHandle(QuadrotorInterface *interface, const std::string& name) : TwistCommandHandle(interface, name), command_(0) {}
   VerticalVelocityCommandHandle(const TwistHandle &twist, double* command) : TwistCommandHandle(twist, 0) { *this = command; }
+  virtual ~VerticalVelocityCommandHandle() {}
 
 //  std::string getName() const { return "twist.linear.z"; }
   bool connected() const { return get(); }
+  void reset() { command_ = 0; }
 
   VerticalVelocityCommandHandle& operator=(Twist *source) { TwistCommandHandle::operator=(source); command_ = 0; return *this; }
   VerticalVelocityCommandHandle& operator=(double *source) { command_ = source; return *this; }
@@ -469,9 +491,11 @@ public:
   AngularVelocityCommandHandle(const TwistCommandHandle& other) : TwistCommandHandle(other), command_(0) {}
   AngularVelocityCommandHandle(QuadrotorInterface *interface, const std::string& name) : TwistCommandHandle(interface, name), command_(0) {}
   AngularVelocityCommandHandle(const TwistHandle &twist, double* command) : TwistCommandHandle(twist, 0) { *this = command; }
+  virtual ~AngularVelocityCommandHandle() {}
 
 //  std::string getName() const { return "twist.angular.z"; }
   bool connected() const { return get(); }
+  void reset() { command_ = 0; }
 
   AngularVelocityCommandHandle& operator=(Twist *source) { TwistCommandHandle::operator=(source); command_ = 0; return *this; }
   AngularVelocityCommandHandle& operator=(double *source) { command_ = source; return *this; }
@@ -499,9 +523,11 @@ public:
 
   WrenchCommandHandle() : command_(0) {}
   WrenchCommandHandle(QuadrotorInterface *interface, const std::string& name) : CommandHandle(interface, name), command_(0) {}
+  virtual ~WrenchCommandHandle() {}
 
 //  std::string getName() const { return "wrench"; }
   bool connected() const { return get(); }
+  void reset() { command_ = 0; }
 
   WrenchCommandHandle& operator=(Wrench *source) { command_ = source; return *this; }
   ValueType *get() const { return command_; }
@@ -528,9 +554,11 @@ public:
 
   MotorCommandHandle() : command_(0) {}
   MotorCommandHandle(QuadrotorInterface *interface, const std::string& name) : CommandHandle(interface, name), command_(0) {}
+  virtual ~MotorCommandHandle() {}
 
 //  std::string getName() const { return "motor"; }
   bool connected() const { return get(); }
+  void reset() { command_ = 0; }
 
   MotorCommandHandle& operator=(MotorCommand *source) { command_ = source; return *this; }
   ValueType *get() const { return command_; }
