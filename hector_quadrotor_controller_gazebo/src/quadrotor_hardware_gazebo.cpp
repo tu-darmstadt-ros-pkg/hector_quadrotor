@@ -33,6 +33,10 @@ namespace hector_quadrotor_controller_gazebo {
 QuadrotorHardwareSim::QuadrotorHardwareSim()
 {
   this->registerInterface(static_cast<QuadrotorInterface *>(this));
+
+  twist_output_ = addOutput<TwistCommandHandle>("twist");
+  wrench_output_ = addOutput<WrenchCommandHandle>("wrench");
+  motor_output_ = addOutput<MotorCommandHandle>("motor");
 }
 
 QuadrotorHardwareSim::~QuadrotorHardwareSim()
@@ -134,21 +138,20 @@ void QuadrotorHardwareSim::readSim(ros::Time time, ros::Duration period)
 
 void QuadrotorHardwareSim::writeSim(ros::Time time, ros::Duration period)
 {
-  const MotorCommand* motor = getCommand<MotorCommandHandle>("motor");
-  if ((mode_ == MODE_AUTO || mode_ == MODE_MOTOR) && motor) {
-    publisher_motor_command_.publish(*motor);
+  if ((mode_ == MODE_AUTO || mode_ == MODE_MOTOR) && motor_output_->connected() && motor_output_->enabled()) {
+    publisher_motor_command_.publish(motor_output_->getCommand());
     return;
   }
 
   const Wrench* wrench = getCommand<WrenchCommandHandle>("wrench");
-  if ((mode_ == MODE_AUTO || mode_ == MODE_WRENCH) && wrench) {
-    publisher_wrench_command_.publish(*wrench);
+  if ((mode_ == MODE_AUTO || mode_ == MODE_WRENCH) && wrench_output_->connected() && wrench_output_->enabled()) {
+    publisher_wrench_command_.publish(wrench_output_->getCommand());
     return;
   }
 
   const Twist* twist = getCommand<TwistCommandHandle>("twist");
-  if ((mode_ == MODE_AUTO || mode_ == MODE_TWIST) && twist) {
-    publisher_twist_command_.publish(*twist);
+  if ((mode_ == MODE_AUTO || mode_ == MODE_TWIST) && twist_output_->connected() && twist_output_->enabled()) {
+    publisher_twist_command_.publish(twist_output_->getCommand());
     return;
   }
 }
