@@ -53,8 +53,11 @@ public:
 
   virtual Pose *getPose()               { return &pose_; }
   virtual Twist *getTwist()             { return &twist_; }
+  virtual Vector3 *getAcceleration()    { return &acceleration_; }
   virtual Imu *getSensorImu()           { return &imu_; }
   virtual MotorStatus *getMotorStatus() { return &motor_status_; }
+
+  virtual bool getMassAndInertia(double &mass, double inertia[3]);
 
   virtual bool initSim(
       const std::string& robot_namespace,
@@ -76,22 +79,24 @@ protected:
   std_msgs::Header header_;
   Pose pose_;
   Twist twist_;
+  Vector3 acceleration_;
   Imu imu_;
   MotorStatus motor_status_;
 
-  TwistCommandHandlePtr twist_output_;
   WrenchCommandHandlePtr wrench_output_;
   MotorCommandHandlePtr motor_output_;
 
-  enum { MODE_AUTO, MODE_TWIST, MODE_WRENCH, MODE_MOTOR } mode_;
+  gazebo::physics::ModelPtr model_;
+  gazebo::physics::LinkPtr link_;
+  gazebo::physics::PhysicsEnginePtr physics_;
 
-  gazebo::physics::ModelPtr parent_model;
+  gazebo::math::Pose gz_pose_;
+  gazebo::math::Vector3 gz_velocity_, gz_acceleration_, gz_angular_velocity_;
 
   ros::CallbackQueue callback_queue_;
   ros::Subscriber subscriber_state_;
   ros::Subscriber subscriber_imu_;
   ros::Subscriber subscriber_motor_status_;
-  ros::Publisher publisher_twist_command_;
   ros::Publisher publisher_wrench_command_;
   ros::Publisher publisher_motor_command_;
 };

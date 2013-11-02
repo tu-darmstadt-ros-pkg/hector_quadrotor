@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(hector_quadrotor_controller)
-#set(CMAKE_BUILD_TYPE Debug)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -37,20 +36,21 @@ catkin_package(
 ## Build ##
 ###########
 
-add_library(quadrotor_controller src/quadrotor_interface.cpp src/quadrotor_hardware.cpp)
-target_link_libraries(quadrotor_controller ${geometry_msgs_LIBRARIES})
+add_library(quadrotor_controller src/quadrotor_interface.cpp src/pid.cpp)
+target_link_libraries(quadrotor_controller ${catkin_LIBRARIES})
 add_dependencies(quadrotor_controller hector_uav_msgs_generate_messages_cpp)
 
 add_library(pose_controller src/pose_controller.cpp)
 target_link_libraries(pose_controller quadrotor_controller)
 
-add_executable(pose_controller_node src/pose_controller_node.cpp)
-target_link_libraries(pose_controller_node pose_controller ${catkin_LIBRARIES})
-set_target_properties(pose_controller_node PROPERTIES OUTPUT_NAME pose_controller)
+add_library(twist_controller src/twist_controller.cpp)
+target_link_libraries(twist_controller quadrotor_controller)
 
-## Add cmake target dependencies of the executable/library
-## as an example, message headers may need to be generated before nodes
-# add_dependencies(@{name}_node @{name}_generate_messages_cpp)
+#add_library(aerodynamics_plugin src/aerodynamics_plugin.cpp)
+#target_link_libraries(aerodynamics_plugin quadrotor_controller)
+
+#add_library(propulsion_plugin src/propulsion_plugin.cpp)
+#target_link_libraries(propulsion_plugin quadrotor_controller)
 
 #############
 ## Install ##
@@ -67,7 +67,7 @@ set_target_properties(pose_controller_node PROPERTIES OUTPUT_NAME pose_controlle
 # )
 
 ## Mark executables and/or libraries for installation
-install(TARGETS quadrotor_controller pose_controller pose_controller_node
+install(TARGETS quadrotor_controller pose_controller twist_controller #aerodynamics_plugin propulsion_plugin
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

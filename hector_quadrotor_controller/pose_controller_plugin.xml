@@ -1,7 +1,0 @@
-<library path="lib/libpose_controller">
-  <class name="hector_quadrotor_controller/PoseController" type="hector_quadrotor_controller::PoseController" base_class_type="controller_interface::ControllerBase">
-  <description>
-    The pose controller controls the quadrotor's pose and outputs velocity commands.
-  </description>
-  </class>
-</library>

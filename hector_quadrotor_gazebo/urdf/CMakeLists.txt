@@ -58,7 +58,7 @@ endif()
 if(USE_PROPULSION_PLUGIN)
   list(APPEND MODEL_PLUGINS quadrotor_propulsion)
 else()
-  list(APPEND MODEL_PLUGINS "quadrotor_simple_controller state_topic=\"${CONTROL_STATE_TOPIC}\" imu_topic=\"${CONTROL_IMU_TOPIC}\"")
+  #list(APPEND MODEL_PLUGINS "quadrotor_simple_controller state_topic=\"${CONTROL_STATE_TOPIC}\" imu_topic=\"${CONTROL_IMU_TOPIC}\"")
 endif()
 
 # aerodynamics plugin

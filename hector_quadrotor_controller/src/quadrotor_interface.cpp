@@ -99,6 +99,32 @@ double PoseHandle::getYaw() const
   return atan2(2.*x*y + 2.*w*z, x*x + w*w - z*z - y*y);
 }
 
+Vector3 PoseHandle::toBody(const Vector3& nav) const
+{
+  const Quaternion::_w_type& w = pose().orientation.w;
+  const Quaternion::_x_type& x = pose().orientation.x;
+  const Quaternion::_y_type& y = pose().orientation.y;
+  const Quaternion::_z_type& z = pose().orientation.z;
+  Vector3 body;
+  body.x = (w*w+x*x-y*y-z*z) * nav.x + (2.*x*y + 2.*w*z) * nav.y + (2.*x*z - 2.*w*y) * nav.z;
+  body.y = (2.*x*y - 2.*w*z) * nav.x + (w*w-x*x+y*y-z*z) * nav.y + (2.*y*z + 2.*w*x) * nav.z;
+  body.z = (2.*x*z + 2.*w*y) * nav.x + (2.*y*z - 2.*w*x) * nav.y + (w*w-x*x-y*y+z*z) * nav.z;
+  return body;
+}
+
+Vector3 PoseHandle::fromBody(const Vector3& body) const
+{
+  const Quaternion::_w_type& w = pose().orientation.w;
+  const Quaternion::_x_type& x = pose().orientation.x;
+  const Quaternion::_y_type& y = pose().orientation.y;
+  const Quaternion::_z_type& z = pose().orientation.z;
+  Vector3 nav;
+  nav.x = (w*w+x*x-y*y-z*z) * body.x + (2.*x*y - 2.*w*z) * body.y + (2.*x*z + 2.*w*y) * body.z;
+  nav.y = (2.*x*y + 2.*w*z) * body.x + (w*w-x*x+y*y-z*z) * body.y + (2.*y*z - 2.*w*x) * body.z;
+  nav.z = (2.*x*z - 2.*w*y) * body.x + (2.*y*z + 2.*w*x) * body.y + (w*w-x*x-y*y+z*z) * body.z;
+  return nav;
+}
+
 void HorizontalPositionCommandHandle::getError(double &x, double &y) const
 {
   getCommand(x, y);

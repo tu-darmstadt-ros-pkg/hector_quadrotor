@@ -43,8 +43,8 @@
    <!-- spawn controller -->
    <arg name="use_ground_truth_for_control" default="true" />
    <group if="$(arg use_ground_truth_for_control)">
-     <param name="controller/state_topic" value="ground_truth/state" />
-     <param name="controller/imu_topic" value="raw_imu" />
+     <param name="controller/state_topic" value="" />
+     <param name="controller/imu_topic" value="" />
    </group>
    <group unless="$(arg use_ground_truth_for_control)">
      <param name="controller/state_topic" value="state" />

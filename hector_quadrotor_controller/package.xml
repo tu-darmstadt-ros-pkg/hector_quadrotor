@@ -37,6 +37,6 @@
   <!-- Dependencies needed only for running tests. -->
 
   <export>
-    <controller_interface plugin="${prefix}/pose_controller_plugin.xml"/>
+    <controller_interface plugin="${prefix}/plugin.xml"/>
   </export>
 </package>

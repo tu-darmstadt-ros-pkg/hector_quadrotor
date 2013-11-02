@@ -1,0 +1,45 @@
+controller:
+    pose:
+        frequency: 10.0
+        type: hector_quadrotor_controller/PoseController
+        xy:
+            k_p: 2.0
+            k_i: 0.0
+            k_d: 0.0
+            limit_output: 5.0
+        z:
+            k_p: 2.0
+            k_i: 0.0
+            k_d: 0.0
+            limit_output: 5.0
+        yaw:
+            k_p: 2.0
+            k_i: 0.0
+            k_d: 0.0
+            limit_output: 1.0
+    twist:
+        type: hector_quadrotor_controller/TwistController
+        linear/xy:
+            k_p: 5.0
+            k_i: 0.0
+            k_d: 1.0
+            limit_output: 5.0
+        linear/z:
+            k_p: 5.0
+            k_i: 0.0
+            k_d: 1.0
+            limit_output: 10.0
+        angular/xy:
+            k_p: 10.0
+            k_i: 0.0
+            k_d: 5.0
+        angular/z:
+            k_p: 2.0
+            k_i: 0.0
+            k_d: 1.0
+            limit_output: 1.0
+        auto_engage: true
+        limits:
+            force/z: 30.0
+            torque/xy: 0.0
+            torque/z: 0.0

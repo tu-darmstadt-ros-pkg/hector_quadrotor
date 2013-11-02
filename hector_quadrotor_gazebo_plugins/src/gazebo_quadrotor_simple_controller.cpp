@@ -54,6 +54,8 @@ GazeboQuadrotorSimpleController::~GazeboQuadrotorSimpleController()
 // Load the controller
 void GazeboQuadrotorSimpleController::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 {
+  gzwarn << "The GazeboQuadrotorSimpleController plugin is DEPRECATED in ROS hydro. Please use the twist_controller in package hector_quadrotor_controller instead." << std::endl;
+
   world = _model->GetWorld();
   link = _model->GetLink();
   link_name_ = link->GetName();

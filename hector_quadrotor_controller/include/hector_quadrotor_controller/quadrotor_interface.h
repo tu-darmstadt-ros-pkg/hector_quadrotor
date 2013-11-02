@@ -66,8 +66,16 @@ public:
 
   virtual Pose *getPose()                 { return 0; }
   virtual Twist *getTwist()               { return 0; }
+  virtual Vector3 *getAcceleration()      { return 0; }
   virtual Imu *getSensorImu()             { return 0; }
   virtual MotorStatus *getMotorStatus()   { return 0; }
+
+  virtual bool getMassAndInertia(double &mass, double inertia[3]) { return false; }
+
+  template <typename HandleType> boost::shared_ptr<HandleType> getHandle()
+  {
+    return boost::shared_ptr<HandleType>(new HandleType(this));
+  }
 
   template <typename HandleType> boost::shared_ptr<HandleType> addInput(const std::string& name)
   {
@@ -157,6 +165,8 @@ public:
 
   void getEulerRPY(double &roll, double &pitch, double &yaw) const;
   double getYaw() const;
+  Vector3 toBody(const Vector3& nav) const;
+  Vector3 fromBody(const Vector3& nav) const;
 
 protected:
   const Pose *pose_;
@@ -177,6 +187,21 @@ protected:
   const Twist *twist_;
 };
 typedef boost::shared_ptr<PoseHandle> PoseHandlePtr;
+
+class AccelerationHandle
+{
+public:
+  AccelerationHandle() : acceleration_(0) {}
+  AccelerationHandle(QuadrotorInterface *interface) : acceleration_(interface->getAcceleration()) {}
+  AccelerationHandle(const Vector3 *acceleration) : acceleration_(acceleration) {}
+  virtual ~AccelerationHandle() {}
+
+  const Vector3& acceleration() const { return *acceleration_; }
+
+protected:
+  const Vector3 *acceleration_;
+};
+typedef boost::shared_ptr<AccelerationHandle> AccelerationHandlePtr;
 
 class StateHandle : public PoseHandle, public TwistHandle
 {

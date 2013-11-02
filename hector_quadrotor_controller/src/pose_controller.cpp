@@ -26,188 +26,155 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 
-#include <hector_quadrotor_controller/pose_controller.h>
-#include <limits>
+#include <hector_quadrotor_controller/quadrotor_interface.h>
+#include <hector_quadrotor_controller/pid.h>
+
+#include <controller_interface/controller.h>
+
+#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/TwistStamped.h>
+
+#include <ros/subscriber.h>
+#include <ros/callback_queue.h>
 
 namespace hector_quadrotor_controller {
 
-bool PoseController::init(QuadrotorInterface *interface, ros::NodeHandle &root_nh, ros::NodeHandle &controller_nh)
+using namespace controller_interface;
+
+class PoseController : public controller_interface::Controller<QuadrotorInterface>
 {
-  // get interface handles
-  pose_input_   = interface->addInput<PoseCommandHandle>("pose");
-  twist_input_  = interface->addInput<TwistCommandHandle>("pose/twist");
-  twist_output_ = interface->addOutput<TwistCommandHandle>("twist");
-  interface->claim(twist_output_->getName());
-
-  // subscribe to commanded pose and velocity
-  ros::SubscribeOptions pose_subscribe_options = ros::SubscribeOptions::create<geometry_msgs::PoseStamped>(
-    "command/pose", 1,
-    boost::bind(&PoseController::poseCommandCallback, this, _1),
-    ros::VoidConstPtr(), 0 // &callback_queue_
-  );
-  pose_subscriber_ = root_nh.subscribe(pose_subscribe_options);
-  ros::SubscribeOptions twist_subscribe_options = ros::SubscribeOptions::create<geometry_msgs::TwistStamped>(
-    "command/twist", 1,
-    boost::bind(&PoseController::twistCommandCallback, this, _1),
-    ros::VoidConstPtr(), 0 // &callback_queue_
-  );
-  twist_subscriber_ = root_nh.subscribe(twist_subscribe_options);
-
-  // get parameters
-  initParameters(parameters_.xy,  ros::NodeHandle(controller_nh, "xy"));
-  initParameters(parameters_.z,   ros::NodeHandle(controller_nh, "z"));
-  initParameters(parameters_.yaw, ros::NodeHandle(controller_nh, "yaw"));
-
-  return true;
-}
-
-void PoseController::initParameters(parameters &param, const ros::NodeHandle &param_nh)
-{
-  param_nh.getParam("enabled", param.enabled = true);
-  param_nh.getParam("k_p", param.k_p = 0.0);
-  param_nh.getParam("k_i", param.k_i = 0.0);
-  param_nh.getParam("k_d", param.k_d = 0.0);
-  param_nh.getParam("limit_i", param.limit_i = std::numeric_limits<double>::quiet_NaN());
-  param_nh.getParam("limit_output", param.limit_output = std::numeric_limits<double>::quiet_NaN());
-}
-
-void PoseController::reset()
-{
-  state_.x   = state();
-  state_.y   = state();
-  state_.x   = state();
-  state_.yaw = state();
-}
-
-PoseController::state::state()
-  : p(std::numeric_limits<double>::quiet_NaN())
-  , i(0.0)
-  , d(std::numeric_limits<double>::quiet_NaN())
-  , derivative(std::numeric_limits<double>::quiet_NaN())
-{
-}
-
-void PoseController::poseCommandCallback(const geometry_msgs::PoseStampedConstPtr& command)
-{
-  pose_command_ = *command;
-  if (!(pose_input_->connected())) *pose_input_ = &(pose_command_.pose);
-
-  ros::Time start_time = command->header.stamp;
-  if (start_time.isZero()) start_time = ros::Time::now();
-  if (!isRunning()) this->startRequest(start_time);
-}
-
-void PoseController::twistCommandCallback(const geometry_msgs::TwistStampedConstPtr& command)
-{
-  twist_command_ = *command;
-  if (!(twist_input_->connected())) *twist_input_ = &(twist_command_.twist);
-
-  ros::Time start_time = command->header.stamp;
-  if (start_time.isZero()) start_time = ros::Time::now();
-  if (!isRunning()) this->startRequest(start_time);
-}
-
-void PoseController::starting(const ros::Time &time)
-{
-  reset();
-  twist_output_->start();
-}
-
-void PoseController::stopping(const ros::Time &time)
-{
-  twist_output_->stop();
-}
-
-void PoseController::update(const ros::Time& time, const ros::Duration& period)
-{
-  Twist output;
-
-  // execute available callbacks in the callback queue (is this real-time safe?)
-//  callback_queue_.callAvailable();
-
-  // return if no pose command is available
-  if (!(pose_input_->connected())) {
-    return;
-  }
-
-  // check command timeout
-  // TODO
-
-  // control horizontal position
-  double error_n, error_w;
-  HorizontalPositionCommandHandle(*pose_input_).getError(error_n, error_w);
-  double command_n = updatePID(error_n, twist_input_->twist().linear.x, state_.x, parameters_.xy, period);
-  double command_w = updatePID(error_w, twist_input_->twist().linear.y, state_.y, parameters_.xy, period);
-
-  // transform to body coordinates (yaw only)
-  double yaw = pose_input_->getYaw();
-  output.linear.x =  cos(yaw) * command_n + sin(yaw) * command_w;
-  output.linear.y = -sin(yaw) * command_n + cos(yaw) * command_w;
-
-  // control height
-  output.linear.z = updatePID(HeightCommandHandle(*pose_input_).getError(), twist_input_->twist().linear.z, state_.z, parameters_.z, period);
-
-  // control yaw angle
-  output.angular.z = updatePID(HeadingCommandHandle(*pose_input_).getError(), twist_input_->twist().angular.z, state_.yaw, parameters_.yaw, period);
-
-  // add twist command if available
-  if (twist_input_->connected())
+public:
+  bool init(QuadrotorInterface *interface, ros::NodeHandle &root_nh, ros::NodeHandle &controller_nh)
   {
-    output.linear.x  += twist_input_->getCommand().linear.x;
-    output.linear.y  += twist_input_->getCommand().linear.y;
-    output.linear.z  += twist_input_->getCommand().linear.z;
-    output.angular.x += twist_input_->getCommand().angular.x;
-    output.angular.y += twist_input_->getCommand().angular.y;
-    output.angular.z += twist_input_->getCommand().angular.z;
+    // get interface handles
+    pose_input_   = interface->addInput<PoseCommandHandle>("pose");
+    twist_input_  = interface->addInput<TwistCommandHandle>("pose/twist");
+    twist_output_ = interface->addOutput<TwistCommandHandle>("twist");
+    interface->claim(twist_output_->getName());
+
+    // subscribe to commanded pose and velocity
+    ros::SubscribeOptions pose_subscribe_options = ros::SubscribeOptions::create<geometry_msgs::PoseStamped>(
+      "command/pose", 1,
+      boost::bind(&PoseController::poseCommandCallback, this, _1),
+      ros::VoidConstPtr(), 0 // &callback_queue_
+    );
+    pose_subscriber_ = root_nh.subscribe(pose_subscribe_options);
+    ros::SubscribeOptions twist_subscribe_options = ros::SubscribeOptions::create<geometry_msgs::TwistStamped>(
+      "command/twist", 1,
+      boost::bind(&PoseController::twistCommandCallback, this, _1),
+      ros::VoidConstPtr(), 0 // &callback_queue_
+    );
+    twist_subscriber_ = root_nh.subscribe(twist_subscribe_options);
+
+    // initialize PID controllers
+    pid_.x.init(ros::NodeHandle(controller_nh, "xy"));
+    pid_.y.init(ros::NodeHandle(controller_nh, "xy"));
+    pid_.z.init(ros::NodeHandle(controller_nh, "z"));
+    pid_.yaw.init(ros::NodeHandle(controller_nh, "yaw"));
+
+    return true;
   }
 
-  // set twist output
-  twist_output_->setCommand(output);
-}
-
-template <typename T> inline T& checknan(T& value)
-{
-  if (std::isnan(value)) value = T();
-  return value;
-}
-
-double PoseController::updatePID(double error, double derivative, state &state, const parameters &param, const ros::Duration& period)
-{
-  if (!param.enabled) return 0.0;
-  double dt = period.toSec();
-
-  // integral error
-  state.i += error * dt;
-  if (param.limit_i > 0.0)
+  void reset()
   {
-    if (state.i >  param.limit_i) state.i =  param.limit_i;
-    if (state.i < -param.limit_i) state.i = -param.limit_i;
+    pid_.x.reset();
+    pid_.y.reset();
+    pid_.x.reset();
+    pid_.yaw.reset();
   }
 
-  // differential error
-  if (dt > 0.0 && !std::isnan(state.p) && !std::isnan(state.derivative)) {
-    state.d = (error - state.p) / dt + state.derivative - derivative;
-  } else {
-    state.d = -derivative;
-  }
-  state.derivative = derivative;
-
-  // proportional error
-  state.p = error;
-
-  // calculate output...
-  double output = param.k_p * state.p + param.k_i * state.i + param.k_d * state.d;
-  int antiwindup = 0;
-  if (param.limit_output > 0.0)
+  void poseCommandCallback(const geometry_msgs::PoseStampedConstPtr& command)
   {
-    if (output >  param.limit_i) { output =  param.limit_i; antiwindup =  1; }
-    if (output < -param.limit_i) { output = -param.limit_i; antiwindup = -1; }
-  }
-  if (antiwindup && (error * dt * antiwindup > 0.0)) state.i -= error * dt;
+    pose_command_ = *command;
+    if (!(pose_input_->connected())) *pose_input_ = &(pose_command_.pose);
 
-  checknan(output);
-  return output;
-}
+    ros::Time start_time = command->header.stamp;
+    if (start_time.isZero()) start_time = ros::Time::now();
+    if (!isRunning()) this->startRequest(start_time);
+  }
+
+  void twistCommandCallback(const geometry_msgs::TwistStampedConstPtr& command)
+  {
+    twist_command_ = *command;
+    if (!(twist_input_->connected())) *twist_input_ = &(twist_command_.twist);
+
+    ros::Time start_time = command->header.stamp;
+    if (start_time.isZero()) start_time = ros::Time::now();
+    if (!isRunning()) this->startRequest(start_time);
+  }
+
+  void starting(const ros::Time &time)
+  {
+    reset();
+    twist_output_->start();
+  }
+
+  void stopping(const ros::Time &time)
+  {
+    twist_output_->stop();
+  }
+
+  void update(const ros::Time& time, const ros::Duration& period)
+  {
+    Twist output;
+
+    // execute available callbacks in the callback queue (is this real-time safe?)
+  //  callback_queue_.callAvailable();
+
+    // return if no pose command is available
+    if (!(pose_input_->connected())) {
+      return;
+    }
+
+    // check command timeout
+    // TODO
+
+    // control horizontal position
+    double error_n, error_w;
+    HorizontalPositionCommandHandle(*pose_input_).getError(error_n, error_w);
+    output.linear.x = pid_.x.update(error_n, twist_input_->twist().linear.x, period);
+    output.linear.y = pid_.y.update(error_w, twist_input_->twist().linear.y, period);
+
+    // control height
+    output.linear.z = pid_.z.update(HeightCommandHandle(*pose_input_).getError(), twist_input_->twist().linear.z, period);
+
+    // control yaw angle
+    output.angular.z = pid_.yaw.update(HeadingCommandHandle(*pose_input_).getError(), twist_input_->twist().angular.z, period);
+
+    // add twist command if available
+    if (twist_input_->connected())
+    {
+      output.linear.x  += twist_input_->getCommand().linear.x;
+      output.linear.y  += twist_input_->getCommand().linear.y;
+      output.linear.z  += twist_input_->getCommand().linear.z;
+      output.angular.x += twist_input_->getCommand().angular.x;
+      output.angular.y += twist_input_->getCommand().angular.y;
+      output.angular.z += twist_input_->getCommand().angular.z;
+    }
+
+    // set twist output
+    twist_output_->setCommand(output);
+  }
+
+private:
+  PoseCommandHandlePtr pose_input_;
+  TwistCommandHandlePtr twist_input_;
+  TwistCommandHandlePtr twist_output_;
+
+  geometry_msgs::PoseStamped pose_command_;
+  geometry_msgs::TwistStamped twist_command_;
+
+  // ros::CallbackQueue callback_queue_;
+  ros::Subscriber pose_subscriber_;
+  ros::Subscriber twist_subscriber_;
+
+  struct {
+    PID x;
+    PID y;
+    PID z;
+    PID yaw;
+  } pid_;
+};
 
 } // namespace hector_quadrotor_controller
 

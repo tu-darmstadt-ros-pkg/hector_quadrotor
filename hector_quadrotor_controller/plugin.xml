@@ -1,0 +1,14 @@
+<library path="lib/libpose_controller">
+  <class name="hector_quadrotor_controller/PoseController" type="hector_quadrotor_controller::PoseController" base_class_type="controller_interface::ControllerBase">
+  <description>
+    The pose controller controls the quadrotor's pose and outputs velocity commands.
+  </description>
+  </class>
+</library>
+<library path="lib/libtwist_controller">
+  <class name="hector_quadrotor_controller/TwistController" type="hector_quadrotor_controller::TwistController" base_class_type="controller_interface::ControllerBase">
+  <description>
+    The simple controller controls the quadrotor's twist (linear and angular velocity) by applying torque and thrust similar to a real quadrotor.
+  </description>
+  </class>
+</library>
