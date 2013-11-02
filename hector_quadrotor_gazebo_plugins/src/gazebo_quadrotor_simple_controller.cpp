@@ -259,7 +259,7 @@ void GazeboQuadrotorSimpleController::Update()
       if (!running_ && velocity_command_.linear.z > 0.1) {
         running_ = true;
         ROS_INFO_NAMED("quadrotor_simple_controller", "Engaging motors!");
-      } else if (running_ && controllers_.velocity_z.i < -1.0 && velocity_command_.linear.z < 0.1 && (velocity.z > -0.1 && velocity.z < 0.1)) {
+      } else if (running_ && controllers_.velocity_z.i < -1.0 && velocity_command_.linear.z < -0.1 && (velocity.z > -0.1 && velocity.z < 0.1)) {
         running_ = false;
         ROS_INFO_NAMED("quadrotor_simple_controller", "Shutting down motors!");
       }
