@@ -139,12 +139,13 @@ void QuadrotorAerodynamics::update(double dt)
   //    std::cout << propulsion_model_->y[i] << " ";
   //  std::cout << "]" << std::endl;
 
-  wrench_.force.x  =  drag_model_->y[0];
-  wrench_.force.y  = -drag_model_->y[1];
-  wrench_.force.z  = -drag_model_->y[2];
-  wrench_.torque.x =  drag_model_->y[3];
-  wrench_.torque.x = -drag_model_->y[4];
-  wrench_.torque.x = -drag_model_->y[5];
+  // drag_model_ gives us inverted vectors!
+  wrench_.force.x  = -( drag_model_->y[0]);
+  wrench_.force.y  = -(-drag_model_->y[1]);
+  wrench_.force.z  = -(-drag_model_->y[2]);
+  wrench_.torque.x = -( drag_model_->y[3]);
+  wrench_.torque.x = -(-drag_model_->y[4]);
+  wrench_.torque.x = -(-drag_model_->y[5]);
 }
 
 } // namespace hector_quadrotor_model
