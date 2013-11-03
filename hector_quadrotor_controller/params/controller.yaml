@@ -22,24 +22,27 @@ controller:
         linear/xy:
             k_p: 5.0
             k_i: 0.0
-            k_d: 1.0
+            k_d: 0.5
             limit_output: 5.0
+            time_constant: 0.1
         linear/z:
             k_p: 5.0
             k_i: 0.0
-            k_d: 1.0
+            k_d: 0.5
             limit_output: 10.0
+            time_constant: 0.1
         angular/xy:
             k_p: 10.0
             k_i: 0.0
             k_d: 5.0
+            time_constant: 0.01
         angular/z:
-            k_p: 2.0
+            k_p: 5.0
             k_i: 0.0
-            k_d: 1.0
-            limit_output: 1.0
-        auto_engage: true
+            k_d: 0.5
+            limit_output: 3.0
+            time_constant: 0.1
         limits:
             force/z: 30.0
-            torque/xy: 0.0
-            torque/z: 0.0
+            torque/xy: 10.0
+            torque/z: 1.0
