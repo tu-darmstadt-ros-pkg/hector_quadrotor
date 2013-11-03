@@ -9,11 +9,8 @@ endif()
 
 option(USE_POSE_ESTIMATION "Use hector_pose_estimation to estimate the pose of the quadrotor." OFF)
 if(USE_POSE_ESTIMATION)
-  rosbuild_find_ros_package(gazebo_rtt_plugin)
-  rosbuild_find_ros_package(rtt_hector_pose_estimation)
-
-  find_library(gazebo_rtt_plugin_LIBRARY libgazebo_rtt_plugin.so HINTS ${gazebo_rtt_plugin_PACKAGE_PATH}/lib)
-  #find_library(rtt_hector_pose_estimation_LIBRARY librtt_hector_pose_estimation-gnulinux.so HINTS ${rtt_hector_pose_estimation_PACKAGE_PATH}/lib/orocos/gnulinux)
+  find_library(gazebo_rtt_plugin_LIBRARY libgazebo_rtt_plugin.so)
+  #find_library(rtt_hector_pose_estimation_LIBRARY librtt_hector_pose_estimation-gnulinux.so)
 
   if(NOT gazebo_rtt_plugin_LIBRARY)
   #if(NOT gazebo_rtt_plugin_LIBRARY OR NOT rtt_hector_pose_estimation_LIBRARY)
@@ -23,16 +20,13 @@ if(USE_POSE_ESTIMATION)
 endif()
 
 if(USE_POSE_ESTIMATION)
-  set(URDF "${URDF}  <xacro:quadrotor_pose_estimation/>\n")
+  set(URDF "${URDF}  <xacro:quadrotor_rtt_pose_estimation/>\n")
 endif()
 
 option(USE_PROPULSION_PLUGIN "Use a model of the quadrotor propulsion system" OFF)
 if(USE_PROPULSION_PLUGIN)
-  rosbuild_find_ros_package(gazebo_rtt_plugin)
-  rosbuild_find_ros_package(hector_quadrotor_gazebo_plugins)
-
-  find_library(gazebo_rtt_plugin_LIBRARY libgazebo_rtt_plugin.so HINTS ${gazebo_rtt_plugin_PACKAGE_PATH}/lib)
-  find_library(hector_gazebo_quadrotor_propulsion_LIBRARY libhector_gazebo_quadrotor_propulsion.so HINTS ${hector_quadrotor_gazebo_plugins_PACKAGE_PATH}/lib)
+  find_library(gazebo_rtt_plugin_LIBRARY libgazebo_rtt_plugin.so)
+  find_library(hector_gazebo_quadrotor_propulsion_LIBRARY libhector_gazebo_quadrotor_propulsion.so)
 
   if(NOT gazebo_rtt_plugin_LIBRARY OR NOT hector_gazebo_quadrotor_propulsion_LIBRARY)
     message(SEND_ERROR "Cannot use the propulsion model as the required plugins have not been found. Try to run 'rosmake hector_quadrotor_gazebo_plugins' first.")
@@ -41,7 +35,7 @@ if(USE_PROPULSION_PLUGIN)
 endif()
 
 if(USE_PROPULSION_PLUGIN)
-  set(URDF "${URDF}  <xacro:quadrotor_controller state_topic=\"${CONTROL_STATE_TOPIC}\" imu_topic=\"${CONTROL_IMU_TOPIC}\"/>\n")
+  set(URDF "${URDF}  <xacro:quadrotor_rtt_controller state_topic=\"${CONTROL_STATE_TOPIC}\" imu_topic=\"${CONTROL_IMU_TOPIC}\"/>\n")
   set(URDF "${URDF}  <xacro:quadrotor_propulsion/>\n")
 else()
   set(URDF "${URDF}  <xacro:quadrotor_simple_controller state_topic=\"${CONTROL_STATE_TOPIC}\" imu_topic=\"${CONTROL_IMU_TOPIC}\"/>\n")
@@ -49,9 +43,7 @@ endif()
 
 option(USE_AERODYNAMICS_PLUGIN "Use a model of the quadrotor aerodynamics" OFF)
 if(USE_AERODYNAMICS_PLUGIN)
-  rosbuild_find_ros_package(hector_quadrotor_gazebo_plugins)
-
-  find_library(hector_gazebo_quadrotor_aerodynamics_LIBRARY libhector_gazebo_quadrotor_aerodynamics.so HINTS ${hector_quadrotor_gazebo_plugins_PACKAGE_PATH}/lib)
+  find_library(hector_gazebo_quadrotor_aerodynamics_LIBRARY libhector_gazebo_quadrotor_aerodynamics.so)
 
   if(NOT gazebo_rtt_plugin_LIBRARY OR NOT hector_gazebo_quadrotor_aerodynamics_LIBRARY)
     message(SEND_ERROR "Cannot use the aerodynamics model as the required plugin has not been found. Try to run 'rosmake hector_quadrotor_gazebo_plugins' first.")
