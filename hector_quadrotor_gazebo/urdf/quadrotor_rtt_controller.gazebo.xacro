@@ -3,7 +3,7 @@
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
 
   <!-- Quadrotor Controller Plugin -->
-  <xacro:macro name="quadrotor_controller" params="state_topic imu_topic">
+  <xacro:macro name="quadrotor_rtt_controller" params="state_topic imu_topic">
     <gazebo>
       <plugin name="quadrotor_controller" filename="libgazebo_rtt_plugin.so">
         <updateRate>100.0</updateRate>

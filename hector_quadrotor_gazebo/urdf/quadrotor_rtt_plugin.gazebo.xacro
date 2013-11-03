@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- Quadrotor RTT Plugin -->
+  <xacro:macro name="quadrotor_rtt_plugin">
+    <gazebo>
+      <plugin name="quadrotor_rtt_plugin" filename="librtt_gazebo_plugin.so">
+      </plugin>
+    </gazebo>
+  </xacro:macro>
+</robot>
