@@ -5,7 +5,7 @@
   <!-- Quadrotor Controller Plugin -->
   <xacro:macro name="quadrotor_rtt_controller" params="state_topic imu_topic">
     <gazebo>
-      <plugin name="quadrotor_controller" filename="libgazebo_rtt_plugin.so">
+      <plugin name="quadrotor_rtt_controller" filename="libgazebo_rtt_plugin.so">
         <updateRate>100.0</updateRate>
         <import>quadro</import>
         <component>Controller</component>
