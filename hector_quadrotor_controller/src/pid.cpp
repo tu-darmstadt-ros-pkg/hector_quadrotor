@@ -70,6 +70,7 @@ void PID::init(const ros::NodeHandle &param_nh)
   param_nh.getParam("k_d", parameters_.k_d);
   param_nh.getParam("limit_i", parameters_.limit_i);
   param_nh.getParam("limit_output", parameters_.limit_output);
+  param_nh.getParam("time_constant", parameters_.time_constant);
 }
 
 void PID::reset()

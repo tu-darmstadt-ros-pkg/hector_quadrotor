@@ -28,6 +28,8 @@
 
 #include <hector_quadrotor_controller/quadrotor_hardware_gazebo.h>
 
+#include <geometry_msgs/WrenchStamped.h>
+
 namespace hector_quadrotor_controller_gazebo {
 
 QuadrotorHardwareSim::QuadrotorHardwareSim()
@@ -88,7 +90,7 @@ bool QuadrotorHardwareSim::initSim(
 
   // publish wrench
   {
-    ros::AdvertiseOptions ops = ros::AdvertiseOptions::create<geometry_msgs::Wrench>("command/wrench", 1, ros::SubscriberStatusCallback(), ros::SubscriberStatusCallback(), ros::VoidConstPtr(), &callback_queue_);
+    ros::AdvertiseOptions ops = ros::AdvertiseOptions::create<geometry_msgs::WrenchStamped>("command/wrench", 1, ros::SubscriberStatusCallback(), ros::SubscriberStatusCallback(), ros::VoidConstPtr(), &callback_queue_);
     publisher_wrench_command_ = model_nh.advertise(ops);
   }
 
@@ -114,12 +116,12 @@ bool QuadrotorHardwareSim::getMassAndInertia(double &mass, double inertia[3]) {
 void QuadrotorHardwareSim::stateCallback(const nav_msgs::OdometryConstPtr &state) {
   // calculate acceleration
   if (!header_.stamp.isZero() && !state->header.stamp.isZero()) {
+    const double acceleration_time_constant = 0.1;
     double dt((state->header.stamp - header_.stamp).toSec());
     if (dt > 0.0) {
-      acceleration_.x = (twist_.linear.x - state->twist.twist.linear.x) / dt;
-      acceleration_.y = (twist_.linear.y - state->twist.twist.linear.y) / dt;
-      acceleration_.z = (twist_.linear.z - state->twist.twist.linear.z) / dt;
-      ROS_DEBUG_STREAM_NAMED("hector_quadrotor_controller_gazebo", "Acceleration: " << acceleration_.x << ", " << acceleration_.y << ", " << acceleration_.z);
+      acceleration_.x = ((state->twist.twist.linear.x - twist_.linear.x) + acceleration_time_constant * acceleration_.x) / (dt + acceleration_time_constant);
+      acceleration_.y = ((state->twist.twist.linear.y - twist_.linear.y) + acceleration_time_constant * acceleration_.y) / (dt + acceleration_time_constant);
+      acceleration_.z = ((state->twist.twist.linear.z - twist_.linear.z) + acceleration_time_constant * acceleration_.z) / (dt + acceleration_time_constant);
     }
   }
 
@@ -142,8 +144,9 @@ void QuadrotorHardwareSim::readSim(ros::Time time, ros::Duration period)
   callback_queue_.callAvailable();
 
   // read state from Gazebo
+  const double acceleration_time_constant = 0.1;
   gz_pose_             =  link_->GetWorldPose();
-  gz_acceleration_     = (link_->GetWorldLinearVel() - gz_velocity_) / period.toSec();
+  gz_acceleration_     = ((link_->GetWorldLinearVel() - gz_velocity_) + acceleration_time_constant * gz_acceleration_) / (period.toSec() + acceleration_time_constant);
   gz_velocity_         =  link_->GetWorldLinearVel();
   gz_angular_velocity_ =  link_->GetWorldAngularVel();
 
@@ -163,6 +166,9 @@ void QuadrotorHardwareSim::readSim(ros::Time time, ros::Duration period)
     twist_.angular.x = gz_angular_velocity_.x;
     twist_.angular.y = gz_angular_velocity_.y;
     twist_.angular.z = gz_angular_velocity_.z;
+    acceleration_.x = gz_acceleration_.x;
+    acceleration_.y = gz_acceleration_.y;
+    acceleration_.z = gz_acceleration_.z;
   }
 
   if (!subscriber_imu_) {
@@ -191,11 +197,14 @@ void QuadrotorHardwareSim::writeSim(ros::Time time, ros::Duration period)
   }
 
   if (wrench_output_->connected() && wrench_output_->enabled()) {
-    Wrench wrench = wrench_output_->getCommand();
+    geometry_msgs::WrenchStamped wrench;
+    wrench.header.stamp = time;
+    wrench.header.frame_id = "base_link";
+    wrench.wrench = wrench_output_->getCommand();
     publisher_wrench_command_.publish(wrench);
 
-    gazebo::math::Vector3 force(wrench.force.x, wrench.force.y, wrench.force.z);
-    gazebo::math::Vector3 torque(wrench.torque.x, wrench.torque.y, wrench.torque.z);
+    gazebo::math::Vector3 force(wrench.wrench.force.x, wrench.wrench.force.y, wrench.wrench.force.z);
+    gazebo::math::Vector3 torque(wrench.wrench.torque.x, wrench.wrench.torque.y, wrench.wrench.torque.z);
     link_->AddRelativeForce(force);
     link_->AddRelativeTorque(torque - link_->GetInertial()->GetCoG().Cross(force));
     return;

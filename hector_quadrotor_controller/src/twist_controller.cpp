@@ -102,6 +102,7 @@ public:
     // get mass and inertia from QuadrotorInterface
     interface->getMassAndInertia(mass_, inertia_);
 
+    twist_given_in_stabilized_frame_ = false;
     return true;
   }
 
@@ -122,13 +123,14 @@ public:
     wrench_.wrench.torque.z = 0.0;
 
     linear_z_control_error_ = 0.0;
-    running_ = false;
+    motors_running_ = false;
   }
 
   void twistCommandCallback(const geometry_msgs::TwistStampedConstPtr& command)
   {
     twist_ = *command;
     if (twist_.header.stamp.isZero()) twist_.header.stamp = ros::Time::now();
+    twist_given_in_stabilized_frame_ = false;
 
     // start controller if it not running
     if (!isRunning()) this->startRequest(twist_.header.stamp);
@@ -138,13 +140,7 @@ public:
   {
     twist_.twist = *command;
     twist_.header.stamp = ros::Time::now();
-
-    // transform to world coordinates (yaw only)
-    double yaw = pose_->getYaw();
-    twist_.twist.linear.x  = cos(yaw) * command->linear.x  - sin(yaw) * command->linear.y;
-    twist_.twist.linear.y  = sin(yaw) * command->linear.x  + cos(yaw) * command->linear.y;
-    twist_.twist.angular.x = cos(yaw) * command->angular.x - sin(yaw) * command->angular.y;
-    twist_.twist.angular.y = sin(yaw) * command->angular.x + cos(yaw) * command->angular.y;
+    twist_given_in_stabilized_frame_ = true;
 
     // start controller if it not running
     if (!isRunning()) this->startRequest(twist_.header.stamp);
@@ -152,14 +148,14 @@ public:
 
   bool engageCallback(std_srvs::Empty::Request&, std_srvs::Empty::Response&)
   {
-    ROS_INFO_NAMED("quadrotor_simple_controller", "Engaging motors!");
-    running_ = true;
+    ROS_INFO_NAMED("twist_controller", "Engaging motors!");
+    motors_running_ = true;
   }
 
   bool shutdownCallback(std_srvs::Empty::Request&, std_srvs::Empty::Response&)
   {
-    ROS_INFO_NAMED("quadrotor_simple_controller", "Shutting down motors!");
-    running_ = false;
+    ROS_INFO_NAMED("twist_controller", "Shutting down motors!");
+    motors_running_ = false;
   }
 
   void starting(const ros::Time &time)
@@ -178,6 +174,7 @@ public:
     // Get twist command input
     if (twist_input_->connected() && twist_input_->enabled()) {
       twist_.twist = twist_input_->getCommand();
+      twist_given_in_stabilized_frame_ = false;
     }
 
     // Get current state and command
@@ -187,38 +184,54 @@ public:
     twist_body.linear =  pose_->toBody(twist.linear);
     twist_body.angular = pose_->toBody(twist.angular);
 
+    // Transform to world coordinates if necessary (yaw only)
+    if (twist_given_in_stabilized_frame_) {
+      double yaw = pose_->getYaw();
+      Twist transformed = command;
+      transformed.linear.x  = cos(yaw) * command.linear.x  - sin(yaw) * command.linear.y;
+      transformed.linear.y  = sin(yaw) * command.linear.x  + cos(yaw) * command.linear.y;
+      transformed.angular.x = cos(yaw) * command.angular.x - sin(yaw) * command.angular.y;
+      transformed.angular.y = sin(yaw) * command.angular.x + cos(yaw) * command.angular.y;
+      command = transformed;
+    }
+
     // Auto engage/shutdown
     if (auto_engage_) {
-      if (!running_ && command.linear.z > 0.1) {
-        running_ = true;
-        ROS_INFO_NAMED("quadrotor_simple_controller", "Engaging motors!");
-      } else if (running_ && command.linear.z < -0.1 && (twist.linear.z > -0.1 && twist.linear.z < 0.1)) {
+      if (!motors_running_ && command.linear.z > 0.1) {
+        motors_running_ = true;
+        ROS_INFO_NAMED("twist_controller", "Engaging motors!");
+      } else if (motors_running_ && command.linear.z < -0.1 && (twist.linear.z > -0.1 && twist.linear.z < 0.1)) {
         if (linear_z_control_error_ > 0.0) linear_z_control_error_ = 0.0; // positive control errors should not affect shutdown
         if (pid_.linear.z.getFilteredControlError(linear_z_control_error_, 10.0, period) < -1.0) {
-          running_ = false;
-          ROS_INFO_NAMED("quadrotor_simple_controller", "Shutting down motors!");
+          motors_running_ = false;
+          ROS_INFO_NAMED("twist_controller", "Shutting down motors!");
         }
       }
     }
 
-    // Get gravity and load factor
-    const double gravity = 9.8065;
-    double load_factor = 1. / (  pose_->pose().orientation.w * pose_->pose().orientation.w
-                               - pose_->pose().orientation.x * pose_->pose().orientation.x
-                               - pose_->pose().orientation.y * pose_->pose().orientation.y
-                               + pose_->pose().orientation.z * pose_->pose().orientation.z );
-
     // Update output
-    if (running_) {
+    if (motors_running_) {
+      // Get gravity and load factor
+      const double gravity = 9.8065;
+      double load_factor = 1. / (  pose_->pose().orientation.w * pose_->pose().orientation.w
+                                 - pose_->pose().orientation.x * pose_->pose().orientation.x
+                                 - pose_->pose().orientation.y * pose_->pose().orientation.y
+                                 + pose_->pose().orientation.z * pose_->pose().orientation.z );
+
       Vector3 acceleration_command;
       acceleration_command.x = pid_.linear.x.update(command.linear.x, twist.linear.x, acceleration_->acceleration().x, period);
       acceleration_command.y = pid_.linear.y.update(command.linear.y, twist.linear.y, acceleration_->acceleration().y, period);
       acceleration_command.z = pid_.linear.z.update(command.linear.z, twist.linear.z, acceleration_->acceleration().z, period) + gravity;
       Vector3 acceleration_command_body = pose_->toBody(acceleration_command);
 
+//      ROS_DEBUG_STREAM_NAMED("twist_controller", "twist.linear:              [" << twist.linear.x << " " << twist.linear.y << " " << twist.linear.z << "]");
+//      ROS_DEBUG_STREAM_NAMED("twist_controller", "twist_body.angular:        [" << twist_body.angular.x << " " << twist_body.angular.y << " " << twist_body.angular.z << "]");
+//      ROS_DEBUG_STREAM_NAMED("twist_controller", "acceleration:              [" << acceleration_->acceleration().x << " " << acceleration_->acceleration().y << " " << acceleration_->acceleration().z << "]");
+//      ROS_DEBUG_STREAM_NAMED("twist_controller", "acceleration_command_body: [" << acceleration_command_body.x << " " << acceleration_command_body.y << " " << acceleration_command_body.z << "]");
+
       wrench_.wrench.torque.x = inertia_[0] * pid_.angular.x.update(-acceleration_command_body.y / gravity, 0.0, twist_body.angular.x, period);
       wrench_.wrench.torque.y = inertia_[1] * pid_.angular.y.update( acceleration_command_body.x / gravity, 0.0, twist_body.angular.y, period);
-      wrench_.wrench.torque.z = inertia_[2] * pid_.angular.z.update( command.angular.z, twist_body.angular.z, 0.0, period);
+      wrench_.wrench.torque.z = inertia_[2] * pid_.angular.z.update( command.angular.z, twist.angular.z, 0.0, period);
       wrench_.wrench.force.x  = 0.0;
       wrench_.wrench.force.y  = 0.0;
       wrench_.wrench.force.z  = mass_       * ((acceleration_command.z - gravity) * load_factor + gravity);
@@ -261,6 +274,7 @@ private:
 
   geometry_msgs::TwistStamped twist_;
   geometry_msgs::WrenchStamped wrench_;
+  bool twist_given_in_stabilized_frame_;
 
   struct {
     struct {
@@ -275,7 +289,7 @@ private:
   double mass_;
   double inertia_[3];
 
-  bool running_;
+  bool motors_running_;
   double linear_z_control_error_;
 };
 

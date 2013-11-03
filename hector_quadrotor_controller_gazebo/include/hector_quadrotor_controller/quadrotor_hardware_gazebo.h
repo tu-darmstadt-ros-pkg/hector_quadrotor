@@ -33,6 +33,8 @@
 #include <hector_quadrotor_controller/quadrotor_interface.h>
 
 #include <nav_msgs/Odometry.h>
+#include <sensor_msgs/Imu.h>
+#include <hector_uav_msgs/MotorStatus.h>
 
 #include <ros/node_handle.h>
 #include <ros/callback_queue.h>
