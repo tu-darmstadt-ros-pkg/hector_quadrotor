@@ -89,22 +89,19 @@ void GazeboRosBaro::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
   height_.header.frame_id = frame_id_;
 
-  // start ros node
+  // Make sure the ROS node for Gazebo has already been initialized
   if (!ros::isInitialized())
   {
-    int argc = 0;
-    char **argv = NULL;
-    ros::init(argc,argv,"gazebo",ros::init_options::NoSigintHandler|ros::init_options::AnonymousName);
+    ROS_FATAL_STREAM("A ROS node for Gazebo has not been initialized, unable to load plugin. "
+      << "Load the Gazebo system plugin 'libgazebo_ros_api_plugin.so' in the gazebo_ros package)");
+    return;
   }
+
   node_handle_ = new ros::NodeHandle(namespace_);
 
   // advertise height
   if (!height_topic_.empty()) {
-#ifdef USE_MAV_MSGS
-    height_publisher_ = node_handle_->advertise<mav_msgs::Height>(height_topic_, 10);
-#else
     height_publisher_ = node_handle_->advertise<geometry_msgs::PointStamped>(height_topic_, 10);
-#endif
   }
 
   // advertise altimeter
@@ -136,18 +133,8 @@ void GazeboRosBaro::Update()
   double height = sensor_model_(pose.pos.z, dt);
 
   if (height_publisher_) {
-#ifdef USE_MAV_MSGS
-    double previous_height = height_.height;
-    height_.header.stamp = ros::Time(sim_time.sec, sim_time.nsec);
-    height_.height = height;
-    height_.height_variance = sensor_model_.gaussian_noise*sensor_model_.gaussian_noise + sensor_model_.drift*sensor_model_.drift;
-    height_.climb = dt > 0.0 ? (height_.height - previous_height) / dt : 0.0;
-    height_.climb_variance = sensor_model_.gaussian_noise*sensor_model_.gaussian_noise;
-#else
     height_.header.stamp = ros::Time(sim_time.sec, sim_time.nsec);
     height_.point.z = height;
-#endif
-
     height_publisher_.publish(height_);
   }
 
