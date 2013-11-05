@@ -32,11 +32,7 @@
 #include <gazebo/common/Plugin.hh>
 
 #include <ros/ros.h>
-#ifdef USE_MAV_MSGS
-  #include <mav_msgs/Height.h>
-#else
-  #include <geometry_msgs/PointStamped.h>
-#endif
+#include <geometry_msgs/PointStamped.h>
 #include <hector_uav_msgs/Altimeter.h>
 
 #include <hector_gazebo_plugins/sensor_model.h>
@@ -67,11 +63,7 @@ private:
   ros::Publisher height_publisher_;
   ros::Publisher altimeter_publisher_;
 
-#ifdef USE_MAV_MSGS
-  mav_msgs::Height height_;
-#else
   geometry_msgs::PointStamped height_;
-#endif
   hector_uav_msgs::Altimeter altimeter_;
 
   std::string namespace_;
