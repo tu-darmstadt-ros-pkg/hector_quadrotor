@@ -1,6 +1,5 @@
 controller:
     pose:
-        frequency: 10.0
         type: hector_quadrotor_controller/PoseController
         xy:
             k_p: 2.0

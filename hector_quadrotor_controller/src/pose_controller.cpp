@@ -119,7 +119,7 @@ public:
     Twist output;
 
     // execute available callbacks in the callback queue (is this real-time safe?)
-  //  callback_queue_.callAvailable();
+    // callback_queue_.callAvailable();
 
     // return if no pose command is available
     if (!(pose_input_->connected())) {
