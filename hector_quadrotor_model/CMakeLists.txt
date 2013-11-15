@@ -27,7 +27,7 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
     INCLUDE_DIRS include
-    LIBRARIES
+    LIBRARIES #hector_quadrotor_propulsion hector_quadrotor_aerodynamics
     CATKIN_DEPENDS geometry_msgs hector_uav_msgs
     DEPENDS 
 )
@@ -43,6 +43,7 @@ option(BUILD_PROPULSION_MODEL "Build a model of the quadrotor propulsion system 
 if(BUILD_PROPULSION_MODEL)
   if(TARGET quadrotorPropulsion)
     add_library(hector_quadrotor_propulsion src/quadrotor_propulsion.cpp)
+    add_dependencies(hector_quadrotor_propulsion hector_uav_msgs_generate_messages_cpp)
     target_link_libraries(hector_quadrotor_propulsion quadrotorPropulsion)
   else()
     message(WARNING "Quadrotor model is not available. Skipping target hector_quadrotor_propulsion...")
