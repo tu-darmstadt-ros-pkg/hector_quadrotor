@@ -32,14 +32,25 @@
 #include <ros/node_handle.h>
 #include <boost/array.hpp>
 
-extern "C" {
-  #include "quadrotorDrag/quadrotorDrag.h"
-  #include "quadrotorDrag/quadrotorDrag_initialize.h"
-}
+//extern "C" {
+//  #include "quadrotorDrag/quadrotorDrag.h"
+//  #include "quadrotorDrag/quadrotorDrag_initialize.h"
+//}
 
 #include <boost/array.hpp>
+#include <limits>
+
+#include "matlab_helpers.h"
 
 namespace hector_quadrotor_model {
+
+struct DragParameters
+{
+    real_T C_wxy;
+    real_T C_wz;
+    real_T C_mxy;
+    real_T C_mz;
+};
 
 // extern void quadrotorDrag(const real_T uin[6], const DragParameters parameter, real_T dt, real_T y[6]);
 struct QuadrotorAerodynamics::DragModel {
@@ -51,7 +62,7 @@ struct QuadrotorAerodynamics::DragModel {
 QuadrotorAerodynamics::QuadrotorAerodynamics()
 {
   // initialize drag model
-  quadrotorDrag_initialize();
+  // quadrotorDrag_initialize();
   drag_model_ = new DragModel;
 }
 
@@ -60,9 +71,65 @@ QuadrotorAerodynamics::~QuadrotorAerodynamics()
   delete drag_model_;
 }
 
-inline void QuadrotorAerodynamics::f(const real_T uin[10], real_T dt, real_T y[14]) const
+/*
+ * quadrotorDrag.c
+ *
+ * Code generation for function 'quadrotorDrag'
+ *
+ * C source code generated on: Sun Nov  3 13:34:38 2013
+ *
+ */
+
+/* Include files */
+//#include "rt_nonfinite.h"
+//#include "quadrotorDrag.h"
+
+/* Type Definitions */
+
+/* Named Constants */
+
+/* Variable Declarations */
+
+/* Variable Definitions */
+
+/* Function Definitions */
+void quadrotorDrag(const real_T uin[6], const DragParameters parameter, real_T
+                   dt, real_T y[6])
 {
-  ::quadrotorDrag(uin, drag_model_->parameters_, dt, y);
+  int32_T i;
+  real_T absoluteVelocity;
+  real_T absoluteAngularVelocity;
+
+  /*  initialize vectors */
+  for (i = 0; i < 6; i++) {
+    y[i] = 0.0;
+  }
+
+  /*  Input variables */
+  /*  Constants */
+  /*  temporarily used vector */
+  absoluteVelocity = sqrt((rt_powd_snf(uin[0], 2.0) + rt_powd_snf(uin[1], 2.0))
+    + rt_powd_snf(uin[2], 2.0));
+  absoluteAngularVelocity = sqrt((rt_powd_snf(uin[3], 2.0) + rt_powd_snf(uin[4],
+    2.0)) + rt_powd_snf(uin[5], 2.0));
+
+  /*  system outputs */
+  /*  calculate drag force */
+  y[0] = parameter.C_wxy * absoluteVelocity * uin[0];
+  y[1] = parameter.C_wxy * absoluteVelocity * uin[1];
+  y[2] = parameter.C_wz * absoluteVelocity * uin[2];
+
+  /*  calculate draq torque */
+  y[3] = parameter.C_mxy * absoluteAngularVelocity * uin[3];
+  y[4] = parameter.C_mxy * absoluteAngularVelocity * uin[4];
+  y[5] = parameter.C_mz * absoluteAngularVelocity * uin[5];
+}
+
+/* End of code generation (quadrotorDrag.c) */
+
+inline void QuadrotorAerodynamics::f(const double uin[10], double dt, double y[14]) const
+{
+  quadrotorDrag(uin, drag_model_->parameters_, dt, y);
 }
 
 void QuadrotorAerodynamics::configure(const std::string &ns)

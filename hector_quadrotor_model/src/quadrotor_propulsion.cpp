@@ -34,14 +34,30 @@
 
 #include <boost/array.hpp>
 
-extern "C" {
-  #include "quadrotorPropulsion/quadrotorPropulsion.h"
-  #include "quadrotorPropulsion/quadrotorPropulsion_initialize.h"
-}
+#include "matlab_helpers.h"
+
+//extern "C" {
+//  #include "quadrotorPropulsion/quadrotorPropulsion.h"
+//  #include "quadrotorPropulsion/quadrotorPropulsion_initialize.h"
+//}
 
 namespace hector_quadrotor_model {
 
-// extern void quadrotorPropulsion(const real_T xin[4], const real_T uin[10], const PropulsionParameters parameter, real_T dt, real_T y[6], real_T xpred[4]);
+struct PropulsionParameters
+{
+    real_T k_m;
+    real_T k_t;
+    real_T CT2s;
+    real_T CT1s;
+    real_T CT0s;
+    real_T Psi;
+    real_T J_M;
+    real_T R_A;
+    real_T alpha_m;
+    real_T beta_m;
+    real_T l_m;
+};
+
 struct QuadrotorPropulsion::PropulsionModel {
   PropulsionParameters parameters_;
   boost::array<real_T,4>  x;
@@ -53,7 +69,7 @@ struct QuadrotorPropulsion::PropulsionModel {
 QuadrotorPropulsion::QuadrotorPropulsion()
 {
   // initialize propulsion model
-  quadrotorPropulsion_initialize();
+  // quadrotorPropulsion_initialize();
   propulsion_model_ = new PropulsionModel;
 }
 
@@ -62,9 +78,155 @@ QuadrotorPropulsion::~QuadrotorPropulsion()
   delete propulsion_model_;
 }
 
-inline void QuadrotorPropulsion::f(const real_T xin[4], const real_T uin[10], real_T dt, real_T y[14], real_T xpred[4]) const
+/*
+ * quadrotorPropulsion.c
+ *
+ * Code generation for function 'quadrotorPropulsion'
+ *
+ * C source code generated on: Sun Nov  3 13:34:35 2013
+ *
+ */
+
+/* Include files */
+//#include "rt_nonfinite.h"
+//#include "motorspeed.h"
+//#include "quadrotorPropulsion.h"
+//#include "quadrotorPropulsion_rtwutil.h"
+
+/* Type Definitions */
+
+/* Named Constants */
+
+/* Variable Declarations */
+
+/* Variable Definitions */
+
+/* Function Declarations */
+
+/* Function Definitions */
+void quadrotorPropulsion(const real_T xin[4], const real_T uin[10], const
+  PropulsionParameters parameter, real_T dt, real_T y[14], real_T xpred[4])
 {
-  ::quadrotorPropulsion(xin, uin, propulsion_model_->parameters_, dt, y, xpred);
+  real_T v_1[4];
+  int32_T i;
+  real_T F_m[4];
+  real_T U[4];
+  real_T M_e[4];
+  real_T I[4];
+  real_T F[3];
+  real_T b_F_m;
+  real_T temp;
+  real_T d0;
+
+  /*  initialize vectors */
+  for (i = 0; i < 4; i++) {
+    xpred[i] = xin[i];
+
+    /*  motorspeed */
+    v_1[i] = 0.0;
+  }
+
+  memset(&y[0], 0, 14U * sizeof(real_T));
+  for (i = 0; i < 4; i++) {
+    F_m[i] = 0.0;
+    U[i] = 0.0;
+    M_e[i] = 0.0;
+    I[i] = 0.0;
+  }
+
+  for (i = 0; i < 3; i++) {
+    F[i] = 0.0;
+  }
+
+  /*  Input variables */
+  U[0] = uin[6];
+  U[1] = uin[7];
+  U[2] = uin[8];
+  U[3] = uin[9];
+
+  /*  Constants */
+  v_1[0] = -uin[2] + parameter.l_m * uin[4];
+  v_1[1] = -uin[2] - parameter.l_m * uin[3];
+  v_1[2] = -uin[2] - parameter.l_m * uin[4];
+  v_1[3] = -uin[2] + parameter.l_m * uin[3];
+
+  /*  calculate thrust for all 4 rotors */
+  for (i = 0; i < 4; i++) {
+    /*  if the flow speed at infinity is negative */
+    if (v_1[i] < 0.0) {
+      b_F_m = (parameter.CT2s * rt_powd_snf(v_1[i], 2.0) + parameter.CT1s *
+               v_1[i] * xin[i]) + parameter.CT0s * rt_powd_snf(xin[i], 2.0);
+
+      /*  if the flow speed at infinity is positive */
+    } else {
+      b_F_m = (-parameter.CT2s * rt_powd_snf(v_1[i], 2.0) + parameter.CT1s *
+               v_1[i] * xin[i]) + parameter.CT0s * rt_powd_snf(xin[i], 2.0);
+    }
+
+    /*  sum up all rotor forces */
+    /*  Identification of Roxxy2827-34 motor with 10x4.5 propeller */
+    /*  temporarily used Expressions */
+    temp = (U[i] * parameter.beta_m - parameter.Psi * xin[i]) / (2.0 *
+      parameter.R_A);
+    temp += sqrt(rt_powd_snf(temp, 2.0) + U[i] * parameter.alpha_m /
+                 parameter.R_A);
+    d0 = parameter.Psi * temp;
+
+    /*  electrical torque motor 1-4 */
+    /*  new version */
+    /*  old version */
+    /*  fx   = (Psi/R_A*(U-Psi*omega_m) - M_m)/J_M; */
+    /*  A    = -(Psi^2/R_A)/J_M; */
+    /*  B(1) =  Psi/(J_M*R_A); */
+    /*  B(2) = -1/J_M; */
+    /*  system outputs. Use euler solver to predict next time step */
+    /*  predicted motor speed */
+    /*  electric torque */
+    /* y = [M_e I]; */
+    /*  system jacobian */
+    /*  A       = 1 + dt*A; */
+    /*  input jacobian */
+    /*  B       = A*B*dt; */
+    M_e[i] = d0;
+    I[i] = temp;
+    xpred[i] = xin[i] + dt * (1.0 / parameter.J_M * (d0 - (parameter.k_t * b_F_m
+      + parameter.k_m * xin[i])));
+    F_m[i] = b_F_m;
+    F[2] += b_F_m;
+  }
+
+  /*  System output, i.e. force and torque of quadrotor */
+  y[0] = 0.0;
+  y[1] = 0.0;
+  y[2] = F[2];
+
+  /*  torque for rotating quadrocopter around x-axis is the mechanical torque */
+  y[3] = (F_m[3] - F_m[1]) * parameter.l_m;
+
+  /*  torque for rotating quadrocopter around y-axis is the mechanical torque */
+  y[4] = (F_m[0] - F_m[2]) * parameter.l_m;
+
+  /*  torque for rotating quadrocopter around z-axis is the electrical torque */
+  y[5] = ((-M_e[0] - M_e[2]) + M_e[1]) + M_e[3];
+
+  /*  motor speeds (rad/s) */
+  for (i = 0; i < 4; i++) {
+    y[i + 6] = xpred[i];
+  }
+
+  /*  motor current (A) */
+  for (i = 0; i < 4; i++) {
+    y[i + 10] = I[i];
+  }
+
+  /*  M_e(1:4) / Psi; */
+}
+
+/* End of code generation (quadrotorPropulsion.c) */
+
+inline void QuadrotorPropulsion::f(const double xin[4], const double uin[10], double dt, double y[14], double xpred[4]) const
+{
+  quadrotorPropulsion(xin, uin, propulsion_model_->parameters_, dt, y, xpred);
 }
 
 void QuadrotorPropulsion::configure(const std::string &ns)
