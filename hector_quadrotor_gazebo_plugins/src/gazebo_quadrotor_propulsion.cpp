@@ -63,7 +63,8 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
   namespace_.clear();
   param_namespace_ = "quadrotor_propulsion";
   trigger_topic_ = "quadro/trigger";
-  voltage_topic_ = "motor_pwm";
+  command_topic_ = "command/motor";
+  pwm_topic_ = "motor_pwm";
   wrench_topic_ = "wrench_out";
   supply_topic_ = "supply";
   status_topic_ = "motor_status";
@@ -74,10 +75,17 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
   if (_sdf->HasElement("robotNamespace"))   namespace_ = _sdf->GetElement("robotNamespace")->Get<std::string>();
   if (_sdf->HasElement("paramNamespace"))   param_namespace_ = _sdf->GetElement("paramNamespace")->Get<std::string>();
   if (_sdf->HasElement("triggerTopic"))     trigger_topic_ = _sdf->GetElement("triggerTopic")->Get<std::string>();
-  if (_sdf->HasElement("voltageTopicName")) voltage_topic_ = _sdf->GetElement("voltageTopicName")->Get<std::string>();
+  if (_sdf->HasElement("topicName"))        command_topic_ = _sdf->GetElement("topicName")->Get<std::string>();
+  if (_sdf->HasElement("pwmTopicName"))     pwm_topic_ = _sdf->GetElement("pwmTopicName")->Get<std::string>();
   if (_sdf->HasElement("wrenchTopic"))      wrench_topic_ = _sdf->GetElement("wrenchTopic")->Get<std::string>();
   if (_sdf->HasElement("supplyTopic"))      supply_topic_ = _sdf->GetElement("supplyTopic")->Get<std::string>();
   if (_sdf->HasElement("statusTopic"))      status_topic_ = _sdf->GetElement("statusTopic")->Get<std::string>();
+
+  if (_sdf->HasElement("voltageTopicName")) {
+    gzwarn << "[quadrotor_propulsion] Plugin parameter 'voltageTopicName' is deprecated! Plese change your config to use "
+           << "'topicName' for MotorCommand messages or 'pwmTopicName' for MotorPWM messages." << std::endl;
+    pwm_topic_ = _sdf->GetElement("voltageTopicName")->Get<std::string>();
+  }
 
   // get model parameters
   model_.configure(param_namespace_);
@@ -109,13 +117,22 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
     trigger_publisher_ = node_handle_->advertise(ops);
   }
 
-  // subscribe command
-  if (!voltage_topic_.empty())
+  // subscribe voltage command
+  if (!command_topic_.empty())
   {
     ros::SubscribeOptions ops;
     ops.callback_queue = &callback_queue_;
-    ops.init<hector_uav_msgs::MotorPWM>(voltage_topic_, 1, boost::bind(&QuadrotorPropulsion::addVoltageToQueue, &model_, _1));
-    voltage_subscriber_ = node_handle_->subscribe(ops);
+    ops.init<hector_uav_msgs::MotorCommand>(command_topic_, 1, boost::bind(&QuadrotorPropulsion::addCommandToQueue, &model_, _1));
+    command_subscriber_ = node_handle_->subscribe(ops);
+  }
+
+  // subscribe pwm command
+  if (!pwm_topic_.empty())
+  {
+    ros::SubscribeOptions ops;
+    ops.callback_queue = &callback_queue_;
+    ops.init<hector_uav_msgs::MotorPWM>(pwm_topic_, 1, boost::bind(&QuadrotorPropulsion::addPWMToQueue, &model_, _1));
+    pwm_subscriber_ = node_handle_->subscribe(ops);
   }
 
   // publish wrench

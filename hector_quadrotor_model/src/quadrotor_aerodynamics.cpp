@@ -38,7 +38,6 @@
 //}
 
 #include <boost/array.hpp>
-#include <limits>
 
 #include "matlab_helpers.h"
 

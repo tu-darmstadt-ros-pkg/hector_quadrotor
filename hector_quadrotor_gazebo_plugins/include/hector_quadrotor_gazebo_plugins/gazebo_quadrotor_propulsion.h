@@ -70,7 +70,8 @@ private:
   void QueueThread();
 
   ros::Publisher trigger_publisher_;
-  ros::Subscriber voltage_subscriber_;
+  ros::Subscriber command_subscriber_;
+  ros::Subscriber pwm_subscriber_;
   ros::Publisher wrench_publisher_;
   ros::Publisher supply_publisher_;
   ros::Publisher motor_status_publisher_;
@@ -79,7 +80,8 @@ private:
   std::string namespace_;
   std::string param_namespace_;
   std::string trigger_topic_;
-  std::string voltage_topic_;
+  std::string command_topic_;
+  std::string pwm_topic_;
   std::string wrench_topic_;
   std::string supply_topic_;
   std::string status_topic_;

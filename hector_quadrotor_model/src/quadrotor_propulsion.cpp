@@ -320,7 +320,24 @@ void QuadrotorPropulsion::setTwist(const geometry_msgs::Twist &twist)
   propulsion_model_->u[5] = -twist.angular.z;
 }
 
-void QuadrotorPropulsion::addVoltageToQueue(const hector_uav_msgs::MotorPWMConstPtr& command)
+void QuadrotorPropulsion::addCommandToQueue(const hector_uav_msgs::MotorCommandConstPtr& command)
+{
+  hector_uav_msgs::MotorPWMPtr pwm(new hector_uav_msgs::MotorPWM);
+  pwm->header = command->header;
+  pwm->pwm.resize(command->voltage.size());
+  for(std::size_t i = 0; i < command->voltage.size(); ++i) {
+    int temp = round(command->voltage[i] / supply_.voltage[0] * 255.0);
+    if (temp < 0)
+      pwm->pwm[i] = 0;
+    else if (temp > 255)
+      pwm->pwm[i] = 255;
+    else
+      pwm->pwm[i] = temp;
+  }
+  addPWMToQueue(pwm);
+}
+
+void QuadrotorPropulsion::addPWMToQueue(const hector_uav_msgs::MotorPWMConstPtr& pwm)
 {
   boost::mutex::scoped_lock lock(command_queue_mutex_);
 
@@ -329,8 +346,8 @@ void QuadrotorPropulsion::addVoltageToQueue(const hector_uav_msgs::MotorPWMConst
     engage();
   }
 
-  ROS_DEBUG_STREAM_NAMED("quadrotor_propulsion", "Received motor command valid at " << command->header.stamp);
-  command_queue_.push(command);
+  ROS_DEBUG_STREAM_NAMED("quadrotor_propulsion", "Received motor command valid at " << pwm->header.stamp);
+  command_queue_.push(pwm);
   command_condition_.notify_all();
 }
 
