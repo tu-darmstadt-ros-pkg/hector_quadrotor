@@ -35,10 +35,4 @@
   <run_depend>hector_uav_msgs</run_depend>
   <run_depend>std_srvs</run_depend>
 
-  <!-- Dependencies needed only for running tests. -->
-
-  <export>
-    <gazebo_ros plugin_path="${prefix}/lib"/>
-  </export>
-
 </package>
