@@ -47,6 +47,9 @@ public:
   bool init(QuadrotorInterface *interface, ros::NodeHandle &root_nh, ros::NodeHandle &controller_nh)
   {
     // get interface handles
+    pose_         = interface->getPose();
+    twist_        = interface->getTwist();
+
     pose_input_   = interface->addInput<PoseCommandHandle>("pose");
     twist_input_  = interface->addInput<TwistCommandHandle>("pose/twist");
     twist_output_ = interface->addOutput<TwistCommandHandle>("twist");
@@ -131,15 +134,15 @@ public:
 
     // control horizontal position
     double error_n, error_w;
-    HorizontalPositionCommandHandle(*pose_input_).getError(error_n, error_w);
-    output.linear.x = pid_.x.update(error_n, twist_input_->twist().linear.x, period);
-    output.linear.y = pid_.y.update(error_w, twist_input_->twist().linear.y, period);
+    HorizontalPositionCommandHandle(*pose_input_).getError(*pose_, error_n, error_w);
+    output.linear.x = pid_.x.update(error_n, twist_->twist().linear.x, period);
+    output.linear.y = pid_.y.update(error_w, twist_->twist().linear.y, period);
 
     // control height
-    output.linear.z = pid_.z.update(HeightCommandHandle(*pose_input_).getError(), twist_input_->twist().linear.z, period);
+    output.linear.z = pid_.z.update(HeightCommandHandle(*pose_input_).getError(*pose_), twist_->twist().linear.z, period);
 
     // control yaw angle
-    output.angular.z = pid_.yaw.update(HeadingCommandHandle(*pose_input_).getError(), twist_input_->twist().angular.z, period);
+    output.angular.z = pid_.yaw.update(HeadingCommandHandle(*pose_input_).getError(*pose_), twist_->twist().angular.z, period);
 
     // add twist command if available
     if (twist_input_->connected())
@@ -157,7 +160,9 @@ public:
   }
 
 private:
+  PoseHandlePtr pose_;
   PoseCommandHandlePtr pose_input_;
+  TwistHandlePtr twist_;
   TwistCommandHandlePtr twist_input_;
   TwistCommandHandlePtr twist_output_;
 

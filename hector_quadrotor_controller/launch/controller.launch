@@ -2,6 +2,6 @@
   <rosparam file="$(find hector_quadrotor_controller)/params/controller.yaml" />
 
   <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="
-    controller/twist
+    controller/twist controller/motor
   "/>
 </launch>

@@ -191,9 +191,11 @@ void QuadrotorHardwareSim::readSim(ros::Time time, ros::Duration period)
 
 void QuadrotorHardwareSim::writeSim(ros::Time time, ros::Duration period)
 {
+  bool result_written = false;
+
   if (motor_output_->connected() && motor_output_->enabled()) {
     publisher_motor_command_.publish(motor_output_->getCommand());
-    return;
+    result_written = true;
   }
 
   if (wrench_output_->connected() && wrench_output_->enabled()) {
@@ -203,11 +205,12 @@ void QuadrotorHardwareSim::writeSim(ros::Time time, ros::Duration period)
     wrench.wrench = wrench_output_->getCommand();
     publisher_wrench_command_.publish(wrench);
 
-    gazebo::math::Vector3 force(wrench.wrench.force.x, wrench.wrench.force.y, wrench.wrench.force.z);
-    gazebo::math::Vector3 torque(wrench.wrench.torque.x, wrench.wrench.torque.y, wrench.wrench.torque.z);
-    link_->AddRelativeForce(force);
-    link_->AddRelativeTorque(torque - link_->GetInertial()->GetCoG().Cross(force));
-    return;
+    if (!result_written) {
+      gazebo::math::Vector3 force(wrench.wrench.force.x, wrench.wrench.force.y, wrench.wrench.force.z);
+      gazebo::math::Vector3 torque(wrench.wrench.torque.x, wrench.wrench.torque.y, wrench.wrench.torque.z);
+      link_->AddRelativeForce(force);
+      link_->AddRelativeTorque(torque - link_->GetInertial()->GetCoG().Cross(force));
+    }
   }
 }
 

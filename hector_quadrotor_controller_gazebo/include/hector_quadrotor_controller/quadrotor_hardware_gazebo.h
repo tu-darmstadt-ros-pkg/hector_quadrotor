@@ -53,11 +53,11 @@ public:
 
   virtual const ros::Time &getTimestamp() { return header_.stamp; }
 
-  virtual Pose *getPose()               { return &pose_; }
-  virtual Twist *getTwist()             { return &twist_; }
-  virtual Vector3 *getAcceleration()    { return &acceleration_; }
-  virtual Imu *getSensorImu()           { return &imu_; }
-  virtual MotorStatus *getMotorStatus() { return &motor_status_; }
+  virtual PoseHandlePtr getPose()                 { return PoseHandlePtr(new PoseHandle(this, &pose_)); }
+  virtual TwistHandlePtr getTwist()               { return TwistHandlePtr(new TwistHandle(this, &twist_)); }
+  virtual AccelerationHandlePtr getAcceleration() { return AccelerationHandlePtr(new AccelerationHandle(this, &acceleration_)); }
+  virtual ImuHandlePtr getSensorImu()             { return ImuHandlePtr(new ImuHandle(this, &imu_)); }
+  virtual MotorStatusHandlePtr getMotorStatus()   { return MotorStatusHandlePtr(new MotorStatusHandle(this, &motor_status_)); }
 
   virtual bool getMassAndInertia(double &mass, double inertia[3]);
 

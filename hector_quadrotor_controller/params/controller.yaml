@@ -20,13 +20,13 @@ controller:
         type: hector_quadrotor_controller/TwistController
         linear/xy:
             k_p: 5.0
-            k_i: 0.0
+            k_i: 1.0
             k_d: 0.5
             limit_output: 5.0
             time_constant: 0.1
         linear/z:
             k_p: 5.0
-            k_i: 0.0
+            k_i: 1.0
             k_d: 0.5
             limit_output: 10.0
             time_constant: 0.1
@@ -37,7 +37,7 @@ controller:
             time_constant: 0.01
         angular/z:
             k_p: 5.0
-            k_i: 0.0
+            k_i: 1.0
             k_d: 0.5
             limit_output: 3.0
             time_constant: 0.1
@@ -45,3 +45,5 @@ controller:
             force/z: 30.0
             torque/xy: 10.0
             torque/z: 1.0
+    motor:
+        type: hector_quadrotor_controller/MotorController

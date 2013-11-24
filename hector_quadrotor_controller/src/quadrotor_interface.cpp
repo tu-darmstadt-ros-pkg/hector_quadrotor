@@ -125,16 +125,16 @@ Vector3 PoseHandle::fromBody(const Vector3& body) const
   return nav;
 }
 
-void HorizontalPositionCommandHandle::getError(double &x, double &y) const
+void HorizontalPositionCommandHandle::getError(const PoseHandle &pose, double &x, double &y) const
 {
   getCommand(x, y);
-  x -= pose().position.x;
-  y -= pose().position.y;
+  x -= pose.get()->position.x;
+  y -= pose.get()->position.y;
 }
 
-double HeightCommandHandle::getError() const
+double HeightCommandHandle::getError(const PoseHandle &pose) const
 {
-  return getCommand() - pose().position.z;
+  return getCommand() - pose.get()->position.z;
 }
 
 void HeadingCommandHandle::setCommand(double command)
@@ -171,11 +171,16 @@ bool HeadingCommandHandle::update(Pose& command) const {
   return false;
 }
 
-double HeadingCommandHandle::getError() const {
+double HeadingCommandHandle::getError(const PoseHandle &pose) const {
   static const double M_2PI = 2.0 * M_PI;
-  double error = getCommand() - getYaw() + M_PI;
+  double error = getCommand() - pose.getYaw() + M_PI;
   error -= floor(error / M_2PI) * M_2PI;
   return error - M_PI;
 }
+
+bool CommandHandle::enabled()    { return interface_->enabled(this); }
+bool CommandHandle::start()      { return interface_->start(this); }
+void CommandHandle::stop()       { interface_->stop(this); }
+bool CommandHandle::disconnect() { interface_->disconnect(this); }
 
 } // namespace hector_quadrotor_controller

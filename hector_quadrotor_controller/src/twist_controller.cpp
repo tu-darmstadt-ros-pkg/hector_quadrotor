@@ -38,6 +38,8 @@
 #include <ros/subscriber.h>
 #include <ros/callback_queue.h>
 
+#include <limits>
+
 namespace hector_quadrotor_controller {
 
 using namespace controller_interface;
@@ -48,8 +50,9 @@ public:
   bool init(QuadrotorInterface *interface, ros::NodeHandle &root_nh, ros::NodeHandle &controller_nh)
   {
     // get interface handles
-    pose_          = interface->getHandle<PoseHandle>();
-    acceleration_  = interface->getHandle<AccelerationHandle>();
+    pose_          = interface->getPose();
+    twist_         = interface->getTwist();
+    acceleration_  = interface->getAcceleration();
     twist_input_   = interface->addInput<TwistCommandHandle>("twist");
     wrench_output_ = interface->addOutput<WrenchCommandHandle>("wrench");
     interface->claim(wrench_output_->getName());
@@ -102,7 +105,7 @@ public:
     // get mass and inertia from QuadrotorInterface
     interface->getMassAndInertia(mass_, inertia_);
 
-    twist_given_in_stabilized_frame_ = false;
+    command_given_in_stabilized_frame_ = false;
     return true;
   }
 
@@ -128,22 +131,22 @@ public:
 
   void twistCommandCallback(const geometry_msgs::TwistStampedConstPtr& command)
   {
-    twist_ = *command;
-    if (twist_.header.stamp.isZero()) twist_.header.stamp = ros::Time::now();
-    twist_given_in_stabilized_frame_ = false;
+    command_ = *command;
+    if (command_.header.stamp.isZero()) command_.header.stamp = ros::Time::now();
+    command_given_in_stabilized_frame_ = false;
 
     // start controller if it not running
-    if (!isRunning()) this->startRequest(twist_.header.stamp);
+    if (!isRunning()) this->startRequest(command_.header.stamp);
   }
 
   void cmd_velCommandCallback(const geometry_msgs::TwistConstPtr& command)
   {
-    twist_.twist = *command;
-    twist_.header.stamp = ros::Time::now();
-    twist_given_in_stabilized_frame_ = true;
+    command_.twist = *command;
+    command_.header.stamp = ros::Time::now();
+    command_given_in_stabilized_frame_ = true;
 
     // start controller if it not running
-    if (!isRunning()) this->startRequest(twist_.header.stamp);
+    if (!isRunning()) this->startRequest(command_.header.stamp);
   }
 
   bool engageCallback(std_srvs::Empty::Request&, std_srvs::Empty::Response&)
@@ -173,19 +176,19 @@ public:
   {
     // Get twist command input
     if (twist_input_->connected() && twist_input_->enabled()) {
-      twist_.twist = twist_input_->getCommand();
-      twist_given_in_stabilized_frame_ = false;
+      command_.twist = twist_input_->getCommand();
+      command_given_in_stabilized_frame_ = false;
     }
 
     // Get current state and command
-    Twist command = twist_.twist;
-    Twist twist = twist_input_->twist();
+    Twist command = command_.twist;
+    Twist twist = twist_->twist();
     Twist twist_body;
     twist_body.linear =  pose_->toBody(twist.linear);
     twist_body.angular = pose_->toBody(twist.angular);
 
     // Transform to world coordinates if necessary (yaw only)
-    if (twist_given_in_stabilized_frame_) {
+    if (command_given_in_stabilized_frame_) {
       double yaw = pose_->getYaw();
       Twist transformed = command;
       transformed.linear.x  = cos(yaw) * command.linear.x  - sin(yaw) * command.linear.y;
@@ -237,7 +240,7 @@ public:
       wrench_.wrench.force.z  = mass_       * ((acceleration_command.z - gravity) * load_factor + gravity);
 
       if (limits_.force.z > 0.0 && wrench_.wrench.force.z > limits_.force.z) wrench_.wrench.force.z = limits_.force.z;
-      if (wrench_.wrench.force.z < 0.0) wrench_.wrench.force.z = 0.0;
+      if (wrench_.wrench.force.z <= 0.0) wrench_.wrench.force.z = std::numeric_limits<double>::min();
       if (limits_.torque.x > 0.0) {
         if (wrench_.wrench.torque.x >  limits_.torque.x) wrench_.wrench.torque.x =  limits_.torque.x;
         if (wrench_.wrench.torque.x < -limits_.torque.x) wrench_.wrench.torque.x = -limits_.torque.x;
@@ -263,6 +266,7 @@ public:
 
 private:
   PoseHandlePtr pose_;
+  TwistHandlePtr twist_;
   AccelerationHandlePtr acceleration_;
   TwistCommandHandlePtr twist_input_;
   WrenchCommandHandlePtr wrench_output_;
@@ -272,9 +276,9 @@ private:
   ros::ServiceServer engage_service_server_;
   ros::ServiceServer shutdown_service_server_;
 
-  geometry_msgs::TwistStamped twist_;
+  geometry_msgs::TwistStamped command_;
   geometry_msgs::WrenchStamped wrench_;
-  bool twist_given_in_stabilized_frame_;
+  bool command_given_in_stabilized_frame_;
 
   struct {
     struct {
