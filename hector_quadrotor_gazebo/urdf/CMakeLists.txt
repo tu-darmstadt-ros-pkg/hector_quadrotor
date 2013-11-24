@@ -4,8 +4,8 @@ set(MODEL_PLUGINS)
 # configuration
 option(USE_RTT_CONTROLLER "Use a quadrotor controller implemented as Orocos RTT component to control the quadrotor." OFF)
 option(USE_POSE_ESTIMATION "Use hector_pose_estimation to estimate the pose of the quadrotor." OFF)
-option(USE_PROPULSION_PLUGIN "Use a model of the quadrotor propulsion system" OFF)
-option(USE_AERODYNAMICS_PLUGIN "Use a model of the quadrotor aerodynamics" OFF)
+option(USE_PROPULSION_PLUGIN "Use a model of the quadrotor propulsion system" ON)
+option(USE_AERODYNAMICS_PLUGIN "Use a model of the quadrotor aerodynamics" ON)
 
 # sensor plugins
 list(APPEND MODEL_PLUGINS quadrotor_sensors)
