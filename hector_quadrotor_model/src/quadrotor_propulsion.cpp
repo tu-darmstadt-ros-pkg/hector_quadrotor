@@ -67,22 +67,22 @@ inline void QuadrotorPropulsion::f(const real_T xin[4], const real_T uin[10], re
   ::quadrotorPropulsion(xin, uin, propulsion_model_->parameters_, dt, y, xpred);
 }
 
-void QuadrotorPropulsion::configure(const std::string &ns)
+bool QuadrotorPropulsion::configure(const std::string &ns)
 {
   ros::NodeHandle param(ns);
 
   // get model parameters
-  param.getParam("k_m",     propulsion_model_->parameters_.k_m);
-  param.getParam("k_t",     propulsion_model_->parameters_.k_t);
-  param.getParam("CT0s",    propulsion_model_->parameters_.CT0s);
-  param.getParam("CT1s",    propulsion_model_->parameters_.CT1s);
-  param.getParam("CT2s",    propulsion_model_->parameters_.CT2s);
-  param.getParam("J_M",     propulsion_model_->parameters_.J_M);
-  param.getParam("l_m",     propulsion_model_->parameters_.l_m);
-  param.getParam("Psi",     propulsion_model_->parameters_.Psi);
-  param.getParam("R_A",     propulsion_model_->parameters_.R_A);
-  param.getParam("alpha_m", propulsion_model_->parameters_.alpha_m);
-  param.getParam("beta_m",  propulsion_model_->parameters_.beta_m);
+  if (!param.getParam("k_m",     propulsion_model_->parameters_.k_m)) return false;
+  if (!param.getParam("k_t",     propulsion_model_->parameters_.k_t)) return false;
+  if (!param.getParam("CT0s",    propulsion_model_->parameters_.CT0s)) return false;
+  if (!param.getParam("CT1s",    propulsion_model_->parameters_.CT1s)) return false;
+  if (!param.getParam("CT2s",    propulsion_model_->parameters_.CT2s)) return false;
+  if (!param.getParam("J_M",     propulsion_model_->parameters_.J_M)) return false;
+  if (!param.getParam("l_m",     propulsion_model_->parameters_.l_m)) return false;
+  if (!param.getParam("Psi",     propulsion_model_->parameters_.Psi)) return false;
+  if (!param.getParam("R_A",     propulsion_model_->parameters_.R_A)) return false;
+  if (!param.getParam("alpha_m", propulsion_model_->parameters_.alpha_m)) return false;
+  if (!param.getParam("beta_m",  propulsion_model_->parameters_.beta_m)) return false;
 
 #ifndef NDEBUG
   std::cout << "Loaded the following quadrotor propulsion model parameters from namespace " << param.getNamespace() << ":" << std::endl;
@@ -102,6 +102,8 @@ void QuadrotorPropulsion::configure(const std::string &ns)
   initial_voltage_ = 14.8;
   param.getParam("supply_voltage", initial_voltage_);
   reset();
+
+  return true;
 }
 
 void QuadrotorPropulsion::reset()

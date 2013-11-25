@@ -65,15 +65,15 @@ inline void QuadrotorAerodynamics::f(const real_T uin[10], real_T dt, real_T y[1
   ::quadrotorDrag(uin, drag_model_->parameters_, dt, y);
 }
 
-void QuadrotorAerodynamics::configure(const std::string &ns)
+bool QuadrotorAerodynamics::configure(const std::string &ns)
 {
   ros::NodeHandle param(ns);
 
   // get model parameters
-  param.getParam("C_wxy", drag_model_->parameters_.C_wxy);
-  param.getParam("C_wz",  drag_model_->parameters_.C_wz);
-  param.getParam("C_mxy", drag_model_->parameters_.C_mxy);
-  param.getParam("C_mz",  drag_model_->parameters_.C_mz);
+  if (!param.getParam("C_wxy", drag_model_->parameters_.C_wxy)) return false;
+  if (!param.getParam("C_wz",  drag_model_->parameters_.C_wz)) return false;
+  if (!param.getParam("C_mxy", drag_model_->parameters_.C_mxy)) return false;
+  if (!param.getParam("C_mz",  drag_model_->parameters_.C_mz)) return false;
 
 #ifndef NDEBUG
   std::cout << "Loaded the following quadrotor drag model parameters from namespace " << param.getNamespace() << ":" << std::endl;
@@ -84,6 +84,7 @@ void QuadrotorAerodynamics::configure(const std::string &ns)
 #endif
 
   reset();
+  return true;
 }
 
 void QuadrotorAerodynamics::reset()
