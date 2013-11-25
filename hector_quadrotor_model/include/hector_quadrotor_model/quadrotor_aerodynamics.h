@@ -29,6 +29,7 @@
 #ifndef HECTOR_QUADROTOR_MODEL_QUADROTOR_AERODYNAMICS_H
 #define HECTOR_QUADROTOR_MODEL_QUADROTOR_AERODYNAMICS_H
 
+#include <geometry_msgs/Quaternion.h>
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/Wrench.h>
@@ -49,7 +50,9 @@ public:
   void reset();
   void update(double dt);
 
+  void setOrientation(const geometry_msgs::Quaternion& orientation);
   void setTwist(const geometry_msgs::Twist& twist);
+  void setBodyTwist(const geometry_msgs::Twist& twist);
   void setWind(const geometry_msgs::Vector3& wind);
 
   const geometry_msgs::Wrench& getWrench() const { return wrench_; }
@@ -57,6 +60,7 @@ public:
   void f(const double uin[6], double dt, double y[6]) const;
 
 private:
+  geometry_msgs::Quaternion orientation_;
   geometry_msgs::Twist twist_;
   geometry_msgs::Vector3 wind_;
 

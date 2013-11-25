@@ -122,6 +122,10 @@ void GazeboQuadrotorAerodynamics::Update()
   // callback_queue_.callAvailable();
 
   // fill input vector u for drag model
+  geometry_msgs::Quaternion orientation;
+  fromQuaternion(link->GetWorldPose().rot, orientation);
+  model_.setOrientation(orientation);
+
   geometry_msgs::Twist twist;
   fromVector(link->GetWorldLinearVel(), twist.linear);
   fromVector(link->GetWorldAngularVel(), twist.angular);
@@ -136,8 +140,8 @@ void GazeboQuadrotorAerodynamics::Update()
   toVector(model_.getWrench().torque, torque);
 
   // set force and torque in gazebo
-  link->AddForceAtRelativePosition(force, -link->GetInertial()->GetCoG());
-  link->AddTorque(torque);
+  link->AddRelativeForce(force);
+  link->AddRelativeTorque(torque - link->GetInertial()->GetCoG().Cross(force));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -18,6 +18,7 @@
   <!-- Dependencies needed to compile this package. -->
   <build_depend>geometry_msgs</build_depend>
   <build_depend>hector_uav_msgs</build_depend>
+  <build_depend>eigen</build_depend>
 
   <!-- Dependencies needed after this package is compiled. -->
   <run_depend>geometry_msgs</run_depend>
