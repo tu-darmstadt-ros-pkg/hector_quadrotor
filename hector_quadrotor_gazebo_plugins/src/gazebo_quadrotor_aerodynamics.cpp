@@ -99,7 +99,7 @@ void GazeboQuadrotorAerodynamics::Load(physics::ModelPtr _model, sdf::ElementPtr
     wind_subscriber_ = node_handle_->subscribe(ops);
   }
 
-  callback_queue_thread_ = boost::thread( boost::bind( &GazeboQuadrotorAerodynamics::QueueThread,this ) );
+  // callback_queue_thread_ = boost::thread( boost::bind( &GazeboQuadrotorAerodynamics::QueueThread,this ) );
 
   // New Mechanism for Updating every World Cycle
   // Listen to the update event. This event is broadcast every
@@ -119,7 +119,7 @@ void GazeboQuadrotorAerodynamics::Update()
   if (dt <= 0.0) return;
 
   // Get new commands/state
-  // callback_queue_.callAvailable();
+  callback_queue_.callAvailable();
 
   // fill input vector u for drag model
   geometry_msgs::Quaternion orientation;
