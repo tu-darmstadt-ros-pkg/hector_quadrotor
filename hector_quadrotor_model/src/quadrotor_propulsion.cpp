@@ -67,10 +67,8 @@ inline void QuadrotorPropulsion::f(const real_T xin[4], const real_T uin[10], re
   ::quadrotorPropulsion(xin, uin, propulsion_model_->parameters_, dt, y, xpred);
 }
 
-bool QuadrotorPropulsion::configure(const std::string &ns)
+bool QuadrotorPropulsion::configure(const ros::NodeHandle &param)
 {
-  ros::NodeHandle param(ns);
-
   // get model parameters
   if (!param.getParam("k_m",     propulsion_model_->parameters_.k_m)) return false;
   if (!param.getParam("k_t",     propulsion_model_->parameters_.k_t)) return false;

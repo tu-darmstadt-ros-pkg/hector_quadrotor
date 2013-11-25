@@ -35,8 +35,9 @@
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/Wrench.h>
 
-#include <ros/time.h>
 #include <ros/forwards.h>
+#include <ros/node_handle.h>
+#include <ros/time.h>
 
 #include <queue>
 
@@ -52,7 +53,7 @@ public:
   QuadrotorPropulsion();
   ~QuadrotorPropulsion();
 
-  bool configure(const std::string& ns = "~");
+  bool configure(const ros::NodeHandle &param = ros::NodeHandle("~"));
   void reset();
   void update(double dt);
 
