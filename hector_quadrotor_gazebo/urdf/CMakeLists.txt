@@ -13,10 +13,10 @@ list(APPEND MODEL_PLUGINS quadrotor_sensors)
 # pose estimation plugin
 if(USE_POSE_ESTIMATION)
   find_library(gazebo_rtt_plugin_LIBRARY libgazebo_rtt_plugin.so)
-  #find_library(rtt_hector_pose_estimation_LIBRARY librtt_hector_pose_estimation-gnulinux.so)
+  find_library(rtt_hector_pose_estimation_LIBRARY librtt_hector_pose_estimation-gnulinux.so)
 
-  if(NOT gazebo_rtt_plugin_LIBRARY)
-  #if(NOT gazebo_rtt_plugin_LIBRARY OR NOT rtt_hector_pose_estimation_LIBRARY)
+  if((NOT TARGET gazebo_rtt_plugin AND NOT gazebo_rtt_plugin_LIBRARY) OR
+     (NOT TARGET rtt_hector_pose_estimation AND NOT rtt_hector_pose_estimation_LIBRARY))
     message(SEND_ERROR "Cannot use the pose estimation plugin as the required plugins have not been found. Try to run 'rosmake gazebo_rtt_plugin rtt_hector_pose_estimation' first.")
     set(USE_POSE_ESTIMATION OFF)
   endif()
@@ -40,10 +40,9 @@ endif()
 
 # propulsion plugin
 if(USE_PROPULSION_PLUGIN)
-  find_library(gazebo_rtt_plugin_LIBRARY libgazebo_rtt_plugin.so)
   find_library(hector_gazebo_quadrotor_propulsion_LIBRARY libhector_gazebo_quadrotor_propulsion.so)
 
-  if(NOT gazebo_rtt_plugin_LIBRARY OR NOT hector_gazebo_quadrotor_propulsion_LIBRARY)
+  if(NOT TARGET hector_gazebo_quadrotor_propulsion AND NOT hector_gazebo_quadrotor_propulsion_LIBRARY)
     message(SEND_ERROR "Cannot use the propulsion model as the required plugins have not been found. Try to run 'rosmake hector_quadrotor_gazebo_plugins' first.")
     set(USE_PROPULSION_PLUGIN OFF)
   endif()
@@ -59,7 +58,7 @@ endif()
 if(USE_AERODYNAMICS_PLUGIN)
   find_library(hector_gazebo_quadrotor_aerodynamics_LIBRARY libhector_gazebo_quadrotor_aerodynamics.so)
 
-  if(NOT gazebo_rtt_plugin_LIBRARY OR NOT hector_gazebo_quadrotor_aerodynamics_LIBRARY)
+  if(NOT TARGET hector_gazebo_quadrotor_aerodynamics AND NOT hector_gazebo_quadrotor_aerodynamics_LIBRARY)
     message(SEND_ERROR "Cannot use the aerodynamics model as the required plugin has not been found. Try to run 'rosmake hector_quadrotor_gazebo_plugins' first.")
     set(USE_AERODYNAMICS_PLUGIN OFF)
   endif()
