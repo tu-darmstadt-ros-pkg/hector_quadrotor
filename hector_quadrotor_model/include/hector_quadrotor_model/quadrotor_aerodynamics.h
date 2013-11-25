@@ -33,6 +33,8 @@
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/Wrench.h>
 
+#include <ros/node_handle.h>
+
 #include <boost/thread/mutex.hpp>
 
 namespace hector_quadrotor_model
@@ -43,7 +45,7 @@ public:
   QuadrotorAerodynamics();
   ~QuadrotorAerodynamics();
 
-  bool configure(const std::string& ns = "~");
+  bool configure(const ros::NodeHandle &param = ros::NodeHandle("~"));
   void reset();
   void update(double dt);
 

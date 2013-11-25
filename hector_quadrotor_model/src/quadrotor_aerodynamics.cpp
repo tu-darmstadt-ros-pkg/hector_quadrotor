@@ -138,10 +138,8 @@ inline void QuadrotorAerodynamics::f(const double uin[10], double dt, double y[1
   quadrotorDrag(uin, drag_model_->parameters_, dt, y);
 }
 
-bool QuadrotorAerodynamics::configure(const std::string &ns)
+bool QuadrotorAerodynamics::configure(const ros::NodeHandle &param)
 {
-  ros::NodeHandle param(ns);
-
   // get model parameters
   if (!param.getParam("C_wxy", drag_model_->parameters_.C_wxy)) return false;
   if (!param.getParam("C_wz",  drag_model_->parameters_.C_wz)) return false;

@@ -39,15 +39,19 @@ using namespace math;
 using namespace hector_quadrotor_model;
 
 GazeboQuadrotorAerodynamics::GazeboQuadrotorAerodynamics()
+  : node_handle_(0)
 {
 }
 
 GazeboQuadrotorAerodynamics::~GazeboQuadrotorAerodynamics()
 {
   event::Events::DisconnectWorldUpdateBegin(updateConnection);
-  node_handle_->shutdown();
-  callback_queue_thread_.join();
-  delete node_handle_;
+  if (node_handle_) {
+    node_handle_->shutdown();
+    if (callback_queue_thread_.joinable())
+      callback_queue_thread_.join();
+    delete node_handle_;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,7 +64,7 @@ void GazeboQuadrotorAerodynamics::Load(physics::ModelPtr _model, sdf::ElementPtr
   // default parameters
   namespace_.clear();
   param_namespace_ = "quadrotor_aerodynamics";
-  wind_topic_ = "wind";
+  wind_topic_ = "/wind";
 
   // load parameters
   if (_sdf->HasElement("robotNamespace")) namespace_ = _sdf->GetElement("robotNamespace")->Get<std::string>();
@@ -75,13 +79,13 @@ void GazeboQuadrotorAerodynamics::Load(physics::ModelPtr _model, sdf::ElementPtr
     return;
   }
 
+  node_handle_ = new ros::NodeHandle(namespace_);
+
   // get model parameters
-  if (!model_.configure(param_namespace_)) {
+  if (!model_.configure(ros::NodeHandle(*node_handle_, param_namespace_))) {
     gzwarn << "[quadrotor_propulsion] Could not properly configure the aerodynamics plugin. Make sure you loaded the parameter file." << std::endl;
     return;
   }
-
-  node_handle_ = new ros::NodeHandle(namespace_);
 
   // subscribe command
   if (!wind_topic_.empty())
