@@ -38,6 +38,7 @@
 //}
 
 #include <boost/array.hpp>
+#include <Eigen/Geometry>
 
 #include "matlab_helpers.h"
 
@@ -169,10 +170,35 @@ void QuadrotorAerodynamics::reset()
   wrench_ = geometry_msgs::Wrench();
 }
 
+void QuadrotorAerodynamics::setOrientation(const geometry_msgs::Quaternion& orientation)
+{
+  boost::mutex::scoped_lock lock(mutex_);
+  orientation_ = orientation;
+}
+
 void QuadrotorAerodynamics::setTwist(const geometry_msgs::Twist& twist)
 {
   boost::mutex::scoped_lock lock(mutex_);
   twist_ = twist;
+}
+
+void QuadrotorAerodynamics::setBodyTwist(const geometry_msgs::Twist& body_twist)
+{
+  boost::mutex::scoped_lock lock(mutex_);
+  Eigen::Quaterniond orientation(orientation_.w, orientation_.x, orientation_.y, orientation_.z);
+  Eigen::Matrix<double,3,3> inverse_rotation_matrix(orientation.inverse().toRotationMatrix());
+
+  Eigen::Vector3d body_linear(body_twist.linear.x, body_twist.linear.y, body_twist.linear.z);
+  Eigen::Vector3d world_linear(inverse_rotation_matrix * body_linear);
+  twist_.linear.x = world_linear.x();
+  twist_.linear.y = world_linear.y();
+  twist_.linear.z = world_linear.z();
+
+  Eigen::Vector3d body_angular(body_twist.angular.x, body_twist.angular.y, body_twist.angular.z);
+  Eigen::Vector3d world_angular(inverse_rotation_matrix * body_angular);
+  twist_.angular.x = world_angular.x();
+  twist_.angular.y = world_angular.y();
+  twist_.angular.z = world_angular.z();
 }
 
 void QuadrotorAerodynamics::setWind(const geometry_msgs::Vector3& wind)
@@ -200,6 +226,14 @@ void QuadrotorAerodynamics::update(double dt)
 //  std::cout << "]" << std::endl;
 
   checknan(drag_model_->u, "drag model input");
+
+  // convert input to body coordinates
+  Eigen::Quaterniond orientation(orientation_.w, orientation_.x, orientation_.y, orientation_.z);
+  Eigen::Matrix<double,3,3> rotation_matrix(orientation.toRotationMatrix());
+  Eigen::Map<Eigen::Vector3d> linear(&(drag_model_->u[0]));
+  Eigen::Map<Eigen::Vector3d> angular(&(drag_model_->u[3]));
+  linear  = rotation_matrix * linear;
+  angular = rotation_matrix * angular;
 
   // update drag model
   f(drag_model_->u.data(), dt, drag_model_->y.data());
