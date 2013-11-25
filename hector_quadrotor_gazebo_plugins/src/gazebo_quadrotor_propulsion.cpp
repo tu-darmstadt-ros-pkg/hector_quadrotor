@@ -87,9 +87,6 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
     pwm_topic_ = _sdf->GetElement("voltageTopicName")->Get<std::string>();
   }
 
-  // get model parameters
-  model_.configure(param_namespace_);
-
   // set control timing parameters
   controlTimer.Load(world, _sdf, "control");
   if (_sdf->HasElement("controlTolerance")) control_tolerance_.fromSec(_sdf->GetElement("controlTolerance")->Get<double>());
@@ -103,6 +100,12 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
   {
     ROS_FATAL_STREAM("A ROS node for Gazebo has not been initialized, unable to load plugin. "
       << "Load the Gazebo system plugin 'libgazebo_ros_api_plugin.so' in the gazebo_ros package)");
+    return;
+  }
+
+  // get model parameters
+  if (!model_.configure(param_namespace_)) {
+    gzwarn << "[quadrotor_propulsion] Could not properly configure the propulsion plugin. Make sure you loaded the parameter file." << std::endl;
     return;
   }
 

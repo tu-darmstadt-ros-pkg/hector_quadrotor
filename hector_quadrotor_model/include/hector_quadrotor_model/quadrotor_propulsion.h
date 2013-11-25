@@ -53,7 +53,7 @@ public:
   QuadrotorPropulsion();
   ~QuadrotorPropulsion();
 
-  void configure(const std::string& ns = "~");
+  bool configure(const std::string& ns = "~");
   void reset();
   void update(double dt);
 

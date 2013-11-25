@@ -49,6 +49,13 @@ struct DragParameters
     real_T C_wz;
     real_T C_mxy;
     real_T C_mz;
+
+    DragParameters()
+      : C_wxy(0.0)
+      , C_wz(0.0)
+      , C_mxy(0.0)
+      , C_mz(0.0)
+    {}
 };
 
 // extern void quadrotorDrag(const real_T uin[6], const DragParameters parameter, real_T dt, real_T y[6]);
@@ -131,15 +138,15 @@ inline void QuadrotorAerodynamics::f(const double uin[10], double dt, double y[1
   quadrotorDrag(uin, drag_model_->parameters_, dt, y);
 }
 
-void QuadrotorAerodynamics::configure(const std::string &ns)
+bool QuadrotorAerodynamics::configure(const std::string &ns)
 {
   ros::NodeHandle param(ns);
 
   // get model parameters
-  param.getParam("C_wxy", drag_model_->parameters_.C_wxy);
-  param.getParam("C_wz",  drag_model_->parameters_.C_wz);
-  param.getParam("C_mxy", drag_model_->parameters_.C_mxy);
-  param.getParam("C_mz",  drag_model_->parameters_.C_mz);
+  if (!param.getParam("C_wxy", drag_model_->parameters_.C_wxy)) return false;
+  if (!param.getParam("C_wz",  drag_model_->parameters_.C_wz)) return false;
+  if (!param.getParam("C_mxy", drag_model_->parameters_.C_mxy)) return false;
+  if (!param.getParam("C_mz",  drag_model_->parameters_.C_mz)) return false;
 
 #ifndef NDEBUG
   std::cout << "Loaded the following quadrotor drag model parameters from namespace " << param.getNamespace() << ":" << std::endl;
@@ -150,6 +157,7 @@ void QuadrotorAerodynamics::configure(const std::string &ns)
 #endif
 
   reset();
+  return true;
 }
 
 void QuadrotorAerodynamics::reset()

@@ -67,14 +67,17 @@ void GazeboQuadrotorAerodynamics::Load(physics::ModelPtr _model, sdf::ElementPtr
   if (_sdf->HasElement("paramNamespace")) param_namespace_ = _sdf->GetElement("paramNamespace")->Get<std::string>();
   if (_sdf->HasElement("windTopicName"))  wind_topic_ = _sdf->GetElement("windTopicName")->Get<std::string>();
 
-  // get model parameters
-  model_.configure(param_namespace_);
-
   // Make sure the ROS node for Gazebo has already been initialized
   if (!ros::isInitialized())
   {
     ROS_FATAL_STREAM("A ROS node for Gazebo has not been initialized, unable to load plugin. "
       << "Load the Gazebo system plugin 'libgazebo_ros_api_plugin.so' in the gazebo_ros package)");
+    return;
+  }
+
+  // get model parameters
+  if (!model_.configure(param_namespace_)) {
+    gzwarn << "[quadrotor_propulsion] Could not properly configure the aerodynamics plugin. Make sure you loaded the parameter file." << std::endl;
     return;
   }
 
@@ -116,8 +119,8 @@ void GazeboQuadrotorAerodynamics::Update()
 
   // fill input vector u for drag model
   geometry_msgs::Twist twist;
-  fromVector(link->GetRelativeLinearVel(), twist.linear);
-  fromVector(link->GetRelativeAngularVel(), twist.angular);
+  fromVector(link->GetWorldLinearVel(), twist.linear);
+  fromVector(link->GetWorldAngularVel(), twist.angular);
   model_.setTwist(twist);
 
   // update the model
@@ -129,8 +132,8 @@ void GazeboQuadrotorAerodynamics::Update()
   toVector(model_.getWrench().torque, torque);
 
   // set force and torque in gazebo
-  link->AddRelativeForce(force);
-  link->AddRelativeTorque(torque - link->GetInertial()->GetCoG().Cross(force));
+  link->AddForceAtRelativePosition(force, -link->GetInertial()->GetCoG());
+  link->AddTorque(torque);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
