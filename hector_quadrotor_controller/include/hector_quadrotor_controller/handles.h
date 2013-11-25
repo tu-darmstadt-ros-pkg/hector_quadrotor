@@ -177,6 +177,8 @@ public:
   virtual bool connected() const = 0;
   virtual void reset() {}
 
+  void *get() const { return 0; }
+
   bool enabled();
   bool start();
   void stop();
@@ -210,6 +212,12 @@ protected:
 };
 typedef boost::shared_ptr<CommandHandle> CommandHandlePtr;
 
+namespace internal {
+  template <class Derived> struct FieldAccessor {
+    static typename Derived::ValueType *get(void *) { return 0; }
+  };
+}
+
 template <class Derived, typename T, class Parent = CommandHandle>
 class CommandHandle_ : public Parent
 {
@@ -226,7 +234,7 @@ public:
 
   using Parent::operator=;
   Derived& operator=(ValueType *source) { command_ = source; return static_cast<Derived &>(*this); }
-  ValueType *get() const { return command_; }
+  ValueType *get() const { return command_ ? command_ : internal::FieldAccessor<Derived>::get(Parent::get()); }
   ValueType &operator*() const { return *command_; }
 
   ValueType& command() { return *get(); }
@@ -269,9 +277,6 @@ public:
   HorizontalPositionCommandHandle(Point* command) { *this = command; }
   virtual ~HorizontalPositionCommandHandle() {}
 
-  virtual bool connected() const { return get(); }
-  ValueType *get() const { return command_ ? command_ : (PoseCommandHandle::get() ? &(PoseCommandHandle::get()->position) : 0); }
-
   using Base::getCommand;
   virtual bool getCommand(double &x, double &y) const {
     x = get()->x;
@@ -298,6 +303,12 @@ public:
 };
 typedef boost::shared_ptr<HorizontalPositionCommandHandle> HorizontalPositionCommandHandlePtr;
 
+namespace internal {
+  template <> struct FieldAccessor<HorizontalPositionCommandHandle> {
+    static Point *get(Pose *pose) { return &(pose->position); }
+  };
+}
+
 class HeightCommandHandle : public CommandHandle_<HeightCommandHandle, double, PoseCommandHandle>
 {
 public:
@@ -310,9 +321,6 @@ public:
   HeightCommandHandle(double *command) { *this = command; }
   virtual ~HeightCommandHandle() {}
 
-  bool connected() const { return get(); }
-  ValueType *get() const { return command_ ? command_ : (PoseCommandHandle::get() ? &(PoseCommandHandle::get()->position.z) : 0); }
-
   using Base::update;
   bool update(Pose& command) const {
     if (!connected()) return false;
@@ -323,6 +331,12 @@ public:
   double getError(const PoseHandle &pose) const;
 };
 typedef boost::shared_ptr<HeightCommandHandle> HeightCommandHandlePtr;
+
+namespace internal {
+  template <> struct FieldAccessor<HeightCommandHandle> {
+    static double *get(Pose *pose) { return &(pose->position.z); }
+  };
+}
 
 class HeadingCommandHandle : public CommandHandle_<HeadingCommandHandle, Quaternion, PoseCommandHandle>
 {
@@ -335,9 +349,6 @@ public:
   HeadingCommandHandle(QuadrotorInterface *interface, const std::string& name) : Base(interface, name, "orientation.yaw"), scalar_(0) {}
   HeadingCommandHandle(Quaternion *command) { *this = command; }
   virtual ~HeadingCommandHandle() {}
-
-  virtual bool connected() const { return (command_ != 0) || get(); }
-  ValueType *get() const { return command_ ? command_ : (PoseCommandHandle::get() ? &(PoseCommandHandle::get()->orientation) : 0); }
 
   using Base::getCommand;
   double getCommand() const;
@@ -354,6 +365,12 @@ protected:
   double *scalar_;
 };
 typedef boost::shared_ptr<HeadingCommandHandle> HeadingCommandHandlePtr;
+
+namespace internal {
+  template <> struct FieldAccessor<HeadingCommandHandle> {
+    static Quaternion *get(Pose *pose) { return &(pose->orientation); }
+  };
+}
 
 class TwistCommandHandle : public CommandHandle_<TwistCommandHandle, Twist>
 {
@@ -380,9 +397,6 @@ public:
   HorizontalVelocityCommandHandle(Vector3* command) { *this = command; }
   virtual ~HorizontalVelocityCommandHandle() {}
 
-  virtual bool connected() const { return get(); }
-  ValueType *get() const { return command_ ? command_ : (TwistCommandHandle::get() ? &(TwistCommandHandle::get()->linear) : 0); }
-
   using Base::getCommand;
   bool getCommand(double &x, double &y) const {
     x = get()->x;
@@ -405,6 +419,12 @@ public:
 };
 typedef boost::shared_ptr<HorizontalVelocityCommandHandle> HorizontalVelocityCommandHandlePtr;
 
+namespace internal {
+  template <> struct FieldAccessor<HorizontalVelocityCommandHandle> {
+    static Vector3 *get(Twist *twist) { return &(twist->linear); }
+  };
+}
+
 class VerticalVelocityCommandHandle : public CommandHandle_<VerticalVelocityCommandHandle, double, TwistCommandHandle>
 {
 public:
@@ -417,9 +437,6 @@ public:
   VerticalVelocityCommandHandle(double* command) { *this = command; }
   virtual ~VerticalVelocityCommandHandle() {}
 
-  virtual bool connected() const { return get(); }
-  ValueType *get() const { return command_ ? command_ : (TwistCommandHandle::get() ? &(TwistCommandHandle::get()->linear.z) : 0); }
-
   using Base::update;
   bool update(Twist& command) const {
     if (!connected()) return false;
@@ -428,6 +445,12 @@ public:
   }
 };
 typedef boost::shared_ptr<VerticalVelocityCommandHandle> VerticalVelocityCommandHandlePtr;
+
+namespace internal {
+  template <> struct FieldAccessor<VerticalVelocityCommandHandle> {
+    static double *get(Twist *twist) { return &(twist->linear.z); }
+  };
+}
 
 class AngularVelocityCommandHandle : public CommandHandle_<AngularVelocityCommandHandle, double, TwistCommandHandle>
 {
@@ -441,9 +464,6 @@ public:
   AngularVelocityCommandHandle(double* command) { *this = command; }
   virtual ~AngularVelocityCommandHandle() {}
 
-  virtual bool connected() const { return get(); }
-  ValueType *get() const { return command_ ? command_ : (TwistCommandHandle::get() ? &(TwistCommandHandle::get()->angular.z) : 0); }
-
   using Base::update;
   bool update(Twist& command) const {
     if (!connected()) return false;
@@ -452,6 +472,12 @@ public:
   }
 };
 typedef boost::shared_ptr<AngularVelocityCommandHandle> AngularVelocityCommandHandlePtr;
+
+namespace internal {
+  template <> struct FieldAccessor<AngularVelocityCommandHandle> {
+    static double *get(Twist *twist) { return &(twist->angular.z); }
+  };
+}
 
 class WrenchCommandHandle : public CommandHandle_<WrenchCommandHandle, Wrench>
 {
