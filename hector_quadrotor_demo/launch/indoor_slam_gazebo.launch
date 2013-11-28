@@ -11,9 +11,16 @@
   </include>
    
   <!-- Start SLAM system -->
-  <include file="$(find hector_slam_launch)/launch/quadrotor_uav.launch"/>
+  <include file="$(find hector_mapping)/launch/mapping_default.launch">
+    <arg name="odom_frame" value="world"/>
+  </include>
+ 
+  <!-- Start GeoTIFF mapper -->
+  <include file="$(find hector_geotiff)/launch/geotiff_mapper.launch">
+    <arg name="trajectory_publish_rate" value="4"/> 
+  </include>
   
   <!-- Start rviz visualization with preset config -->
-  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find hector_quadrotor_demo)/rviz_cfg/indoor_slam.vcg"/>
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find hector_quadrotor_demo)/rviz_cfg/indoor_slam.rviz"/>
    
 </launch>

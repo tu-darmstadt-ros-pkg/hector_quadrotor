@@ -49,7 +49,7 @@ private:
 
   struct Button
   {
-    unsigned int button;
+    int button;
   };
 
   struct {
@@ -61,12 +61,16 @@ private:
 
   struct
   {
+    Button slow;
   } buttons_;
+
+  double slow_factor_;
 
 public:
   Teleop()
   {
     ros::NodeHandle params("~");
+
     axes_.x.axis = 0;
     axes_.x.max = 2.0;
     axes_.y.axis = 0;
@@ -75,6 +79,9 @@ public:
     axes_.z.max = 2.0;
     axes_.yaw.axis = 0;
     axes_.yaw.max = 90.0*M_PI/180.0;
+    buttons_.slow.button = 0;
+    slow_factor_ = 0.2;
+
     params.getParam("x_axis", axes_.x.axis);
     params.getParam("y_axis", axes_.y.axis);
     params.getParam("z_axis", axes_.z.axis);
@@ -83,6 +90,8 @@ public:
     params.getParam("y_velocity_max", axes_.y.max);
     params.getParam("z_velocity_max", axes_.z.max);
     params.getParam("yaw_velocity_max", axes_.yaw.max);
+    params.getParam("slow_button", buttons_.slow.button);
+    params.getParam("slow_factor", slow_factor_);
 
     joy_subscriber_ = node_handle_.subscribe<sensor_msgs::Joy>("joy", 1, boost::bind(&Teleop::joyCallback, this, _1));
     velocity_publisher_ = node_handle_.advertise<geometry_msgs::Twist>("cmd_vel", 10);
@@ -99,6 +108,12 @@ public:
     velocity_.linear.y  = getAxis(joy, axes_.y.axis)   * axes_.y.max;
     velocity_.linear.z  = getAxis(joy, axes_.z.axis)   * axes_.z.max;
     velocity_.angular.z = getAxis(joy, axes_.yaw.axis) * axes_.yaw.max;
+    if (getButton(joy, buttons_.slow.button)) {
+      velocity_.linear.x  *= slow_factor_;
+      velocity_.linear.y  *= slow_factor_;
+      velocity_.linear.z  *= slow_factor_;
+      velocity_.angular.z *= slow_factor_;
+    }
     velocity_publisher_.publish(velocity_);
   }
 

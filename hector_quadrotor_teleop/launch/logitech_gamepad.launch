@@ -13,6 +13,7 @@
     <param name="x_velocity_max" value="5"/>
     <param name="y_velocity_max" value="5"/>
     <param name="z_velocity_max" value="2"/>
+    <param name="slow_button" value="6"/>
   </node>
 </launch>
 
