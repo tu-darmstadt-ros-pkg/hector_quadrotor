@@ -90,6 +90,7 @@ public:
   {
     pose_command_ = *command;
     if (!(pose_input_->connected())) *pose_input_ = &(pose_command_.pose);
+    pose_input_->start();
 
     ros::Time start_time = command->header.stamp;
     if (start_time.isZero()) start_time = ros::Time::now();
@@ -100,6 +101,7 @@ public:
   {
     twist_command_ = *command;
     if (!(twist_input_->connected())) *twist_input_ = &(twist_command_.twist);
+    twist_input_->start();
 
     ros::Time start_time = command->header.stamp;
     if (start_time.isZero()) start_time = ros::Time::now();
@@ -124,28 +126,26 @@ public:
     // execute available callbacks in the callback queue (is this real-time safe?)
     // callback_queue_.callAvailable();
 
-    // return if no pose command is available
-    if (!(pose_input_->connected())) {
-      return;
-    }
-
     // check command timeout
     // TODO
 
-    // control horizontal position
-    double error_n, error_w;
-    HorizontalPositionCommandHandle(*pose_input_).getError(*pose_, error_n, error_w);
-    output.linear.x = pid_.x.update(error_n, twist_->twist().linear.x, period);
-    output.linear.y = pid_.y.update(error_w, twist_->twist().linear.y, period);
+    // return if no pose command is available
+    if (pose_input_->enabled()) {
+        // control horizontal position
+        double error_n, error_w;
+        HorizontalPositionCommandHandle(*pose_input_).getError(*pose_, error_n, error_w);
+        output.linear.x = pid_.x.update(error_n, twist_->twist().linear.x, period);
+        output.linear.y = pid_.y.update(error_w, twist_->twist().linear.y, period);
 
-    // control height
-    output.linear.z = pid_.z.update(HeightCommandHandle(*pose_input_).getError(*pose_), twist_->twist().linear.z, period);
+        // control height
+        output.linear.z = pid_.z.update(HeightCommandHandle(*pose_input_).getError(*pose_), twist_->twist().linear.z, period);
 
-    // control yaw angle
-    output.angular.z = pid_.yaw.update(HeadingCommandHandle(*pose_input_).getError(*pose_), twist_->twist().angular.z, period);
+        // control yaw angle
+        output.angular.z = pid_.yaw.update(HeadingCommandHandle(*pose_input_).getError(*pose_), twist_->twist().angular.z, period);
+    }
 
     // add twist command if available
-    if (twist_input_->connected())
+    if (twist_input_->enabled())
     {
       output.linear.x  += twist_input_->getCommand().linear.x;
       output.linear.y  += twist_input_->getCommand().linear.y;

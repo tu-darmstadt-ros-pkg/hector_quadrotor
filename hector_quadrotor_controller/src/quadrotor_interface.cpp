@@ -40,24 +40,28 @@ QuadrotorInterface::~QuadrotorInterface()
 
 bool QuadrotorInterface::enabled(const CommandHandle *handle) const
 {
-  if (!handle) return false;
+  if (!handle || !handle->connected()) return false;
   std::string resource = handle->getName();
   return enabled_.count(resource) > 0;
 }
 
 bool QuadrotorInterface::start(const CommandHandle *handle)
 {
-  if (!handle) return false;
+  if (!handle || !handle->connected()) return false;
+  if (enabled(handle)) return true;
   std::string resource = handle->getName();
   enabled_[resource] = handle;
+  ROS_DEBUG_NAMED("quadrotor_interface", "Enabled %s control", resource.c_str());
 }
 
 void QuadrotorInterface::stop(const CommandHandle *handle)
 {
   if (!handle) return;
+  if (!enabled(handle)) return;
   std::string resource = handle->getName();
   std::map<std::string, const CommandHandle *>::iterator it = enabled_.lower_bound(resource);
   if (it != enabled_.end() && it->second == handle) enabled_.erase(it);
+  ROS_DEBUG_NAMED("quadrotor_interface", "Disabled %s control", resource.c_str());
 }
 
 void QuadrotorInterface::disconnect(const CommandHandle *handle)
