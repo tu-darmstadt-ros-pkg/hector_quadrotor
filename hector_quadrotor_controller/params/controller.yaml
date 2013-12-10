@@ -42,6 +42,7 @@ controller:
             limit_output: 3.0
             time_constant: 0.1
         limits:
+            load_factor: 1.5
             force/z: 30.0
             torque/xy: 10.0
             torque/z: 1.0

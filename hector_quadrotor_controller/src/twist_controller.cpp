@@ -97,6 +97,7 @@ public:
 
     // load other parameters
     controller_nh.getParam("auto_engage", auto_engage_ = true);
+    controller_nh.getParam("limits/load_factor", load_factor_limit = 1.5);
     controller_nh.getParam("limits/force/z", limits_.force.z);
     controller_nh.getParam("limits/torque/xy", limits_.torque.x);
     controller_nh.getParam("limits/torque/xy", limits_.torque.y);
@@ -220,6 +221,8 @@ public:
                                  - pose_->pose().orientation.x * pose_->pose().orientation.x
                                  - pose_->pose().orientation.y * pose_->pose().orientation.y
                                  + pose_->pose().orientation.z * pose_->pose().orientation.z );
+      // Note: load_factor could be NaN or Inf...?
+      if (load_factor_limit > 0.0 && !(load_factor < load_factor_limit)) load_factor = load_factor_limit;
 
       Vector3 acceleration_command;
       acceleration_command.x = pid_.linear.x.update(command.linear.x, twist.linear.x, acceleration_->acceleration().x, period);
@@ -290,6 +293,7 @@ private:
 
   geometry_msgs::Wrench limits_;
   bool auto_engage_;
+  double load_factor_limit;
   double mass_;
   double inertia_[3];
 
