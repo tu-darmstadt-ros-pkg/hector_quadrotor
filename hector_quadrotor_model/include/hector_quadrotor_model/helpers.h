@@ -34,10 +34,21 @@
 namespace hector_quadrotor_model
 {
 
+template <typename T, std::size_t N> std::ostream &operator<<(std::ostream &os, const boost::array<T,N> &array)
+{
+    os << "[ ";
+    for(typename boost::array<T,N>::const_iterator it = array.begin(); it != array.end(); ++it)
+    {
+        os << *it << ", ";
+    }
+    return os << "]";
+}
+
 template <typename T> static inline void checknan(T& value, const std::string& text = "") {
+  assert(value == value);
   if (!(value == value)) {
 #ifndef NDEBUG
-    if (!text.empty()) std::cerr << text << " contains **!?* Nan values!" << std::endl;
+    if (!text.empty()) std::cerr << text << " contains **!?* Nan values: " << value << std::endl;
 #endif
     value = T();
     return;

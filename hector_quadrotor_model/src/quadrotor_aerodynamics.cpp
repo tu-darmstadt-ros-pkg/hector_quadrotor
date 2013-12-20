@@ -220,11 +220,7 @@ void QuadrotorAerodynamics::update(double dt)
   drag_model_->u[4] = -twist_.angular.y;
   drag_model_->u[5] = -twist_.angular.z;
 
-//  std::cout << "u = [ ";
-//  for(std::size_t i = 0; i < drag_model_->u.size(); ++i)
-//    std::cout << drag_model_->u[i] << " ";
-//  std::cout << "]" << std::endl;
-
+  std::cout << "u_nav  = " << drag_model_->u << std::endl;
   checknan(drag_model_->u, "drag model input");
 
   // convert input to body coordinates
@@ -234,16 +230,13 @@ void QuadrotorAerodynamics::update(double dt)
   Eigen::Map<Eigen::Vector3d> angular(&(drag_model_->u[3]));
   linear  = rotation_matrix * linear;
   angular = rotation_matrix * angular;
+  std::cout << "u_body = " << drag_model_->u << std::endl;
 
   // update drag model
   f(drag_model_->u.data(), dt, drag_model_->y.data());
 
+  std::cout << "y_body = " << drag_model_->y << std::endl;
   checknan(drag_model_->y, "drag model output");
-
-  //  std::cout << "y = [ ";
-  //  for(std::size_t i = 0; i < propulsion_model_->y.size(); ++i)
-  //    std::cout << propulsion_model_->y[i] << " ";
-  //  std::cout << "]" << std::endl;
 
   // drag_model_ gives us inverted vectors!
   wrench_.force.x  = -( drag_model_->y[0]);
