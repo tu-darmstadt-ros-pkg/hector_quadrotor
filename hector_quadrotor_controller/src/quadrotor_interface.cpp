@@ -157,7 +157,11 @@ void HeadingCommandHandle::setCommand(double command)
 
 double HeadingCommandHandle::getCommand() const {
   if (scalar_) return *scalar_;
-  return atan2(get()->z, get()->w) * 2.;
+  const Quaternion::_w_type& w = get()->w;
+  const Quaternion::_x_type& x = get()->x;
+  const Quaternion::_y_type& y = get()->y;
+  const Quaternion::_z_type& z = get()->z;
+  return atan2(2.*x*y + 2.*w*z, x*x + w*w - z*z - y*y);
 }
 
 bool HeadingCommandHandle::update(Pose& command) const {
