@@ -68,7 +68,7 @@ bool QuadrotorHardwareSim::initSim(
 
     gzlog << "[hector_quadrotor_controller_gazebo] Using topic '" << subscriber_state_.getTopic() << "' as state input for control" << std::endl;
   } else {
-    gzlog << "[hector_quadrotor_controller_gazebo] Using ground truth data from Gazebo as state input for control" << std::endl;
+    gzlog << "[hector_quadrotor_controller_gazebo] Using ground truth from Gazebo as state input for control" << std::endl;
   }
 
   // subscribe imu
@@ -79,7 +79,7 @@ bool QuadrotorHardwareSim::initSim(
     subscriber_imu_ = model_nh.subscribe(ops);
     gzlog << "[hector_quadrotor_controller_gazebo] Using topic '" << subscriber_imu_.getTopic() << "' as imu input for control" << std::endl;
   } else {
-    gzlog << "[hector_quadrotor_controller_gazebo] Using ground truth data from Gazebo as state input for control" << std::endl;
+    gzlog << "[hector_quadrotor_controller_gazebo] Using ground truth from Gazebo as imu input for control" << std::endl;
   }
 
   // subscribe motor_status
