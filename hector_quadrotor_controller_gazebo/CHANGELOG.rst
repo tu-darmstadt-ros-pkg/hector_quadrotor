@@ -1,0 +1,8 @@
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Changelog for package hector_quadrotor_controller_gazebo
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+0.3.1 (2013-12-26)
+------------------
+* New controller implementation using ros_control
+* Contributors: Johannes Meyer
