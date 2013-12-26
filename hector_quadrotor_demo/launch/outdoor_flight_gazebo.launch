@@ -11,6 +11,6 @@
   </include>
   
   <!-- Start rviz visualization with preset config -->
-  <!-- node pkg="rviz" type="rviz" name="rviz" args="-d $(find hector_quadrotor_demo)/rviz_cfg/outdoor_flight.rviz"/ -->
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find hector_quadrotor_demo)/rviz_cfg/outdoor_flight.rviz"/>
    
 </launch>
