@@ -250,8 +250,8 @@ void QuadrotorAerodynamics::update(double dt)
   wrench_.force.y  = -(-drag_model_->y[1]);
   wrench_.force.z  = -(-drag_model_->y[2]);
   wrench_.torque.x = -( drag_model_->y[3]);
-  wrench_.torque.x = -(-drag_model_->y[4]);
-  wrench_.torque.x = -(-drag_model_->y[5]);
+  wrench_.torque.y = -(-drag_model_->y[4]);
+  wrench_.torque.z = -(-drag_model_->y[5]);
 }
 
 } // namespace hector_quadrotor_model
