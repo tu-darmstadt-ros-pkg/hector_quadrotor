@@ -4,7 +4,7 @@ project(hector_quadrotor_model)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS geometry_msgs hector_uav_msgs)
+find_package(catkin REQUIRED COMPONENTS geometry_msgs hector_uav_msgs roscpp)
 include_directories(include ${catkin_INCLUDE_DIRS})
 
 ## System dependencies are found with CMake's conventions
@@ -30,7 +30,7 @@ include_directories(${EIGEN_INCLUDE_DIRS})
 catkin_package(
     INCLUDE_DIRS include
     LIBRARIES hector_quadrotor_propulsion hector_quadrotor_aerodynamics
-    CATKIN_DEPENDS geometry_msgs hector_uav_msgs
+    CATKIN_DEPENDS geometry_msgs hector_uav_msgs roscpp
     DEPENDS 
 )
 
