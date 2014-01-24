@@ -52,6 +52,7 @@ public:
 
     pose_input_   = interface->addInput<PoseCommandHandle>("pose");
     twist_input_  = interface->addInput<TwistCommandHandle>("pose/twist");
+    twist_limit_  = interface->addInput<TwistCommandHandle>("pose/twist_limit");
     twist_output_ = interface->addOutput<TwistCommandHandle>("twist");
     interface->claim(twist_output_->getName());
 
@@ -155,6 +156,29 @@ public:
       output.angular.z += twist_input_->getCommand().angular.z;
     }
 
+    // limit twist
+    if (twist_limit_->enabled())
+    {
+        double linear_xy = sqrt(output.linear.x*output.linear.x + output.linear.y*output.linear.y);
+        double limit_linear_xy  = std::max(twist_limit_->get()->linear.x, twist_limit_->get()->linear.y);
+        if (limit_linear_xy > 0.0 && linear_xy > limit_linear_xy) {
+            output.linear.x *= limit_linear_xy / linear_xy;
+            output.linear.y *= limit_linear_xy / linear_xy;
+        }
+        if (twist_limit_->get()->linear.z > 0.0 && fabs(output.linear.z) > twist_limit_->get()->linear.z) {
+            output.linear.z *= twist_limit_->get()->linear.z / fabs(output.linear.z);
+        }
+        double angular_xy = sqrt(output.angular.x*output.angular.x + output.angular.y*output.angular.y);
+        double limit_angular_xy  = std::max(twist_limit_->get()->angular.x, twist_limit_->get()->angular.y);
+        if (limit_angular_xy > 0.0 && angular_xy > limit_angular_xy) {
+            output.angular.x *= limit_angular_xy / angular_xy;
+            output.angular.y *= limit_angular_xy / angular_xy;
+        }
+        if (twist_limit_->get()->angular.z > 0.0 && fabs(output.angular.z) > twist_limit_->get()->angular.z) {
+            output.angular.z *= twist_limit_->get()->angular.z / fabs(output.angular.z);
+        }
+    }
+
     // set twist output
     twist_output_->setCommand(output);
   }
@@ -164,6 +188,7 @@ private:
   PoseCommandHandlePtr pose_input_;
   TwistHandlePtr twist_;
   TwistCommandHandlePtr twist_input_;
+  TwistCommandHandlePtr twist_limit_;
   TwistCommandHandlePtr twist_output_;
 
   geometry_msgs::PoseStamped pose_command_;
