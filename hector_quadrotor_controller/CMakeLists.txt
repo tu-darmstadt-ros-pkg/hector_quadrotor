@@ -8,7 +8,7 @@ find_package(catkin REQUIRED COMPONENTS roscpp geometry_msgs sensor_msgs nav_msg
 include_directories(include ${catkin_INCLUDE_DIRS})
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost REQUIRED COMPONENTS system)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -44,7 +44,7 @@ add_library(hector_quadrotor_pose_controller src/pose_controller.cpp)
 target_link_libraries(hector_quadrotor_pose_controller hector_quadrotor_controller)
 
 add_library(hector_quadrotor_twist_controller src/twist_controller.cpp)
-target_link_libraries(hector_quadrotor_twist_controller hector_quadrotor_controller)
+target_link_libraries(hector_quadrotor_twist_controller hector_quadrotor_controller ${BOOST_LIBRARIES})
 
 add_library(hector_quadrotor_motor_controller src/motor_controller.cpp)
 target_link_libraries(hector_quadrotor_motor_controller hector_quadrotor_controller)

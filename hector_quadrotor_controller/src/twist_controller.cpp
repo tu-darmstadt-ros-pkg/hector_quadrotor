@@ -38,6 +38,8 @@
 #include <ros/subscriber.h>
 #include <ros/callback_queue.h>
 
+#include <boost/thread.hpp>
+
 #include <limits>
 
 namespace hector_quadrotor_controller {
@@ -47,6 +49,12 @@ using namespace controller_interface;
 class TwistController : public controller_interface::Controller<QuadrotorInterface>
 {
 public:
+  ~TwistController()
+  {
+    is_shutting_down_ = true;
+    callback_queue_thread_.join();
+  }
+
   bool init(QuadrotorInterface *interface, ros::NodeHandle &root_nh, ros::NodeHandle &controller_nh)
   {
     // get interface handles
@@ -61,14 +69,14 @@ public:
     ros::SubscribeOptions twist_subscribe_options = ros::SubscribeOptions::create<geometry_msgs::TwistStamped>(
       "command/twist", 1,
       boost::bind(&TwistController::twistCommandCallback, this, _1),
-      ros::VoidConstPtr(), 0 // &callback_queue_
+      ros::VoidConstPtr(), &callback_queue_
     );
     twist_subscriber_ = root_nh.subscribe(twist_subscribe_options);
 
     ros::SubscribeOptions cmd_vel_subscribe_options = ros::SubscribeOptions::create<geometry_msgs::Twist>(
       "cmd_vel", 1,
       boost::bind(&TwistController::cmd_velCommandCallback, this, _1),
-      ros::VoidConstPtr(), 0 // &callback_queue_
+      ros::VoidConstPtr(), &callback_queue_
     );
     cmd_vel_subscriber_ = root_nh.subscribe(cmd_vel_subscribe_options);
 
@@ -76,13 +84,13 @@ public:
     {
       ros::AdvertiseServiceOptions ops = ros::AdvertiseServiceOptions::create<std_srvs::Empty>(
         "engage", boost::bind(&TwistController::engageCallback, this, _1, _2),
-        ros::VoidConstPtr(), 0 // &callback_queue_
+        ros::VoidConstPtr(), &callback_queue_
       );
       engage_service_server_ = root_nh.advertiseService(ops);
 
       ops = ros::AdvertiseServiceOptions::create<std_srvs::Empty>(
         "shutdown", boost::bind(&TwistController::shutdownCallback, this, _1, _2),
-        ros::VoidConstPtr(), 0 // &callback_queue_
+        ros::VoidConstPtr(), &callback_queue_
       );
       shutdown_service_server_ = root_nh.advertiseService(ops);
     }
@@ -107,6 +115,9 @@ public:
     interface->getMassAndInertia(mass_, inertia_);
 
     command_given_in_stabilized_frame_ = false;
+
+    is_shutting_down_ = false;
+    callback_queue_thread_ = boost::thread(boost::bind(&TwistController::CallbackQueueThread, this));
     return true;
   }
 
@@ -132,6 +143,8 @@ public:
 
   void twistCommandCallback(const geometry_msgs::TwistStampedConstPtr& command)
   {
+    boost::mutex::scoped_lock lock(command_mutex_);
+
     command_ = *command;
     if (command_.header.stamp.isZero()) command_.header.stamp = ros::Time::now();
     command_given_in_stabilized_frame_ = false;
@@ -142,6 +155,8 @@ public:
 
   void cmd_velCommandCallback(const geometry_msgs::TwistConstPtr& command)
   {
+    boost::mutex::scoped_lock lock(command_mutex_);
+
     command_.twist = *command;
     command_.header.stamp = ros::Time::now();
     command_given_in_stabilized_frame_ = true;
@@ -152,12 +167,16 @@ public:
 
   bool engageCallback(std_srvs::Empty::Request&, std_srvs::Empty::Response&)
   {
+    boost::mutex::scoped_lock lock(command_mutex_);
+
     ROS_INFO_NAMED("twist_controller", "Engaging motors!");
     motors_running_ = true;
   }
 
   bool shutdownCallback(std_srvs::Empty::Request&, std_srvs::Empty::Response&)
   {
+    boost::mutex::scoped_lock lock(command_mutex_);
+
     ROS_INFO_NAMED("twist_controller", "Shutting down motors!");
     motors_running_ = false;
   }
@@ -175,6 +194,8 @@ public:
 
   void update(const ros::Time& time, const ros::Duration& period)
   {
+    boost::mutex::scoped_lock lock(command_mutex_);
+
     // Get twist command input
     if (twist_input_->connected() && twist_input_->enabled()) {
       command_.twist = twist_input_->getCommand();
@@ -302,6 +323,18 @@ private:
 
   bool motors_running_;
   double linear_z_control_error_;
+
+  bool is_shutting_down_;
+  ros::CallbackQueue callback_queue_;
+  boost::thread callback_queue_thread_;
+  boost::mutex command_mutex_;
+
+  void CallbackQueueThread() {
+    static const ros::WallDuration timeout(1.0);
+    while(!is_shutting_down_) {
+      callback_queue_.callAvailable(timeout);
+    }
+  }
 };
 
 } // namespace hector_quadrotor_controller
