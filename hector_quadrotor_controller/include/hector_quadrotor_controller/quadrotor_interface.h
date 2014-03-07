@@ -70,7 +70,7 @@ public:
 
     // connect to output of same name
     if (outputs_.count(name)) {
-      boost::shared_ptr<HandleType> output = boost::shared_dynamic_cast<HandleType>(outputs_.at(name));
+      boost::shared_ptr<HandleType> output = boost::dynamic_pointer_cast<HandleType>(outputs_.at(name));
       output->connectTo(*input);
     }
 
@@ -89,7 +89,7 @@ public:
 
     // connect to output of same name
     if (inputs_.count(name)) {
-      boost::shared_ptr<HandleType> input = boost::shared_dynamic_cast<HandleType>(inputs_.at(name));
+      boost::shared_ptr<HandleType> input = boost::dynamic_pointer_cast<HandleType>(inputs_.at(name));
       output->connectTo(*input);
     }
 
@@ -99,13 +99,13 @@ public:
   template <typename HandleType> boost::shared_ptr<HandleType> getOutput(const std::string& name) const
   {
     if (!outputs_.count(name)) return boost::shared_ptr<HandleType>();
-    return boost::shared_static_cast<HandleType>(outputs_.at(name));
+    return boost::static_pointer_cast<HandleType>(outputs_.at(name));
   }
 
   template <typename HandleType> boost::shared_ptr<HandleType> getInput(const std::string& name) const
   {
     if (!inputs_.count(name)) return boost::shared_ptr<HandleType>();
-    return boost::shared_static_cast<HandleType>(inputs_.at(name));
+    return boost::static_pointer_cast<HandleType>(inputs_.at(name));
   }
 
   template <typename HandleType> typename HandleType::ValueType const* getCommand(const std::string& name) const
