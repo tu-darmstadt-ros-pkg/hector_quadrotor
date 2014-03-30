@@ -3,7 +3,7 @@ Changelog for package hector_quadrotor_controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 0.3.2 (2014-03-30)
------------
+------------------
 * Fix boost 1.53 issues
   changed boost::shared_dynamic_cast to boost::dynamic_pointer_cast and
   boost::shared_static_cast to boost::static_pointer_cast
