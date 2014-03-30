@@ -1,6 +1,6 @@
 <package>
   <name>hector_quadrotor_teleop</name>
-  <version>0.3.1</version>
+  <version>0.3.2</version>
   <description>hector_quadrotor_teleop enables quadrotor flying with a joystick by
      processing joy/Joy messages and translating them to geometry_msgs/Twist.</description>
   <maintainer email="meyer@fsr.tu-darmstadt.de">Johannes Meyer</maintainer>

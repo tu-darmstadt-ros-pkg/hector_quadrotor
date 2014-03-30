@@ -1,6 +1,6 @@
 <package>
   <name>hector_uav_msgs</name>
-  <version>0.3.1</version>
+  <version>0.3.2</version>
   <description>hector_uav_msgs is a message package that contains messages for UAV controller inputs and outputs and some sensor readings not covered by sensor_msgs.</description>
   <maintainer email="meyer@fsr.tu-darmstadt.de">Johannes Meyer</maintainer>
 

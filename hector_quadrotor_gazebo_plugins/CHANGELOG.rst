@@ -2,6 +2,9 @@
 Changelog for package hector_quadrotor_gazebo_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.2 (2014-03-30)
+-----------
+
 0.3.1 (2013-12-26)
 ------------------
 * disabled separate queue thread for the aerodynamics plugin

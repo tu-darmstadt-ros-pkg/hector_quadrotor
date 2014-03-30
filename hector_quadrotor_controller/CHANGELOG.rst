@@ -2,6 +2,15 @@
 Changelog for package hector_quadrotor_controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.2 (2014-03-30)
+-----------
+* Fix boost 1.53 issues
+  changed boost::shared_dynamic_cast to boost::dynamic_pointer_cast and
+  boost::shared_static_cast to boost::static_pointer_cast
+* use a separate callback queue thread for the TwistController
+* added optional twist limit in pose controller
+* Contributors: Christopher Hrabia, Johannes Meyer
+
 0.3.1 (2013-12-26)
 ------------------
 * New controller implementation using ros_control

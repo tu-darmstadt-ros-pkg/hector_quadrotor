@@ -2,6 +2,9 @@
 Changelog for package hector_quadrotor_model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.2 (2014-03-30)
+-----------
+
 0.3.1 (2013-12-26)
 ------------------
 * fixed copy&paste error in quadrotor_aerodynamics.cpp
