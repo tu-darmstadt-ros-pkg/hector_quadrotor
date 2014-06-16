@@ -170,7 +170,7 @@ class CommandHandle
 public:
   CommandHandle() : interface_(0), new_value_(false) {}
   CommandHandle(QuadrotorInterface *interface, const std::string& name, const std::string& field) : interface_(interface), name_(name), field_(field), new_value_(false) {}
-  virtual ~CommandHandle() {}
+  virtual ~CommandHandle() { disconnect(); }
 
   virtual const std::string& getName() const { return name_; }
   virtual const std::string& getField() const { return field_; }
