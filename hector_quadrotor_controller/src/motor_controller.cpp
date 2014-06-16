@@ -42,12 +42,29 @@ using namespace controller_interface;
 class MotorController : public controller_interface::Controller<QuadrotorInterface>
 {
 public:
+  MotorController()
+    : node_handle_(0)
+  {}
+
+  ~MotorController()
+  {
+    if (node_handle_) {
+      node_handle_->shutdown();
+      delete node_handle_;
+      node_handle_ = 0;
+    }
+  }
+
   bool init(QuadrotorInterface *interface, ros::NodeHandle &root_nh, ros::NodeHandle &controller_nh)
   {
     // get interface handles
     wrench_input_  = interface->addInput<WrenchCommandHandle>("wrench");
     motor_output_  = interface->addOutput<MotorCommandHandle>("motor");
     interface->claim(motor_output_->getName());
+
+    // initialize NodeHandle
+    delete node_handle_;
+    node_handle_ = new ros::NodeHandle(root_nh);
 
     // load parameters
     controller_nh.getParam("force_per_voltage", parameters_.force_per_voltage = 0.559966216);
@@ -147,6 +164,7 @@ private:
   WrenchCommandHandlePtr wrench_input_;
   MotorCommandHandlePtr motor_output_;
 
+  ros::NodeHandle *node_handle_;
   ros::Subscriber wrench_subscriber_;
   ros::ServiceServer engage_service_server_;
   ros::ServiceServer shutdown_service_server_;

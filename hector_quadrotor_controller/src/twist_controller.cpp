@@ -49,10 +49,20 @@ using namespace controller_interface;
 class TwistController : public controller_interface::Controller<QuadrotorInterface>
 {
 public:
+  TwistController()
+    : node_handle_(0)
+  {}
+
   ~TwistController()
   {
     is_shutting_down_ = true;
     callback_queue_thread_.join();
+
+    if (node_handle_) {
+      node_handle_->shutdown();
+      delete node_handle_;
+      node_handle_ = 0;
+    }
   }
 
   bool init(QuadrotorInterface *interface, ros::NodeHandle &root_nh, ros::NodeHandle &controller_nh)
@@ -65,20 +75,24 @@ public:
     wrench_output_ = interface->addOutput<WrenchCommandHandle>("wrench");
     interface->claim(wrench_output_->getName());
 
+    // initialize NodeHandle
+    delete node_handle_;
+    node_handle_ = new ros::NodeHandle(root_nh);
+
     // subscribe to commanded twist (geometry_msgs/TwistStamped) and cmd_vel (geometry_msgs/Twist)
     ros::SubscribeOptions twist_subscribe_options = ros::SubscribeOptions::create<geometry_msgs::TwistStamped>(
       "command/twist", 1,
       boost::bind(&TwistController::twistCommandCallback, this, _1),
       ros::VoidConstPtr(), &callback_queue_
     );
-    twist_subscriber_ = root_nh.subscribe(twist_subscribe_options);
+    twist_subscriber_ = node_handle_->subscribe(twist_subscribe_options);
 
     ros::SubscribeOptions cmd_vel_subscribe_options = ros::SubscribeOptions::create<geometry_msgs::Twist>(
       "cmd_vel", 1,
       boost::bind(&TwistController::cmd_velCommandCallback, this, _1),
       ros::VoidConstPtr(), &callback_queue_
     );
-    cmd_vel_subscriber_ = root_nh.subscribe(cmd_vel_subscribe_options);
+    cmd_vel_subscriber_ = node_handle_->subscribe(cmd_vel_subscribe_options);
 
     // engage/shutdown service servers
     {
@@ -86,13 +100,13 @@ public:
         "engage", boost::bind(&TwistController::engageCallback, this, _1, _2),
         ros::VoidConstPtr(), &callback_queue_
       );
-      engage_service_server_ = root_nh.advertiseService(ops);
+      engage_service_server_ = node_handle_->advertiseService(ops);
 
       ops = ros::AdvertiseServiceOptions::create<std_srvs::Empty>(
         "shutdown", boost::bind(&TwistController::shutdownCallback, this, _1, _2),
         ros::VoidConstPtr(), &callback_queue_
       );
-      shutdown_service_server_ = root_nh.advertiseService(ops);
+      shutdown_service_server_ = node_handle_->advertiseService(ops);
     }
 
     // initialize PID controllers
@@ -298,6 +312,7 @@ private:
   TwistCommandHandlePtr twist_input_;
   WrenchCommandHandlePtr wrench_output_;
 
+  ros::NodeHandle *node_handle_;
   ros::Subscriber twist_subscriber_;
   ros::Subscriber cmd_vel_subscriber_;
   ros::ServiceServer engage_service_server_;

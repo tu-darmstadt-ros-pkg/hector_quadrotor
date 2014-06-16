@@ -44,6 +44,19 @@ using namespace controller_interface;
 class PoseController : public controller_interface::Controller<QuadrotorInterface>
 {
 public:
+  PoseController()
+    : node_handle_(0)
+  {}
+
+  ~PoseController()
+  {
+    if (node_handle_) {
+      node_handle_->shutdown();
+      delete node_handle_;
+      node_handle_ = 0;
+    }
+  }
+
   bool init(QuadrotorInterface *interface, ros::NodeHandle &root_nh, ros::NodeHandle &controller_nh)
   {
     // get interface handles
@@ -56,19 +69,23 @@ public:
     twist_output_ = interface->addOutput<TwistCommandHandle>("twist");
     interface->claim(twist_output_->getName());
 
+    // initialize NodeHandle
+    delete node_handle_;
+    node_handle_ = new ros::NodeHandle(root_nh);
+
     // subscribe to commanded pose and velocity
     ros::SubscribeOptions pose_subscribe_options = ros::SubscribeOptions::create<geometry_msgs::PoseStamped>(
       "command/pose", 1,
       boost::bind(&PoseController::poseCommandCallback, this, _1),
       ros::VoidConstPtr(), 0 // &callback_queue_
     );
-    pose_subscriber_ = root_nh.subscribe(pose_subscribe_options);
+    pose_subscriber_ = node_handle_->subscribe(pose_subscribe_options);
     ros::SubscribeOptions twist_subscribe_options = ros::SubscribeOptions::create<geometry_msgs::TwistStamped>(
       "command/twist", 1,
       boost::bind(&PoseController::twistCommandCallback, this, _1),
       ros::VoidConstPtr(), 0 // &callback_queue_
     );
-    twist_subscriber_ = root_nh.subscribe(twist_subscribe_options);
+    twist_subscriber_ = node_handle_->subscribe(twist_subscribe_options);
 
     // initialize PID controllers
     pid_.x.init(ros::NodeHandle(controller_nh, "xy"));
@@ -194,6 +211,7 @@ private:
   geometry_msgs::PoseStamped pose_command_;
   geometry_msgs::TwistStamped twist_command_;
 
+  ros::NodeHandle *node_handle_;
   // ros::CallbackQueue callback_queue_;
   ros::Subscriber pose_subscriber_;
   ros::Subscriber twist_subscriber_;
