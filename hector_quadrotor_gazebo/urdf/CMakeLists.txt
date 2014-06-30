@@ -2,39 +2,15 @@
 set(MODEL_PLUGINS)
 
 # configuration
-option(USE_RTT_CONTROLLER "Use a quadrotor controller implemented as Orocos RTT component to control the quadrotor." OFF)
-option(USE_POSE_ESTIMATION "Use hector_pose_estimation to estimate the pose of the quadrotor." OFF)
-option(USE_PROPULSION_PLUGIN "Use a model of the quadrotor propulsion system" OFF)
+option(USE_EXTERNAL_CONTROLLER "Do not run the hector_quadrotor_controller_gazebo plugin." OFF)
+option(USE_PROPULSION_PLUGIN "Use a model of the quadrotor propulsion system" ON)
 option(USE_AERODYNAMICS_PLUGIN "Use a model of the quadrotor aerodynamics" ON)
 
 # sensor plugins
 list(APPEND MODEL_PLUGINS quadrotor_sensors)
 
-# pose estimation plugin
-if(USE_POSE_ESTIMATION)
-  find_library(gazebo_rtt_plugin_LIBRARY libgazebo_rtt_plugin.so)
-  find_library(rtt_hector_pose_estimation_LIBRARY librtt_hector_pose_estimation-gnulinux.so)
-
-  if((NOT TARGET gazebo_rtt_plugin AND NOT gazebo_rtt_plugin_LIBRARY) OR
-     (NOT TARGET rtt_hector_pose_estimation AND NOT rtt_hector_pose_estimation_LIBRARY))
-    message(SEND_ERROR "Cannot use the pose estimation plugin as the required plugins have not been found. Try to run 'rosmake gazebo_rtt_plugin rtt_hector_pose_estimation' first.")
-    set(USE_POSE_ESTIMATION OFF)
-  endif()
-endif()
-
-if(USE_POSE_ESTIMATION)
-  list(APPEND MODEL_PLUGINS quadrotor_rtt_pose_estimation)
-  set(CONTROL_STATE_TOPIC "state")
-  set(CONTROL_IMU_TOPIC "imu")
-else()
-  set(CONTROL_STATE_TOPIC "ground_truth/state")
-  set(CONTROL_IMU_TOPIC "raw_imu")
-endif()
-
 # controller plugin
-if(USE_RTT_CONTROLLER)
-  list(APPEND MODEL_PLUGINS "quadrotor_rtt_controller state_topic=\"${CONTROL_STATE_TOPIC}\" imu_topic=\"${CONTROL_IMU_TOPIC}\"")
-else()
+if(NOT USE_EXTERNAL_CONTROLLER)
   list(APPEND MODEL_PLUGINS quadrotor_controller)
 endif()
 
@@ -47,11 +23,8 @@ if(USE_PROPULSION_PLUGIN)
     set(USE_PROPULSION_PLUGIN OFF)
   endif()
 endif()
-
 if(USE_PROPULSION_PLUGIN)
   list(APPEND MODEL_PLUGINS quadrotor_propulsion)
-else()
-  #list(APPEND MODEL_PLUGINS "quadrotor_simple_controller state_topic=\"${CONTROL_STATE_TOPIC}\" imu_topic=\"${CONTROL_IMU_TOPIC}\"")
 endif()
 
 # aerodynamics plugin
@@ -63,7 +36,6 @@ if(USE_AERODYNAMICS_PLUGIN)
     set(USE_AERODYNAMICS_PLUGIN OFF)
   endif()
 endif()
-
 if(USE_AERODYNAMICS_PLUGIN)
   list(APPEND MODEL_PLUGINS quadrotor_aerodynamics)
 endif()
