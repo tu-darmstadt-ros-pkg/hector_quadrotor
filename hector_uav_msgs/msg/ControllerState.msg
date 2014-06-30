@@ -13,4 +13,5 @@ uint8 HEIGHT = 128
 
 uint8 state
 uint8 MOTORS_RUNNING = 1
-uint8 AIRBORNE = 2
+uint8 FLYING = 2
+uint8 AIRBORNE = 4
