@@ -93,6 +93,7 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
 
   // set control timing parameters
   controlTimer.Load(world, _sdf, "control");
+  motorStatusTimer.Load(world, _sdf, "motorStatus");
   if (_sdf->HasElement("controlTolerance")) control_tolerance_.fromSec(_sdf->GetElement("controlTolerance")->Get<double>());
   if (_sdf->HasElement("controlDelay"))     control_delay_.fromSec(_sdf->GetElement("controlDelay")->Get<double>());
 
@@ -193,7 +194,7 @@ void GazeboQuadrotorPropulsion::Update()
   if (dt <= 0.0) return;
 
   // Send trigger
-  bool trigger = controlTimer.update();
+  bool trigger = controlTimer.getUpdatePeriod() > 0.0 ? controlTimer.update() : false;
   if (trigger && trigger_publisher_) {
     rosgraph_msgs::Clock clock;
     clock.clock = ros::Time(current_time.sec, current_time.nsec);
@@ -229,7 +230,7 @@ void GazeboQuadrotorPropulsion::Update()
   }
 
   // publish motor status
-  if (motor_status_publisher_ && trigger /* && current_time >= last_motor_status_time_ + control_period_ */) {
+  if (motor_status_publisher_ && motorStatusTimer.update() /* && current_time >= last_motor_status_time_ + control_period_ */) {
     hector_uav_msgs::MotorStatus motor_status = model_.getMotorStatus();
     motor_status.header.stamp = ros::Time(current_time.sec, current_time.nsec);
     motor_status_publisher_.publish(motor_status);

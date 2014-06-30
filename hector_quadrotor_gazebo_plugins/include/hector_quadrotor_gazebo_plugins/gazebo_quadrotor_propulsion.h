@@ -97,6 +97,7 @@ private:
   event::ConnectionPtr updateConnection;
 
   UpdateTimer controlTimer;
+  UpdateTimer motorStatusTimer;
 };
 
 }

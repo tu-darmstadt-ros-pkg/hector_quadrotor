@@ -12,6 +12,7 @@
         <controlRate>100.0</controlRate>
         <!-- <controlTolerance>0.01</controlTolerance> -->
         <controlDelay>0.01</controlDelay>
+        <motorStatusRate>100.0</motorStatusRate>
       </plugin>
     </gazebo>
   </xacro:macro>
