@@ -380,7 +380,7 @@ bool QuadrotorPropulsion::processQueue(const ros::Time &timestamp, const ros::Du
 
   do {
 
-    if (!command_queue_.empty()) {
+    while(!command_queue_.empty()) {
       hector_uav_msgs::MotorPWMConstPtr new_motor_voltage = command_queue_.front();
       ros::Time new_time = new_motor_voltage->header.stamp;
 
@@ -389,20 +389,18 @@ bool QuadrotorPropulsion::processQueue(const ros::Time &timestamp, const ros::Du
         command_queue_.pop();
         new_command = true;
 
-        ROS_DEBUG_STREAM_NAMED("quadrotor_propulsion", "Using motor command valid at t = " << new_time.toSec() << "s for simulation step at t = " << timestamp.toSec() << "s (dt = " << (timestamp - new_time).toSec() << "s)");
-
       // new motor command is too old:
       } else if (new_time < min) {
         ROS_DEBUG_NAMED("quadrotor_propulsion", "Command received was %fs too old. Discarding.", (new_time - timestamp).toSec());
         command_queue_.pop();
-        continue;
 
       // new motor command is too new:
       } else {
-        // do nothing
+        break;
       }
+    }
 
-    } else {
+    if (command_queue_.empty() && !new_command) {
       if (!motor_status_.on || wait.isZero()) break;
 
       ROS_DEBUG_NAMED("quadrotor_propulsion", "Waiting for command at simulation step t = %fs... last update was %fs ago", timestamp.toSec(), (timestamp - last_command_time_).toSec());
@@ -420,6 +418,10 @@ bool QuadrotorPropulsion::processQueue(const ros::Time &timestamp, const ros::Du
     }
 
   } while(false);
+
+  if (new_command) {
+      ROS_DEBUG_STREAM_NAMED("quadrotor_propulsion", "Using motor command valid at t = " << last_command_time_.toSec() << "s for simulation step at t = " << timestamp.toSec() << "s (dt = " << (timestamp - last_command_time_).toSec() << "s)");
+  }
 
   return new_command;
 }
