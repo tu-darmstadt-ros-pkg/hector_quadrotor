@@ -24,6 +24,7 @@
   <run_depend>roscpp</run_depend>
   <run_depend>sensor_msgs</run_depend>
   <run_depend>geometry_msgs</run_depend>
+  <run_depend>joy</run_depend>
 
   <!-- Dependencies needed only for running tests. -->
 
