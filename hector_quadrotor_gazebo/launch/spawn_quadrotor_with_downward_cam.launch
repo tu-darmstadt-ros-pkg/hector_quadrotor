@@ -1,11 +1,28 @@
 <?xml version="1.0"?>
 
- <launch>
-   <arg name="use_ground_truth_for_tf" default="true" />
+<launch>
+   <arg name="name" default="quadrotor"/>
+   <arg name="tf_prefix" default="$(optenv ROS_NAMESPACE)"/>
+   <arg name="x" default="0.0"/>
+   <arg name="y" default="0.0"/>
+   <arg name="z" default="0.3"/>
 
-   <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor.launch" >
+   <arg name="use_ground_truth_for_tf" default="true"/>
+   <arg name="use_ground_truth_for_control" default="true"/>
+   <arg name="use_pose_estimation" if="$(arg use_ground_truth_for_control)" default="false"/>
+   <arg name="use_pose_estimation" unless="$(arg use_ground_truth_for_control)" default="true"/>
+
+   <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor.launch">
+     <arg name="name" default="$(arg name)"/>
      <arg name="model" value="$(find hector_quadrotor_description)/urdf/quadrotor_downward_cam.gazebo.xacro"/>
-     <arg name="use_ground_truth_for_tf" value="$(arg use_ground_truth_for_tf)" />
+     <arg name="tf_prefix" default="$(arg tf_prefix)"/>
+     <arg name="x" default="$(arg x)"/>
+     <arg name="y" default="$(arg y)"/>
+     <arg name="z" default="$(arg z)"/>   
+     <arg name="use_ground_truth_for_tf" value="$(arg use_ground_truth_for_tf)"/>
+     <arg name="use_ground_truth_for_control" value="$(arg use_ground_truth_for_control)"/>
+     <arg name="use_pose_estimation" value="$(arg use_pose_estimation)"/>
    </include>
- </launch>
- 
+
+</launch>
+
