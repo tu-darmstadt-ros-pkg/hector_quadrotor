@@ -21,11 +21,13 @@
   <build_depend>eigen</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>cmake_modules</build_depend>
+  <build_depend>boost</build_depend>
 
   <!-- Dependencies needed after this package is compiled. -->
   <run_depend>geometry_msgs</run_depend>
   <run_depend>hector_uav_msgs</run_depend>
   <run_depend>roscpp</run_depend>
+  <run_depend>boost</run_depend>
 
   <!-- Dependencies needed only for running tests. -->
 

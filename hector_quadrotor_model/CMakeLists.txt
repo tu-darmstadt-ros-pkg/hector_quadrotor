@@ -8,7 +8,9 @@ find_package(catkin REQUIRED COMPONENTS geometry_msgs hector_uav_msgs roscpp cma
 include_directories(include ${catkin_INCLUDE_DIRS})
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost REQUIRED COMPONENTS thread)
+include_directories(${Boost_INCLUDE_DIRS})
+
 find_package(Eigen REQUIRED)
 include_directories(${EIGEN_INCLUDE_DIRS})
 
@@ -31,7 +33,7 @@ catkin_package(
     INCLUDE_DIRS include
     LIBRARIES hector_quadrotor_propulsion hector_quadrotor_aerodynamics
     CATKIN_DEPENDS geometry_msgs hector_uav_msgs roscpp
-    DEPENDS 
+    DEPENDS Boost
 )
 
 ###########
@@ -40,9 +42,11 @@ catkin_package(
 
 add_library(hector_quadrotor_propulsion src/quadrotor_propulsion.cpp)
 add_dependencies(hector_quadrotor_propulsion hector_uav_msgs_generate_messages_cpp)
+target_link_libraries(hector_quadrotor_propulsion ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 #target_link_libraries(hector_quadrotor_propulsion quadrotorPropulsion)
 
 add_library(hector_quadrotor_aerodynamics src/quadrotor_aerodynamics.cpp)
+target_link_libraries(hector_quadrotor_propulsion ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 #target_link_libraries(hector_quadrotor_aerodynamics quadrotorDrag)
 
 #############
