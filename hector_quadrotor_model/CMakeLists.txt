@@ -46,7 +46,7 @@ target_link_libraries(hector_quadrotor_propulsion ${catkin_LIBRARIES} ${Boost_LI
 #target_link_libraries(hector_quadrotor_propulsion quadrotorPropulsion)
 
 add_library(hector_quadrotor_aerodynamics src/quadrotor_aerodynamics.cpp)
-target_link_libraries(hector_quadrotor_propulsion ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(hector_quadrotor_aerodynamics ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 #target_link_libraries(hector_quadrotor_aerodynamics quadrotorDrag)
 
 #############
