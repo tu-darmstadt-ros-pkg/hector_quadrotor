@@ -1,8 +1,12 @@
 <?xml version="1.0"?>
 
 <launch>
-  <node name="joy" pkg="joy" type="joy_node" output="screen" />
-  
+  <arg name="joy_dev" default="/dev/input/js0" />
+
+  <node name="joy" pkg="joy" type="joy_node" output="screen" >
+    <param name="dev" value="$(arg joy_dev)" />
+  </node>
+
   <!-- Note that axis IDs are those from the joystick message plus one, to be able to invert axes by specifiying either positive or negative axis numbers.-->
   <!-- Axis 2 from joy message thus has to be set as '3' or '-3'(inverted mode) below-->
   <node name="quadrotor_teleop" pkg="hector_quadrotor_teleop" type="quadrotor_teleop">
