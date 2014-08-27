@@ -185,6 +185,7 @@ public:
 
     ROS_INFO_NAMED("twist_controller", "Engaging motors!");
     motors_running_ = true;
+    return true;
   }
 
   bool shutdownCallback(std_srvs::Empty::Request&, std_srvs::Empty::Response&)
@@ -193,6 +194,7 @@ public:
 
     ROS_INFO_NAMED("twist_controller", "Shutting down motors!");
     motors_running_ = false;
+    return true;
   }
 
   void starting(const ros::Time &time)

@@ -229,12 +229,14 @@ bool GazeboQuadrotorSimpleController::EngageCallback(std_srvs::Empty::Request &,
 {
   ROS_INFO_NAMED("quadrotor_simple_controller", "Engaging motors!");
   running_ = true;
+  return true;
 }
 
 bool GazeboQuadrotorSimpleController::ShutdownCallback(std_srvs::Empty::Request &, std_srvs::Empty::Response &)
 {
   ROS_INFO_NAMED("quadrotor_simple_controller", "Shutting down motors!");
   running_ = false;
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

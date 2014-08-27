@@ -52,6 +52,7 @@ bool QuadrotorInterface::start(const CommandHandle *handle)
   std::string resource = handle->getName();
   enabled_[resource] = handle;
   ROS_DEBUG_NAMED("quadrotor_interface", "Enabled %s control", resource.c_str());
+  return true;
 }
 
 void QuadrotorInterface::stop(const CommandHandle *handle)
@@ -189,6 +190,6 @@ double HeadingCommandHandle::getError(const PoseHandle &pose) const {
 bool CommandHandle::enabled()    { return interface_->enabled(this); }
 bool CommandHandle::start()      { return interface_->start(this); }
 void CommandHandle::stop()       { interface_->stop(this); }
-bool CommandHandle::disconnect() { interface_->disconnect(this); }
+void CommandHandle::disconnect() { interface_->disconnect(this); }
 
 } // namespace hector_quadrotor_controller

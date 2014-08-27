@@ -182,7 +182,7 @@ public:
   bool enabled();
   bool start();
   void stop();
-  bool disconnect();
+  void disconnect();
 
   template <typename T> T* ownData(T* data) { my_.reset(data); return data; }
 
@@ -401,6 +401,7 @@ public:
   bool getCommand(double &x, double &y) const {
     x = get()->x;
     y = get()->y;
+    return true;
   }
 
   using Base::setCommand;
