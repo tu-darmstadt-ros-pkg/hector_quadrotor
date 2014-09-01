@@ -2,6 +2,11 @@
 Changelog for package hector_quadrotor_teleop
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.3 (2014-09-01)
+------------------
+* added run dependency to joy package (joystick drivers)
+* Contributors: Johannes Meyer
+
 0.3.2 (2014-03-30)
 ------------------
 

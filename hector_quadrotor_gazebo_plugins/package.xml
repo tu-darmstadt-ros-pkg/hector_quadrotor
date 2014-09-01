@@ -1,6 +1,6 @@
 <package>
   <name>hector_quadrotor_gazebo_plugins</name>
-  <version>0.3.2</version>
+  <version>0.3.3</version>
   <description>hector_quadrotor_gazebo_plugins provides gazebo plugins for using quadrotors in gazebo.
      The hector_gazebo_ros_baro sensor plugin simulates an altimeter based on barometric pressure.
      hector_quadrotor_simple_controller is a simple controller allowing to command the quadrotor's velocity

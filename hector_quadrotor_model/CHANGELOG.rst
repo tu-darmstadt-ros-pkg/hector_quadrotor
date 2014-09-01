@@ -2,6 +2,14 @@
 Changelog for package hector_quadrotor_model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.3 (2014-09-01)
+------------------
+* fixed target_link_libraries() line for the quadrotor_aerodynamics library
+* fixed missing cmake commands to link with boost and roscpp
+* always use newest available motor command in propulsion plugin
+* added cmake_modules dependency
+* Contributors: Johannes Meyer, Rasit Eskicioglu
+
 0.3.2 (2014-03-30)
 ------------------
 

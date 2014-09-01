@@ -1,6 +1,6 @@
 <package>
   <name>hector_quadrotor_description</name>
-  <version>0.3.2</version>
+  <version>0.3.3</version>
   <description>hector_quadrotor_description provides an URDF model of a quadrotor UAV.</description>
   <maintainer email="meyer@fsr.tu-darmstadt.de">Johannes Meyer</maintainer>
 

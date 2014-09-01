@@ -2,6 +2,11 @@
 Changelog for package hector_quadrotor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.3 (2014-09-01)
+------------------
+* moved simulation package dependencies from hector_quadrotor metapackage to hector_quadrotor_gazebo
+* Contributors: Johannes Meyer
+
 0.3.2 (2014-03-30)
 ------------------
 * added packages hector_quadrotor_controller and hector_quadrotor_controller_gazebo to meta-package

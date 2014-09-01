@@ -2,6 +2,12 @@
 Changelog for package hector_quadrotor_gazebo_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.3 (2014-09-01)
+------------------
+* fixed some compiler warnings and missing return values
+* added separate update timer for MotorStatus output in propulsion plugin
+* Contributors: Johannes Meyer
+
 0.3.2 (2014-03-30)
 ------------------
 

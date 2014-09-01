@@ -2,6 +2,15 @@
 Changelog for package hector_quadrotor_gazebo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.3 (2014-09-01)
+------------------
+* cleaned up launch files and fixed argument forwarding to spawn_quadrotor.launch
+* removed all RTT related plugins
+* added separate update timer for MotorStatus output in propulsion plugin
+* added launch file argument to enable/disable pose estimation
+* moved simulation package dependencies from hector_quadrotor metapackage to hector_quadrotor_gazebo
+* Contributors: Johannes Meyer
+
 0.3.2 (2014-03-30)
 ------------------
 

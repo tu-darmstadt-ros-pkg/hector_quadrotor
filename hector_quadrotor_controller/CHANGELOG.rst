@@ -2,6 +2,14 @@
 Changelog for package hector_quadrotor_controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.3 (2014-09-01)
+------------------
+* fixed some compiler warnings and missing return values
+* increased integral gain for attitude stabilization (fix #12)
+* make a copy of the root NodeHandle in all controllers
+  For some reason deconstructing the TwistController resulted in a pure virtual function call without this patch.
+* Contributors: Johannes Meyer
+
 0.3.2 (2014-03-30)
 ------------------
 * Fix boost 1.53 issues
