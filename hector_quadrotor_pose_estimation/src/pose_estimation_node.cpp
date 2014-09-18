@@ -44,6 +44,7 @@ QuadrotorPoseEstimationNode::~QuadrotorPoseEstimationNode()
 bool QuadrotorPoseEstimationNode::init() {
   if (!PoseEstimationNode::init()) return false;
   baro_subscriber_ = getNodeHandle().subscribe("altimeter", 10, &QuadrotorPoseEstimationNode::baroCallback, this);
+  height_subscriber_.shutdown();
   return true;
 }
 
