@@ -8,6 +8,11 @@
    <arg name="y" default="0.0"/>
    <arg name="z" default="0.3"/>
 
+   <arg name="use_ground_truth_for_tf" default="true" />
+   <arg name="use_ground_truth_for_control" default="true" />
+   <arg name="use_pose_estimation" if="$(arg use_ground_truth_for_control)" default="false"/>
+   <arg name="use_pose_estimation" unless="$(arg use_ground_truth_for_control)" default="true"/>
+
    <!-- send the robot XML to param server -->
    <param name="robot_description" command="$(find xacro)/xacro.py '$(arg model)'" />
    <param name="tf_prefix" type="string" value="$(arg tf_prefix)" />
@@ -28,8 +33,6 @@
    </node>
 
    <!-- publish state and tf -->
-   <arg name="use_ground_truth_for_tf" default="true" />
-   <arg name="use_pose_estimation" default="false" />
    <node name="ground_truth_to_tf" pkg="message_to_tf" type="message_to_tf" output="screen">
      <param name="odometry_topic" value="ground_truth/state" />
      <param name="frame_id" value="/world" />
@@ -38,6 +41,7 @@
    </node>
    <group if="$(arg use_pose_estimation)">
      <node name="pose_estimation" pkg="hector_quadrotor_pose_estimation" type="hector_quadrotor_pose_estimation" output="screen">
+       <rosparam file="$(find hector_quadrotor_pose_estimation)/params/simulation.yaml" />
        <param name="nav_frame" value="$(arg tf_prefix)/nav" />
        <param name="tf_prefix" value="$(arg tf_prefix)" unless="$(arg use_ground_truth_for_tf)" />
        <param name="tf_prefix" value="$(arg tf_prefix)/pose_estimation" if="$(arg use_ground_truth_for_tf)" />
@@ -46,7 +50,6 @@
    </group>
 
    <!-- spawn controller -->
-   <arg name="use_ground_truth_for_control" default="true" />
    <group if="$(arg use_ground_truth_for_control)">
      <param name="controller/state_topic" value="" />
      <param name="controller/imu_topic" value="" />
