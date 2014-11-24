@@ -46,7 +46,6 @@
        <param name="tf_prefix" value="$(arg tf_prefix)" unless="$(arg use_ground_truth_for_tf)" />
        <param name="tf_prefix" value="$(arg tf_prefix)/pose_estimation" if="$(arg use_ground_truth_for_tf)" />
      </node>
-     <node pkg="tf" type="static_transform_publisher" name="world_nav_broadcaster" args="0 0 0 0 0 0 /world $(arg tf_prefix)/nav 100"/>
    </group>
 
    <!-- spawn controller -->

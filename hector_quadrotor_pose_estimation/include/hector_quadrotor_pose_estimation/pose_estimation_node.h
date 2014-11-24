@@ -38,7 +38,7 @@ using namespace hector_pose_estimation;
 
 class QuadrotorPoseEstimationNode : public PoseEstimationNode {
 public:
-  QuadrotorPoseEstimationNode(const SystemPtr& system = SystemPtr());
+  QuadrotorPoseEstimationNode(const SystemPtr& system = SystemPtr(), const StatePtr& state = StatePtr());
   virtual ~QuadrotorPoseEstimationNode();
 
   virtual bool init();

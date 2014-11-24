@@ -31,8 +31,8 @@
 
 namespace hector_quadrotor_pose_estimation {
 
-QuadrotorPoseEstimationNode::QuadrotorPoseEstimationNode(const SystemPtr& system)
-  : PoseEstimationNode(system)
+QuadrotorPoseEstimationNode::QuadrotorPoseEstimationNode(const SystemPtr& system, const StatePtr& state)
+  : PoseEstimationNode(system, state)
 {
   pose_estimation_->addMeasurement(new Baro("baro"));
 }

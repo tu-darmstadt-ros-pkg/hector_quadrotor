@@ -1,10 +1,4 @@
-baro:
-  auto_elevation: false
-gps:
-  auto_reference: false
-magnetic:
-  auto_heading: false
 reference_altitude: 0.0
 reference_heading: 0.0
-reference_latitude: 0.870919297
-reference_longitude: 0.155334303
+reference_latitude: 49.860246
+reference_longitude: 8.687077
