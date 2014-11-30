@@ -69,12 +69,14 @@ private:
   void QueueThread();
 
   ros::Subscriber wind_subscriber_;
+  ros::Publisher wrench_publisher_;
 
   std::string body_name_;
   std::string namespace_;
   std::string param_namespace_;
   double control_rate_;
   std::string wind_topic_;
+  std::string wrench_topic_;
 
   common::Time last_time_;
 

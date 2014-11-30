@@ -32,6 +32,8 @@
 #include <gazebo/common/Events.hh>
 #include <gazebo/physics/physics.hh>
 
+#include <geometry_msgs/WrenchStamped.h>
+
 namespace gazebo {
 
 using namespace common;
@@ -65,11 +67,13 @@ void GazeboQuadrotorAerodynamics::Load(physics::ModelPtr _model, sdf::ElementPtr
   namespace_.clear();
   param_namespace_ = "quadrotor_aerodynamics";
   wind_topic_ = "/wind";
+  wrench_topic_ = "aerodynamics/wrench";
 
   // load parameters
   if (_sdf->HasElement("robotNamespace")) namespace_ = _sdf->GetElement("robotNamespace")->Get<std::string>();
   if (_sdf->HasElement("paramNamespace")) param_namespace_ = _sdf->GetElement("paramNamespace")->Get<std::string>();
   if (_sdf->HasElement("windTopicName"))  wind_topic_ = _sdf->GetElement("windTopicName")->Get<std::string>();
+  if (_sdf->HasElement("wrenchTopic"))    wrench_topic_ = _sdf->GetElement("wrenchTopic")->Get<std::string>();
 
   // Make sure the ROS node for Gazebo has already been initialized
   if (!ros::isInitialized())
@@ -97,6 +101,15 @@ void GazeboQuadrotorAerodynamics::Load(physics::ModelPtr _model, sdf::ElementPtr
       boost::bind(&QuadrotorAerodynamics::setWind, &model_, _1)
     );
     wind_subscriber_ = node_handle_->subscribe(ops);
+  }
+
+  // advertise wrench
+  if (!wrench_topic_.empty())
+  {
+    ros::AdvertiseOptions ops;
+    ops.callback_queue = &callback_queue_;
+    ops.init<geometry_msgs::WrenchStamped>(wrench_topic_, 10);
+    wrench_publisher_ = node_handle_->advertise(ops);
   }
 
   // callback_queue_thread_ = boost::thread( boost::bind( &GazeboQuadrotorAerodynamics::QueueThread,this ) );
@@ -138,6 +151,15 @@ void GazeboQuadrotorAerodynamics::Update()
   Vector3 force, torque;
   toVector(model_.getWrench().force, force);
   toVector(model_.getWrench().torque, torque);
+
+  // publish wrench
+  if (wrench_publisher_) {
+    geometry_msgs::WrenchStamped wrench_msg;
+    wrench_msg.header.stamp = ros::Time(current_time.sec, current_time.nsec);
+    wrench_msg.header.frame_id = link->GetName();
+    wrench_msg.wrench = model_.getWrench();
+    wrench_publisher_.publish(wrench_msg);
+  }
 
   // set force and torque in gazebo
   link->AddRelativeForce(force);

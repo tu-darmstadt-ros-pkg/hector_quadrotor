@@ -33,6 +33,7 @@
 #include <gazebo/physics/physics.hh>
 
 #include <rosgraph_msgs/Clock.h>
+#include <geometry_msgs/WrenchStamped.h>
 
 namespace gazebo {
 
@@ -69,7 +70,7 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
   trigger_topic_ = "quadro/trigger";
   command_topic_ = "command/motor";
   pwm_topic_ = "motor_pwm";
-  wrench_topic_ = "wrench_out";
+  wrench_topic_ = "propulsion/wrench";
   supply_topic_ = "supply";
   status_topic_ = "motor_status";
   control_tolerance_ = ros::Duration();
@@ -143,16 +144,16 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
     pwm_subscriber_ = node_handle_->subscribe(ops);
   }
 
-  // publish wrench
+  // advertise wrench
   if (!wrench_topic_.empty())
   {
     ros::AdvertiseOptions ops;
     ops.callback_queue = &callback_queue_;
-    ops.init<geometry_msgs::Wrench>(wrench_topic_, 10);
+    ops.init<geometry_msgs::WrenchStamped>(wrench_topic_, 10);
     wrench_publisher_ = node_handle_->advertise(ops);
   }
 
-  // publish and latch supply
+  // advertise and latch supply
   if (!supply_topic_.empty())
   {
     ros::AdvertiseOptions ops;
@@ -163,7 +164,7 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
     supply_publisher_.publish(model_.getSupply());
   }
 
-  // publish motor_status
+  // advertise motor_status
   if (!status_topic_.empty())
   {
     ros::AdvertiseOptions ops;
@@ -226,7 +227,11 @@ void GazeboQuadrotorPropulsion::Update()
 
   // publish wrench
   if (wrench_publisher_) {
-    wrench_publisher_.publish(model_.getWrench());
+    geometry_msgs::WrenchStamped wrench_msg;
+    wrench_msg.header.stamp = ros::Time(current_time.sec, current_time.nsec);
+    wrench_msg.header.frame_id = link->GetName();
+    wrench_msg.wrench = model_.getWrench();
+    wrench_publisher_.publish(wrench_msg);
   }
 
   // publish motor status
