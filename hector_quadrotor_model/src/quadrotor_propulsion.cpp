@@ -332,6 +332,10 @@ void QuadrotorPropulsion::setTwist(const geometry_msgs::Twist &twist)
   propulsion_model_->u[3] = twist.angular.x;
   propulsion_model_->u[4] = -twist.angular.y;
   propulsion_model_->u[5] = -twist.angular.z;
+
+  // We limit the input velocities to +-100. Required for numeric stability in case of collisions,
+  // where velocities returned by Gazebo can be very high.
+  limit(boost::iterator_range<boost::array<real_T,10>::iterator>(&(propulsion_model_->u[0]), &(propulsion_model_->u[6])), -100.0, 100.0);
 }
 
 void QuadrotorPropulsion::addCommandToQueue(const hector_uav_msgs::MotorCommandConstPtr& command)
@@ -430,10 +434,9 @@ void QuadrotorPropulsion::update(double dt)
 {
   if (dt <= 0.0) return;
 
-//  std::cout << "u = [ ";
-//  for(std::size_t i = 0; i < propulsion_model_->u.size(); ++i)
-//    std::cout << propulsion_model_->u[i] << " ";
-//  std::cout << "]" << std::endl;
+  ROS_DEBUG_STREAM_NAMED("quadrotor_propulsion", "propulsion.twist:   " << PrintVector<double>(propulsion_model_->u.begin(), propulsion_model_->u.begin() + 6));
+  ROS_DEBUG_STREAM_NAMED("quadrotor_propulsion", "propulsion.voltage: " << PrintVector<double>(propulsion_model_->u.begin() + 6, propulsion_model_->u.begin() + 10));
+  ROS_DEBUG_STREAM_NAMED("quadrotor_propulsion", "propulsion.x_prior: " << PrintVector<double>(propulsion_model_->x.begin(), propulsion_model_->x.end()));
 
   checknan(propulsion_model_->u, "propulsion model input");
   checknan(propulsion_model_->x, "propulsion model state");
@@ -442,12 +445,11 @@ void QuadrotorPropulsion::update(double dt)
   f(propulsion_model_->x.data(), propulsion_model_->u.data(), dt, propulsion_model_->y.data(), propulsion_model_->x_pred.data());
   propulsion_model_->x = propulsion_model_->x_pred;
 
-  checknan(propulsion_model_->y, "propulsion model output");
+  ROS_DEBUG_STREAM_NAMED("quadrotor_propulsion", "propulsion.x_post:  " << PrintVector<double>(propulsion_model_->x.begin(), propulsion_model_->x.end()));
+  ROS_DEBUG_STREAM_NAMED("quadrotor_propulsion", "propulsion.force:   " << PrintVector<double>(propulsion_model_->y.begin() + 0, propulsion_model_->y.begin() + 3) << " " <<
+                                                 "propulsion.torque:  " << PrintVector<double>(propulsion_model_->y.begin() + 3, propulsion_model_->y.begin() + 6));
 
-  //  std::cout << "y = [ ";
-  //  for(std::size_t i = 0; i < propulsion_model_->y.size(); ++i)
-  //    std::cout << propulsion_model_->y[i] << " ";
-  //  std::cout << "]" << std::endl;
+  checknan(propulsion_model_->y, "propulsion model output");
 
   wrench_.force.x  =  propulsion_model_->y[0];
   wrench_.force.y  = -propulsion_model_->y[1];

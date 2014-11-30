@@ -220,12 +220,9 @@ void QuadrotorAerodynamics::update(double dt)
   drag_model_->u[4] = -twist_.angular.y;
   drag_model_->u[5] = -twist_.angular.z;
 
-//  std::cout << "u = [ ";
-//  for(std::size_t i = 0; i < drag_model_->u.size(); ++i)
-//    std::cout << drag_model_->u[i] << " ";
-//  std::cout << "]" << std::endl;
-
-  checknan(drag_model_->u, "drag model input");
+  // We limit the input velocities to +-100. Required for numeric stability in case of collisions,
+  // where velocities returned by Gazebo can be very high.
+  limit(drag_model_->u, -100.0, 100.0);
 
   // convert input to body coordinates
   Eigen::Quaterniond orientation(orientation_.w, orientation_.x, orientation_.y, orientation_.z);
@@ -235,15 +232,15 @@ void QuadrotorAerodynamics::update(double dt)
   linear  = rotation_matrix * linear;
   angular = rotation_matrix * angular;
 
+  ROS_DEBUG_STREAM_NAMED("quadrotor_aerodynamics", "aerodynamics.twist:  " << PrintVector<double>(drag_model_->u.begin(), drag_model_->u.begin() + 6));
+  checknan(drag_model_->u, "drag model input");
+
   // update drag model
   f(drag_model_->u.data(), dt, drag_model_->y.data());
 
+  ROS_DEBUG_STREAM_NAMED("quadrotor_aerodynamics", "aerodynamics.force:  " << PrintVector<double>(drag_model_->y.begin() + 0, drag_model_->y.begin() + 3));
+  ROS_DEBUG_STREAM_NAMED("quadrotor_aerodynamics", "aerodynamics.torque: " << PrintVector<double>(drag_model_->y.begin() + 3, drag_model_->y.begin() + 6));
   checknan(drag_model_->y, "drag model output");
-
-  //  std::cout << "y = [ ";
-  //  for(std::size_t i = 0; i < propulsion_model_->y.size(); ++i)
-  //    std::cout << propulsion_model_->y[i] << " ";
-  //  std::cout << "]" << std::endl;
 
   // drag_model_ gives us inverted vectors!
   wrench_.force.x  = -( drag_model_->y[0]);

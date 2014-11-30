@@ -30,14 +30,70 @@
 #define HECTOR_QUADROTOR_MODEL_HELPERS_H
 
 #include <geometry_msgs/Wrench.h>
+#include <boost/range/iterator_range.hpp>
 
 namespace hector_quadrotor_model
 {
 
+template <typename T> int isnan(const T& value) {
+  return std::isnan(value);
+}
+
+template <typename T, std::size_t N> int isnan(const boost::array<T,N>& array) {
+  for(typename boost::array<T,N>::const_iterator it = array.begin(); it != array.end(); ++it)
+    if (std::isnan(*it)) return std::isnan(*it);
+  return false;
+}
+
+template <typename IteratorT> int isnan(const boost::iterator_range<IteratorT>& range, const typename boost::iterator_range<IteratorT>::value_type& min, const typename boost::iterator_range<IteratorT>::value_type& max) {
+  for(IteratorT it = range.begin(); it != range.end(); ++it)
+    if (std::isnan(*it)) return std::isnan(*it);
+  return false;
+}
+
+template <typename T> int isinf(const T& value) {
+  return std::isinf(value);
+}
+
+template <typename T, std::size_t N> int isinf(const boost::array<T,N>& array) {
+  for(typename boost::array<T,N>::const_iterator it = array.begin(); it != array.end(); ++it)
+    if (std::isinf(*it)) return std::isinf(*it);
+  return false;
+}
+
+template <typename IteratorT> int isinf(const boost::iterator_range<IteratorT>& range, const typename boost::iterator_range<IteratorT>::value_type& min, const typename boost::iterator_range<IteratorT>::value_type& max) {
+  for(IteratorT it = range.begin(); it != range.end(); ++it)
+    if (std::isinf(*it)) return std::isinf(*it);
+  return false;
+}
+
+template <typename T> void limit(T& value, const T& min, const T& max) {
+  if (!isnan(min) && value < min) value = min;
+  if (!isnan(max) && value > max) value = max;
+}
+
+template <typename T, std::size_t N> void limit(boost::array<T,N>& array, const T& min, const T& max) {
+  for(typename boost::array<T,N>::iterator it = array.begin(); it != array.end(); ++it)
+    limit(*it, min, max);
+}
+
+template <typename IteratorT> void limit(const boost::iterator_range<IteratorT>& range, const typename boost::iterator_range<IteratorT>::value_type& min, const typename boost::iterator_range<IteratorT>::value_type& max) {
+  for(IteratorT it = range.begin(); it != range.end(); ++it)
+    limit(*it, min, max);
+}
+
 template <typename T> static inline void checknan(T& value, const std::string& text = "") {
-  if (!(value == value)) {
+  if (isnan(value)) {
 #ifndef NDEBUG
     if (!text.empty()) std::cerr << text << " contains **!?* Nan values!" << std::endl;
+#endif
+    value = T();
+    return;
+  }
+
+  if (isinf(value)) {
+#ifndef NDEBUG
+    if (!text.empty()) std::cerr << text << " is +-Inf!" << std::endl;
 #endif
     value = T();
     return;
@@ -90,6 +146,31 @@ static inline geometry_msgs::Wrench operator+(const geometry_msgs::Wrench& a, co
   result.torque = a.torque + b.torque;
   return result;
 }
+
+template<typename T>
+class PrintVector {
+public:
+  typedef const T* const_iterator;
+  PrintVector(const_iterator begin, const_iterator end, const std::string &delimiter = "[ ]") : begin_(begin), end_(end), delimiter_(delimiter) {}
+  const_iterator begin() const { return begin_; }
+  const_iterator end() const { return end_; }
+  std::size_t size() const { return end_ - begin_; }
+
+  std::ostream& operator>>(std::ostream& os) const {
+    if (!delimiter_.empty()) os << delimiter_.substr(0, delimiter_.size() - 1);
+    for(const_iterator it = begin(); it != end(); ++it) {
+      if (it != begin()) os << " ";
+      os << *it;
+    }
+    if (!delimiter_.empty()) os << delimiter_.substr(1, delimiter_.size() - 1);
+    return os;
+  }
+
+private:
+  const_iterator begin_, end_;
+  std::string delimiter_;
+};
+template <typename T> std::ostream &operator<<(std::ostream& os, const PrintVector<T>& vector) { return vector >> os; }
 
 }
 
