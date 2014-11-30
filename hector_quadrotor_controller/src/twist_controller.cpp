@@ -236,31 +236,42 @@ public:
       command = transformed;
     }
 
+    // Get gravity and load factor
+    const double gravity = 9.8065;
+    double load_factor = 1. / (  pose_->pose().orientation.w * pose_->pose().orientation.w
+                               - pose_->pose().orientation.x * pose_->pose().orientation.x
+                               - pose_->pose().orientation.y * pose_->pose().orientation.y
+                               + pose_->pose().orientation.z * pose_->pose().orientation.z );
+    // Note: load_factor could be NaN or Inf...?
+    if (load_factor_limit > 0.0 && !(load_factor < load_factor_limit)) load_factor = load_factor_limit;
+
     // Auto engage/shutdown
     if (auto_engage_) {
-      if (!motors_running_ && command.linear.z > 0.1) {
+      if (!motors_running_ && command.linear.z > 0.1 && load_factor > 0.0) {
         motors_running_ = true;
         ROS_INFO_NAMED("twist_controller", "Engaging motors!");
-      } else if (motors_running_ && command.linear.z < -0.1 && (twist.linear.z > -0.1 && twist.linear.z < 0.1)) {
+      } else if (motors_running_ && command.linear.z < -0.1 /* && (twist.linear.z > -0.1 && twist.linear.z < 0.1) */) {
+        double shutdown_limit = 0.25 * std::min(command.linear.z, -0.5);
         if (linear_z_control_error_ > 0.0) linear_z_control_error_ = 0.0; // positive control errors should not affect shutdown
-        if (pid_.linear.z.getFilteredControlError(linear_z_control_error_, 10.0, period) < -1.0) {
+        if (pid_.linear.z.getFilteredControlError(linear_z_control_error_, 5.0, period) < shutdown_limit) {
           motors_running_ = false;
           ROS_INFO_NAMED("twist_controller", "Shutting down motors!");
+        } else {
+          ROS_DEBUG_STREAM_NAMED("twist_controller", "z control error = " << linear_z_control_error_ << " >= " << shutdown_limit);
         }
+      } else {
+        linear_z_control_error_ = 0.0;
+      }
+
+      // flip over?
+      if (motors_running_ && load_factor < 0.0) {
+        motors_running_ = false;
+        ROS_WARN_NAMED("twist_controller", "Shutting down motors due to flip over!");
       }
     }
 
     // Update output
     if (motors_running_) {
-      // Get gravity and load factor
-      const double gravity = 9.8065;
-      double load_factor = 1. / (  pose_->pose().orientation.w * pose_->pose().orientation.w
-                                 - pose_->pose().orientation.x * pose_->pose().orientation.x
-                                 - pose_->pose().orientation.y * pose_->pose().orientation.y
-                                 + pose_->pose().orientation.z * pose_->pose().orientation.z );
-      // Note: load_factor could be NaN or Inf...?
-      if (load_factor_limit > 0.0 && !(load_factor < load_factor_limit)) load_factor = load_factor_limit;
-
       Vector3 acceleration_command;
       acceleration_command.x = pid_.linear.x.update(command.linear.x, twist.linear.x, acceleration_->acceleration().x, period);
       acceleration_command.y = pid_.linear.y.update(command.linear.y, twist.linear.y, acceleration_->acceleration().y, period);
@@ -280,10 +291,10 @@ public:
       wrench_.wrench.torque.z = inertia_[2] * pid_.angular.z.update( command.angular.z, twist.angular.z, 0.0, period);
       wrench_.wrench.force.x  = 0.0;
       wrench_.wrench.force.y  = 0.0;
-      wrench_.wrench.force.z  = mass_       * ((acceleration_command.z - gravity) * load_factor + gravity);
+      wrench_.wrench.force.z  = mass_ * ((acceleration_command.z - gravity) * load_factor + gravity);
 
       if (limits_.force.z > 0.0 && wrench_.wrench.force.z > limits_.force.z) wrench_.wrench.force.z = limits_.force.z;
-      if (wrench_.wrench.force.z <= 0.0) wrench_.wrench.force.z = std::numeric_limits<double>::min();
+      if (wrench_.wrench.force.z <= std::numeric_limits<double>::min()) wrench_.wrench.force.z = std::numeric_limits<double>::min();
       if (limits_.torque.x > 0.0) {
         if (wrench_.wrench.torque.x >  limits_.torque.x) wrench_.wrench.torque.x =  limits_.torque.x;
         if (wrench_.wrench.torque.x < -limits_.torque.x) wrench_.wrench.torque.x = -limits_.torque.x;
@@ -296,6 +307,9 @@ public:
         if (wrench_.wrench.torque.z >  limits_.torque.z) wrench_.wrench.torque.z =  limits_.torque.z;
         if (wrench_.wrench.torque.z < -limits_.torque.z) wrench_.wrench.torque.z = -limits_.torque.z;
       }
+
+      ROS_DEBUG_STREAM_NAMED("twist_controller", "wrench_command.force:       [" << wrench_.wrench.force.x << " " << wrench_.wrench.force.y << " " << wrench_.wrench.force.z << "]");
+      ROS_DEBUG_STREAM_NAMED("twist_controller", "wrench_command.torque:      [" << wrench_.wrench.torque.x << " " << wrench_.wrench.torque.y << " " << wrench_.wrench.torque.z << "]");
 
     } else {
       reset();

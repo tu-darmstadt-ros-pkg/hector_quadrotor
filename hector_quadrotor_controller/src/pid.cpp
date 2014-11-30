@@ -143,7 +143,7 @@ double PID::getFilteredControlError(double& filtered_error, double time_constant
   double dt_sec = dt.toSec();
   filtered_error = checknan(filtered_error);
   if (dt_sec + time_constant > 0.0) {
-    filtered_error = filtered_error + dt_sec * state_.p - (dt_sec / (dt_sec + time_constant)) * filtered_error;
+    filtered_error = (time_constant * filtered_error + dt_sec * state_.p) / (dt_sec + time_constant);
   }
   return filtered_error;
 }
