@@ -44,6 +44,9 @@ GazeboRosBaro::GazeboRosBaro()
 GazeboRosBaro::~GazeboRosBaro()
 {
   updateTimer.Disconnect(updateConnection);
+
+  dynamic_reconfigure_server_.reset();
+
   node_handle_->shutdown();
   delete node_handle_;
 }
@@ -108,6 +111,10 @@ void GazeboRosBaro::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
   if (!altimeter_topic_.empty()) {
     altimeter_publisher_ = node_handle_->advertise<hector_uav_msgs::Altimeter>(altimeter_topic_, 10);
   }
+
+  // setup dynamic_reconfigure server
+  dynamic_reconfigure_server_.reset(new dynamic_reconfigure::Server<SensorModelConfig>(ros::NodeHandle(*node_handle_, altimeter_topic_)));
+  dynamic_reconfigure_server_->setCallback(boost::bind(&SensorModel::dynamicReconfigureCallback, &sensor_model_, _1, _2));
 
   Reset();
 
