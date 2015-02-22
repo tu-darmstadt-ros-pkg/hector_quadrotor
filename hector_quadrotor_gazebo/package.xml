@@ -1,6 +1,6 @@
 <package>
   <name>hector_quadrotor_gazebo</name>
-  <version>0.3.3</version>
+  <version>0.3.4</version>
   <description>hector_quadrotor_gazebo provides a quadrotor model for the gazebo simulator.
      It can be commanded using geometry_msgs/Twist messages.</description>
   <maintainer email="meyer@fsr.tu-darmstadt.de">Johannes Meyer</maintainer>

@@ -2,6 +2,12 @@
 Changelog for package hector_quadrotor_controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.4 (2015-02-22)
+------------------
+* improved automatic landing detection and shutdown on rollovers
+* slightly updated velocity controller limits and gains
+* Contributors: Johannes Meyer
+
 0.3.3 (2014-09-01)
 ------------------
 * fixed some compiler warnings and missing return values

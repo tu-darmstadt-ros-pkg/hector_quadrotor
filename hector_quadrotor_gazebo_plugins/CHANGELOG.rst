@@ -2,6 +2,19 @@
 Changelog for package hector_quadrotor_gazebo_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.4 (2015-02-22)
+------------------
+* added dynamic_reconfigure server to gazebo_ros_baro plugin
+  See https://github.com/tu-darmstadt-ros-pkg/hector_gazebo/commit/e1698e1c7bfa5fce6a724ab0a922a88bd49c9733 for
+  the equivalent commit in hector_gazebo_plugins.
+* publish propulsion and aerodynamic wrench as WrenchStamped
+  This is primarily for debugging purposes.
+  The default topic for the propulsion plugin has been changed to propulsion/wrench.
+* disabled detection of available plugins in cmake
+  The aerodynamics and propulsion plugins are built unconditinally now in hector_quadrotor_gazebo_plugins and the detection is obsolete.
+  Additionally we used platform-specific library prefixes and suffixes in find_libary() which caused errors on different platforms.
+* Contributors: Johannes Meyer
+
 0.3.3 (2014-09-01)
 ------------------
 * fixed some compiler warnings and missing return values

@@ -2,6 +2,11 @@
 Changelog for package hector_quadrotor_teleop
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.4 (2015-02-22)
+------------------
+* Add optional parameter to set the joystick device
+* Contributors: whoenig
+
 0.3.3 (2014-09-01)
 ------------------
 * added run dependency to joy package (joystick drivers)

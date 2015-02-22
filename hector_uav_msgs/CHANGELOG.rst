@@ -2,6 +2,9 @@
 Changelog for package hector_uav_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.4 (2015-02-22)
+------------------
+
 0.3.3 (2014-09-01)
 ------------------
 * updated value type in RawImu message to int16

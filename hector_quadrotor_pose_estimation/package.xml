@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>hector_quadrotor_pose_estimation</name>
-  <version>0.3.3</version>
+  <version>0.3.4</version>
   <description>
     hector_quadrotor_pose_estimation provides a <a href="http://wiki.ros.org/hector_pose_estimation">hector_pose_estimation</a> node and nodelet specialized for hector_quadrotor.
   </description>

@@ -1,6 +1,6 @@
 <package>
   <name>hector_quadrotor_controller</name>
-  <version>0.3.3</version>
+  <version>0.3.4</version>
   <description>hector_quadrotor_controller provides libraries and a node for quadrotor control using <a href="http://wiki.ros.org/ros_control">ros_control</a>.</description>
   <maintainer email="meyer@fsr.tu-darmstadt.de">Johannes Meyer</maintainer>
 
