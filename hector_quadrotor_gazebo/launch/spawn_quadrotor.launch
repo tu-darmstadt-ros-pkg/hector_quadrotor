@@ -14,8 +14,10 @@
    <arg name="use_pose_estimation" unless="$(arg use_ground_truth_for_control)" default="true"/>
 
    <!-- send the robot XML to param server -->
-   <param name="robot_description" command="$(find xacro)/xacro.py '$(arg model)'" />
+   <param name="robot_description" command="$(find xacro)/xacro.py '$(arg model)' base_link_frame:=$(arg tf_prefix)/base_link" />
    <param name="tf_prefix" type="string" value="$(arg tf_prefix)" />
+   <param name="base_link_frame" type="string" value="$(arg tf_prefix)/base_link"/>
+   <param name="world_frame" type="string" value="world"/>
 
    <!-- push robot_description to factory and spawn robot in gazebo -->
    <node name="spawn_robot" pkg="gazebo_ros" type="spawn_model"

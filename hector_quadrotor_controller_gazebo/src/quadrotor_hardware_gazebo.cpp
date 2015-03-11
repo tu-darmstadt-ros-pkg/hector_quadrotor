@@ -59,6 +59,9 @@ bool QuadrotorHardwareSim::initSim(
   link_ = model_->GetLink();
   physics_ = model_->GetWorld()->GetPhysicsEngine();
 
+  model_nh.param<std::string>("world_frame", world_frame_, "world");
+  model_nh.param<std::string>("base_link_frame", base_link_frame_, "base_link");
+
   // subscribe state
   std::string state_topic;
   param_nh.getParam("state_topic", state_topic);
@@ -151,7 +154,7 @@ void QuadrotorHardwareSim::readSim(ros::Time time, ros::Duration period)
   gz_angular_velocity_ =  link_->GetWorldAngularVel();
 
   if (!subscriber_state_) {
-    header_.frame_id = "/world";
+    header_.frame_id = world_frame_;
     header_.stamp = time;
     pose_.position.x = gz_pose_.pos.x;
     pose_.position.y = gz_pose_.pos.y;
@@ -201,7 +204,7 @@ void QuadrotorHardwareSim::writeSim(ros::Time time, ros::Duration period)
   if (wrench_output_->connected() && wrench_output_->enabled()) {
     geometry_msgs::WrenchStamped wrench;
     wrench.header.stamp = time;
-    wrench.header.frame_id = "base_link";
+    wrench.header.frame_id = base_link_frame_;
     wrench.wrench = wrench_output_->getCommand();
     publisher_wrench_command_.publish(wrench);
 

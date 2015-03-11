@@ -124,6 +124,7 @@ public:
     controller_nh.getParam("limits/torque/xy", limits_.torque.x);
     controller_nh.getParam("limits/torque/xy", limits_.torque.y);
     controller_nh.getParam("limits/torque/z", limits_.torque.z);
+    root_nh.param<std::string>("base_link_frame", base_link_frame_, "base_link");
 
     // get mass and inertia from QuadrotorInterface
     interface->getMassAndInertia(mass_, inertia_);
@@ -317,7 +318,7 @@ public:
 
     // set wrench output
     wrench_.header.stamp = time;
-    wrench_.header.frame_id = "base_link";
+    wrench_.header.frame_id = base_link_frame_;
     wrench_output_->setCommand(wrench_.wrench);
   }
 
@@ -337,6 +338,7 @@ private:
   geometry_msgs::TwistStamped command_;
   geometry_msgs::WrenchStamped wrench_;
   bool command_given_in_stabilized_frame_;
+  std::string base_link_frame_;
 
   struct {
     struct {

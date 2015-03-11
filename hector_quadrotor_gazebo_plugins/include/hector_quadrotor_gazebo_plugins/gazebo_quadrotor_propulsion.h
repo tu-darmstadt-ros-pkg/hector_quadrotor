@@ -85,6 +85,7 @@ private:
   std::string wrench_topic_;
   std::string supply_topic_;
   std::string status_topic_;
+  std::string frame_id_;
   ros::Duration control_delay_;
   ros::Duration control_tolerance_;
 

@@ -84,6 +84,7 @@ protected:
   Vector3 acceleration_;
   Imu imu_;
   MotorStatus motor_status_;
+  std::string base_link_frame_, world_frame_;
 
   WrenchCommandHandlePtr wrench_output_;
   MotorCommandHandlePtr motor_output_;
