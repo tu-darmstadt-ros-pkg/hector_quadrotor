@@ -73,7 +73,6 @@ public:
     acceleration_  = interface->getAcceleration();
     twist_input_   = interface->addInput<TwistCommandHandle>("twist");
     wrench_output_ = interface->addOutput<WrenchCommandHandle>("wrench");
-    interface->claim(wrench_output_->getName());
 
     // initialize NodeHandle
     delete node_handle_;

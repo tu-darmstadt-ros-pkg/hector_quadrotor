@@ -87,6 +87,9 @@ public:
     outputs_[name] = output;
     *output = output->ownData(new typename HandleType::ValueType());
 
+    //claim resource
+    claim(name);
+
     // connect to output of same name
     if (inputs_.count(name)) {
       boost::shared_ptr<HandleType> input = boost::dynamic_pointer_cast<HandleType>(inputs_.at(name));
