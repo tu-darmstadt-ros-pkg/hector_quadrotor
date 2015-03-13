@@ -36,6 +36,8 @@
 #include <hector_uav_msgs/MotorStatus.h>
 #include <hector_uav_msgs/MotorCommand.h>
 #include <hector_uav_msgs/AttitudeCommand.h>
+#include <hector_uav_msgs/YawrateCommand.h>
+#include <hector_uav_msgs/ThrustCommand.h>
 
 namespace hector_quadrotor_controller {
 
@@ -51,6 +53,8 @@ using sensor_msgs::Imu;
 using hector_uav_msgs::MotorStatus;
 using hector_uav_msgs::MotorCommand;
 using hector_uav_msgs::AttitudeCommand;
+using hector_uav_msgs::YawrateCommand;
+using hector_uav_msgs::ThrustCommand;
 
 template <class Derived, typename T>
 class Handle_
@@ -493,6 +497,39 @@ public:
   virtual ~MotorCommandHandle() {}
 };
 typedef boost::shared_ptr<MotorCommandHandle> MotorCommandHandlePtr;
+
+class AttitudeCommandHandle : public CommandHandle_<AttitudeCommandHandle, AttitudeCommand>
+{
+public:
+  using Base::operator=;
+
+  AttitudeCommandHandle() {}
+  AttitudeCommandHandle(QuadrotorInterface *interface, const std::string& name) : Base(interface, name) {}
+  virtual ~AttitudeCommandHandle() {}
+};
+typedef boost::shared_ptr<AttitudeCommandHandle> AttitudeCommandHandlePtr;
+
+class YawrateCommandHandle : public CommandHandle_<YawrateCommandHandle, YawrateCommand>
+{
+public:
+  using Base::operator=;
+
+  YawrateCommandHandle() {}
+  YawrateCommandHandle(QuadrotorInterface *interface, const std::string& name) : Base(interface, name) {}
+  virtual ~YawrateCommandHandle() {}
+};
+typedef boost::shared_ptr<YawrateCommandHandle> YawrateCommandHandlePtr;
+
+class ThrustCommandHandle : public CommandHandle_<ThrustCommandHandle, ThrustCommand>
+{
+public:
+  using Base::operator=;
+
+  ThrustCommandHandle() {}
+  ThrustCommandHandle(QuadrotorInterface *interface, const std::string& name) : Base(interface, name) {}
+  virtual ~ThrustCommandHandle() {}
+};
+typedef boost::shared_ptr<ThrustCommandHandle> ThrustCommandHandlePtr;
 
 } // namespace hector_quadrotor_controller
 
