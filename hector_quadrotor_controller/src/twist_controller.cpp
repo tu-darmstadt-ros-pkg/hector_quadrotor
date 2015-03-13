@@ -50,20 +50,10 @@ class TwistController : public controller_interface::Controller<QuadrotorInterfa
 {
 public:
   TwistController()
-    : node_handle_(0)
   {}
 
   ~TwistController()
-  {
-    is_shutting_down_ = true;
-    callback_queue_thread_.join();
-
-    if (node_handle_) {
-      node_handle_->shutdown();
-      delete node_handle_;
-      node_handle_ = 0;
-    }
-  }
+  {}
 
   bool init(QuadrotorInterface *interface, ros::NodeHandle &root_nh, ros::NodeHandle &controller_nh)
   {
@@ -74,40 +64,15 @@ public:
     twist_input_   = interface->addInput<TwistCommandHandle>("twist");
     wrench_output_ = interface->addOutput<WrenchCommandHandle>("wrench");
     interface->claim(wrench_output_->getName());
-
-    // initialize NodeHandle
-    delete node_handle_;
-    node_handle_ = new ros::NodeHandle(root_nh);
+    node_handle_ = root_nh;
 
     // subscribe to commanded twist (geometry_msgs/TwistStamped) and cmd_vel (geometry_msgs/Twist)
-    ros::SubscribeOptions twist_subscribe_options = ros::SubscribeOptions::create<geometry_msgs::TwistStamped>(
-      "command/twist", 1,
-      boost::bind(&TwistController::twistCommandCallback, this, _1),
-      ros::VoidConstPtr(), &callback_queue_
-    );
-    twist_subscriber_ = node_handle_->subscribe(twist_subscribe_options);
-
-    ros::SubscribeOptions cmd_vel_subscribe_options = ros::SubscribeOptions::create<geometry_msgs::Twist>(
-      "cmd_vel", 1,
-      boost::bind(&TwistController::cmd_velCommandCallback, this, _1),
-      ros::VoidConstPtr(), &callback_queue_
-    );
-    cmd_vel_subscriber_ = node_handle_->subscribe(cmd_vel_subscribe_options);
+    twist_subscriber_ = node_handle_.subscribe<geometry_msgs::TwistStamped>("command/twist", 1, boost::bind(&TwistController::twistCommandCallback, this, _1));
+    cmd_vel_subscriber_ = node_handle_.subscribe<geometry_msgs::Twist>("cmd_vel", 1, boost::bind(&TwistController::cmd_velCommandCallback, this, _1));
 
     // engage/shutdown service servers
-    {
-      ros::AdvertiseServiceOptions ops = ros::AdvertiseServiceOptions::create<std_srvs::Empty>(
-        "engage", boost::bind(&TwistController::engageCallback, this, _1, _2),
-        ros::VoidConstPtr(), &callback_queue_
-      );
-      engage_service_server_ = node_handle_->advertiseService(ops);
-
-      ops = ros::AdvertiseServiceOptions::create<std_srvs::Empty>(
-        "shutdown", boost::bind(&TwistController::shutdownCallback, this, _1, _2),
-        ros::VoidConstPtr(), &callback_queue_
-      );
-      shutdown_service_server_ = node_handle_->advertiseService(ops);
-    }
+    engage_service_server_ = node_handle_.advertiseService<std_srvs::Empty::Request, std_srvs::Empty::Response>("engage", boost::bind(&TwistController::engageCallback, this, _1, _2));
+    shutdown_service_server_ = node_handle_.advertiseService<std_srvs::Empty::Request, std_srvs::Empty::Response>("shutdown", boost::bind(&TwistController::shutdownCallback, this, _1, _2));
 
     // initialize PID controllers
     pid_.linear.x.init(ros::NodeHandle(controller_nh, "linear/xy"));
@@ -130,8 +95,6 @@ public:
 
     command_given_in_stabilized_frame_ = false;
 
-    is_shutting_down_ = false;
-    callback_queue_thread_ = boost::thread(boost::bind(&TwistController::CallbackQueueThread, this));
     return true;
   }
 
@@ -139,7 +102,7 @@ public:
   {
     pid_.linear.x.reset();
     pid_.linear.y.reset();
-    pid_.linear.x.reset();
+    pid_.linear.z.reset();
     pid_.angular.x.reset();
     pid_.angular.y.reset();
     pid_.angular.z.reset();
@@ -239,9 +202,9 @@ public:
     // Get gravity and load factor
     const double gravity = 9.8065;
     double load_factor = 1. / (  pose_->pose().orientation.w * pose_->pose().orientation.w
-                               - pose_->pose().orientation.x * pose_->pose().orientation.x
-                               - pose_->pose().orientation.y * pose_->pose().orientation.y
-                               + pose_->pose().orientation.z * pose_->pose().orientation.z );
+                                 - pose_->pose().orientation.x * pose_->pose().orientation.x
+                                 - pose_->pose().orientation.y * pose_->pose().orientation.y
+                                 + pose_->pose().orientation.z * pose_->pose().orientation.z );
     // Note: load_factor could be NaN or Inf...?
     if (load_factor_limit > 0.0 && !(load_factor < load_factor_limit)) load_factor = load_factor_limit;
 
@@ -328,7 +291,7 @@ private:
   TwistCommandHandlePtr twist_input_;
   WrenchCommandHandlePtr wrench_output_;
 
-  ros::NodeHandle *node_handle_;
+  ros::NodeHandle node_handle_;
   ros::Subscriber twist_subscriber_;
   ros::Subscriber cmd_vel_subscriber_;
   ros::ServiceServer engage_service_server_;
@@ -354,18 +317,8 @@ private:
 
   bool motors_running_;
   double linear_z_control_error_;
-
-  bool is_shutting_down_;
-  ros::CallbackQueue callback_queue_;
-  boost::thread callback_queue_thread_;
   boost::mutex command_mutex_;
 
-  void CallbackQueueThread() {
-    static const ros::WallDuration timeout(1.0);
-    while(!is_shutting_down_) {
-      callback_queue_.callAvailable(timeout);
-    }
-  }
 };
 
 } // namespace hector_quadrotor_controller
