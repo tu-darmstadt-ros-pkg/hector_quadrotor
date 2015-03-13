@@ -1,69 +1,71 @@
 <?xml version="1.0"?>
 
 <launch>
-   <arg name="name" default="quadrotor"/>
-   <arg name="model" default="$(find hector_quadrotor_description)/urdf/quadrotor.gazebo.xacro"/>
-   <arg name="tf_prefix" default="$(optenv ROS_NAMESPACE)"/>
-   <arg name="x" default="0.0"/>
-   <arg name="y" default="0.0"/>
-   <arg name="z" default="0.3"/>
+  <arg name="name" default="quadrotor"/>
+  <arg name="model" default="$(find hector_quadrotor_description)/urdf/quadrotor.gazebo.xacro"/>
+  <arg name="tf_prefix" default="$(optenv ROS_NAMESPACE)"/>
+  <arg name="controller_definition" default="$(find hector_quadrotor_controller)/launch/controller.launch"/>
 
-   <arg name="use_ground_truth_for_tf" default="true" />
-   <arg name="use_ground_truth_for_control" default="true" />
-   <arg name="use_pose_estimation" if="$(arg use_ground_truth_for_control)" default="false"/>
-   <arg name="use_pose_estimation" unless="$(arg use_ground_truth_for_control)" default="true"/>
+  <arg name="x" default="0.0"/>
+  <arg name="y" default="0.0"/>
+  <arg name="z" default="0.3"/>
 
-   <!-- send the robot XML to param server -->
-   <param name="robot_description" command="$(find xacro)/xacro.py '$(arg model)' base_link_frame:=$(arg tf_prefix)/base_link" />
-   <param name="tf_prefix" type="string" value="$(arg tf_prefix)" />
-   <param name="base_link_frame" type="string" value="$(arg tf_prefix)/base_link"/>
-   <param name="world_frame" type="string" value="world"/>
+  <arg name="use_ground_truth_for_tf" default="true" />
+  <arg name="use_ground_truth_for_control" default="true" />
+  <arg name="use_pose_estimation" if="$(arg use_ground_truth_for_control)" default="false"/>
+  <arg name="use_pose_estimation" unless="$(arg use_ground_truth_for_control)" default="true"/>
 
-   <!-- push robot_description to factory and spawn robot in gazebo -->
-   <node name="spawn_robot" pkg="gazebo_ros" type="spawn_model"
-     args="-param robot_description
+  <!-- send the robot XML to param server -->
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(arg model)' base_link_frame:=$(arg tf_prefix)/base_link" />
+  <param name="tf_prefix" type="string" value="$(arg tf_prefix)" />
+  <param name="base_link_frame" type="string" value="$(arg tf_prefix)/base_link"/>
+  <param name="world_frame" type="string" value="world"/>
+
+  <!-- push robot_description to factory and spawn robot in gazebo -->
+  <node name="spawn_robot" pkg="gazebo_ros" type="spawn_model"
+        args="-param robot_description
            -urdf
            -x $(arg x)
            -y $(arg y)
            -z $(arg z)
            -model $(arg name)"
-     respawn="false" output="screen"/>
-     
-   <!-- start robot state publisher -->
-   <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen" >
-     <param name="publish_frequency" type="double" value="50.0" />
-   </node>
+        respawn="false" output="screen"/>
 
-   <!-- publish state and tf -->
-   <node name="ground_truth_to_tf" pkg="message_to_tf" type="message_to_tf" output="screen">
-     <param name="odometry_topic" value="ground_truth/state" />
-     <param name="frame_id" value="/world" />
-     <param name="tf_prefix" value="$(arg tf_prefix)" if="$(arg use_ground_truth_for_tf)" />
-     <param name="tf_prefix" value="$(arg tf_prefix)/ground_truth" unless="$(arg use_ground_truth_for_tf)" />
-   </node>
-   <group if="$(arg use_pose_estimation)">
-     <node name="pose_estimation" pkg="hector_quadrotor_pose_estimation" type="hector_quadrotor_pose_estimation" output="screen">
-       <rosparam file="$(find hector_quadrotor_pose_estimation)/params/simulation.yaml" />
-       <param name="nav_frame" value="$(arg tf_prefix)/nav" />
-       <param name="publish_world_nav_transform" value="true" />
-       <param name="tf_prefix" value="$(arg tf_prefix)" unless="$(arg use_ground_truth_for_tf)" />
-       <param name="tf_prefix" value="$(arg tf_prefix)/pose_estimation" if="$(arg use_ground_truth_for_tf)" />
-     </node>
-   </group>
+  <!-- start robot state publisher -->
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen" >
+    <param name="publish_frequency" type="double" value="50.0" />
+  </node>
 
-   <!-- spawn controller -->
-   <group if="$(arg use_ground_truth_for_control)">
-     <param name="controller/state_topic" value="" />
-     <param name="controller/imu_topic" value="" />
-   </group>
-   <group unless="$(arg use_ground_truth_for_control)">
-     <param name="controller/state_topic" value="state" />
-     <param name="controller/imu_topic" value="imu" />
-   </group>
-   <include file="$(find hector_quadrotor_controller)/launch/controller.launch" />
+  <!-- publish state and tf -->
+  <node name="ground_truth_to_tf" pkg="message_to_tf" type="message_to_tf" output="screen">
+    <param name="odometry_topic" value="ground_truth/state" />
+    <param name="frame_id" value="/world" />
+    <param name="tf_prefix" value="$(arg tf_prefix)" if="$(arg use_ground_truth_for_tf)" />
+    <param name="tf_prefix" value="$(arg tf_prefix)/ground_truth" unless="$(arg use_ground_truth_for_tf)" />
+  </node>
+  <group if="$(arg use_pose_estimation)">
+    <node name="pose_estimation" pkg="hector_quadrotor_pose_estimation" type="hector_quadrotor_pose_estimation" output="screen">
+      <rosparam file="$(find hector_quadrotor_pose_estimation)/params/simulation.yaml" />
+      <param name="nav_frame" value="$(arg tf_prefix)/nav" />
+      <param name="publish_world_nav_transform" value="true" />
+      <param name="tf_prefix" value="$(arg tf_prefix)" unless="$(arg use_ground_truth_for_tf)" />
+      <param name="tf_prefix" value="$(arg tf_prefix)/pose_estimation" if="$(arg use_ground_truth_for_tf)" />
+    </node>
+  </group>
 
-   <arg name="motors" default="robbe_2827-34_epp1045" />
-   <rosparam command="load" file="$(find hector_quadrotor_model)/param/quadrotor_aerodynamics.yaml" />
-   <rosparam command="load" file="$(find hector_quadrotor_model)/param/$(arg motors).yaml" />
+  <!-- spawn controller -->
+  <group if="$(arg use_ground_truth_for_control)">
+    <param name="controller/state_topic" value="" />
+    <param name="controller/imu_topic" value="" />
+  </group>
+  <group unless="$(arg use_ground_truth_for_control)">
+    <param name="controller/state_topic" value="state" />
+    <param name="controller/imu_topic" value="imu" />
+  </group>
+  <include file="$(arg controller_definition)" />
+
+  <arg name="motors" default="robbe_2827-34_epp1045" />
+  <rosparam command="load" file="$(find hector_quadrotor_model)/param/quadrotor_aerodynamics.yaml" />
+  <rosparam command="load" file="$(find hector_quadrotor_model)/param/$(arg motors).yaml" />
 
 </launch>
