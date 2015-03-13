@@ -35,6 +35,7 @@
 #include <sensor_msgs/Imu.h>
 #include <hector_uav_msgs/MotorStatus.h>
 #include <hector_uav_msgs/MotorCommand.h>
+#include <hector_uav_msgs/AttitudeCommand.h>
 
 namespace hector_quadrotor_controller {
 
@@ -49,12 +50,14 @@ using geometry_msgs::Wrench;
 using sensor_msgs::Imu;
 using hector_uav_msgs::MotorStatus;
 using hector_uav_msgs::MotorCommand;
+using hector_uav_msgs::AttitudeCommand;
 
 template <class Derived, typename T>
 class Handle_
 {
 public:
   typedef T ValueType;
+  typedef Handle_<Derived, T> Base;
 
   Handle_(const std::string& name, const std::string& field = std::string()) : interface_(0), name_(name), field_(field), value_(0) {}
   Handle_(QuadrotorInterface *interface, const std::string& name, const std::string& field = std::string()) : interface_(interface), name_(name), field_(field), value_(0) {}
@@ -81,7 +84,6 @@ protected:
 class PoseHandle : public Handle_<PoseHandle, Pose>
 {
 public:
-  typedef Handle_<PoseHandle, Pose> Base;
   using Base::operator=;
 
   PoseHandle() : Base("pose") {}
@@ -101,7 +103,6 @@ typedef boost::shared_ptr<PoseHandle> PoseHandlePtr;
 class TwistHandle : public Handle_<TwistHandle, Twist>
 {
 public:
-  typedef Handle_<TwistHandle, Twist> Base;
   using Base::operator=;
 
   TwistHandle() : Base("twist") {}
@@ -116,7 +117,6 @@ typedef boost::shared_ptr<TwistHandle> TwistHandlePtr;
 class AccelerationHandle : public Handle_<AccelerationHandle, Vector3>
 {
 public:
-  typedef Handle_<AccelerationHandle, Vector3> Base;
   using Base::operator=;
 
   AccelerationHandle(QuadrotorInterface *interface, const Vector3 *acceleration) : Base(interface, acceleration, "acceleration") {}
@@ -140,7 +140,6 @@ typedef boost::shared_ptr<PoseHandle> PoseHandlePtr;
 class ImuHandle : public Handle_<ImuHandle, Imu>
 {
 public:
-  typedef Handle_<ImuHandle, Imu> Base;
   using Base::operator=;
 
   ImuHandle() : Base("imu") {}
@@ -154,7 +153,6 @@ typedef boost::shared_ptr<ImuHandle> ImuHandlePtr;
 class MotorStatusHandle : public Handle_<MotorStatusHandle, MotorStatus>
 {
 public:
-  typedef Handle_<MotorStatusHandle, MotorStatus> Base;
   using Base::operator=;
 
   MotorStatusHandle() : Base("motor_status") {}
@@ -223,6 +221,7 @@ class CommandHandle_ : public Parent
 {
 public:
   typedef T ValueType;
+  typedef CommandHandle_<Derived, T, Parent> Base;
 
   CommandHandle_() : command_(0) {}
   CommandHandle_(const Parent &other) : Parent(other), command_(0) {}
@@ -255,7 +254,6 @@ protected:
 class PoseCommandHandle : public CommandHandle_<PoseCommandHandle, Pose>
 {
 public:
-  typedef CommandHandle_<PoseCommandHandle, Pose> Base;
   using Base::operator=;
 
   PoseCommandHandle() {}
@@ -268,7 +266,6 @@ typedef boost::shared_ptr<PoseCommandHandle> PoseCommandHandlePtr;
 class HorizontalPositionCommandHandle : public CommandHandle_<HorizontalPositionCommandHandle, Point, PoseCommandHandle>
 {
 public:
-  typedef CommandHandle_<HorizontalPositionCommandHandle, Point, PoseCommandHandle> Base;
   using Base::operator=;
 
   HorizontalPositionCommandHandle() {}
@@ -312,7 +309,6 @@ namespace internal {
 class HeightCommandHandle : public CommandHandle_<HeightCommandHandle, double, PoseCommandHandle>
 {
 public:
-  typedef CommandHandle_<HeightCommandHandle, double, PoseCommandHandle> Base;
   using Base::operator=;
 
   HeightCommandHandle() {}
@@ -341,7 +337,6 @@ namespace internal {
 class HeadingCommandHandle : public CommandHandle_<HeadingCommandHandle, Quaternion, PoseCommandHandle>
 {
 public:
-  typedef CommandHandle_<HeadingCommandHandle, Quaternion, PoseCommandHandle> Base;
   using Base::operator=;
 
   HeadingCommandHandle() {}
@@ -375,7 +370,7 @@ namespace internal {
 class TwistCommandHandle : public CommandHandle_<TwistCommandHandle, Twist>
 {
 public:
-  typedef CommandHandle_<TwistCommandHandle, Twist> Base;
+
   using Base::operator=;
 
   TwistCommandHandle() {}
@@ -388,7 +383,6 @@ typedef boost::shared_ptr<TwistCommandHandle> TwistCommandHandlePtr;
 class HorizontalVelocityCommandHandle : public CommandHandle_<HorizontalVelocityCommandHandle, Vector3, TwistCommandHandle>
 {
 public:
-  typedef CommandHandle_<HorizontalVelocityCommandHandle, Vector3, TwistCommandHandle> Base;
   using Base::operator=;
 
   HorizontalVelocityCommandHandle() {}
@@ -429,7 +423,6 @@ namespace internal {
 class VerticalVelocityCommandHandle : public CommandHandle_<VerticalVelocityCommandHandle, double, TwistCommandHandle>
 {
 public:
-  typedef CommandHandle_<VerticalVelocityCommandHandle, double, TwistCommandHandle> Base;
   using Base::operator=;
 
   VerticalVelocityCommandHandle() {}
@@ -456,7 +449,6 @@ namespace internal {
 class AngularVelocityCommandHandle : public CommandHandle_<AngularVelocityCommandHandle, double, TwistCommandHandle>
 {
 public:
-  typedef CommandHandle_<AngularVelocityCommandHandle, double, TwistCommandHandle> Base;
   using Base::operator=;
 
   AngularVelocityCommandHandle() {}
@@ -483,7 +475,6 @@ namespace internal {
 class WrenchCommandHandle : public CommandHandle_<WrenchCommandHandle, Wrench>
 {
 public:
-  typedef CommandHandle_<WrenchCommandHandle, Wrench> Base;
   using Base::operator=;
 
   WrenchCommandHandle() {}
@@ -495,7 +486,6 @@ typedef boost::shared_ptr<WrenchCommandHandle> WrenchCommandHandlePtr;
 class MotorCommandHandle : public CommandHandle_<MotorCommandHandle, MotorCommand>
 {
 public:
-  typedef CommandHandle_<MotorCommandHandle, MotorCommand> Base;
   using Base::operator=;
 
   MotorCommandHandle() {}
