@@ -2,6 +2,9 @@
 Changelog for package hector_quadrotor_pose_estimation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.5 (2015-03-28)
+------------------
+
 0.3.4 (2015-02-22)
 ------------------
 * added missing install rule for hector_quadrotor_pose_estimation_nodelets.xml

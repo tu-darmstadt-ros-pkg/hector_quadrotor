@@ -2,6 +2,9 @@
 Changelog for package hector_quadrotor_gazebo_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.5 (2015-03-28)
+------------------
+
 0.3.4 (2015-02-22)
 ------------------
 * added dynamic_reconfigure server to gazebo_ros_baro plugin

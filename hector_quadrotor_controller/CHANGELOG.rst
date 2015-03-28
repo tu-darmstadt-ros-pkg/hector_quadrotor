@@ -2,6 +2,13 @@
 Changelog for package hector_quadrotor_controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.5 (2015-03-28)
+------------------
+* updated angular/z controller parameters
+* Remove redundant callback queue in twist_controller, use root_nh queue as per ros_control API
+* Add controller timeout to allow faster shutdown of spawner
+* Contributors: Johannes Meyer, Paul Bovbel
+
 0.3.4 (2015-02-22)
 ------------------
 * improved automatic landing detection and shutdown on rollovers

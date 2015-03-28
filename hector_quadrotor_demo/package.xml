@@ -1,6 +1,6 @@
 <package>
   <name>hector_quadrotor_demo</name>
-  <version>0.3.4</version>
+  <version>0.3.5</version>
   <description>hector_quadrotor_demo contains various launch files and needed dependencies for demonstration of the hector_quadrotor stack (indoor/outdoor flight in gazebo etc.)</description>
   <maintainer email="meyer@fsr.tu-darmstadt.de">Johannes Meyer</maintainer>
 
