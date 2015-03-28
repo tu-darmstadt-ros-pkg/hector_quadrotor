@@ -44,18 +44,9 @@ using namespace controller_interface;
 class PoseController : public controller_interface::Controller<QuadrotorInterface>
 {
 public:
-  PoseController()
-    : node_handle_(0)
-  {}
+  PoseController() {}
 
-  ~PoseController()
-  {
-    if (node_handle_) {
-      node_handle_->shutdown();
-      delete node_handle_;
-      node_handle_ = 0;
-    }
-  }
+  ~PoseController() {}
 
   bool init(QuadrotorInterface *interface, ros::NodeHandle &root_nh, ros::NodeHandle &controller_nh)
   {
@@ -69,23 +60,11 @@ public:
     twist_output_ = interface->addOutput<TwistCommandHandle>("twist");
     interface->claim(twist_output_->getName());
 
-    // initialize NodeHandle
-    delete node_handle_;
-    node_handle_ = new ros::NodeHandle(root_nh);
+    node_handle_ = root_nh;
 
     // subscribe to commanded pose and velocity
-    ros::SubscribeOptions pose_subscribe_options = ros::SubscribeOptions::create<geometry_msgs::PoseStamped>(
-      "command/pose", 1,
-      boost::bind(&PoseController::poseCommandCallback, this, _1),
-      ros::VoidConstPtr(), 0 // &callback_queue_
-    );
-    pose_subscriber_ = node_handle_->subscribe(pose_subscribe_options);
-    ros::SubscribeOptions twist_subscribe_options = ros::SubscribeOptions::create<geometry_msgs::TwistStamped>(
-      "command/twist", 1,
-      boost::bind(&PoseController::twistCommandCallback, this, _1),
-      ros::VoidConstPtr(), 0 // &callback_queue_
-    );
-    twist_subscriber_ = node_handle_->subscribe(twist_subscribe_options);
+    pose_subscriber_ = node_handle_.subscribe<geometry_msgs::PoseStamped>("command/pose", 1, boost::bind(&PoseController::poseCommandCallback, this, _1));
+    twist_subscriber_ = node_handle_.subscribe<geometry_msgs::TwistStamped>("command/twist", 1, boost::bind(&PoseController::twistCommandCallback, this, _1));
 
     // initialize PID controllers
     pid_.x.init(ros::NodeHandle(controller_nh, "xy"));
@@ -141,25 +120,22 @@ public:
   {
     Twist output;
 
-    // execute available callbacks in the callback queue (is this real-time safe?)
-    // callback_queue_.callAvailable();
-
     // check command timeout
     // TODO
 
     // return if no pose command is available
     if (pose_input_->enabled()) {
-        // control horizontal position
-        double error_n, error_w;
-        HorizontalPositionCommandHandle(*pose_input_).getError(*pose_, error_n, error_w);
-        output.linear.x = pid_.x.update(error_n, twist_->twist().linear.x, period);
-        output.linear.y = pid_.y.update(error_w, twist_->twist().linear.y, period);
+      // control horizontal position
+      double error_n, error_w;
+      HorizontalPositionCommandHandle(*pose_input_).getError(*pose_, error_n, error_w);
+      output.linear.x = pid_.x.update(error_n, twist_->twist().linear.x, period);
+      output.linear.y = pid_.y.update(error_w, twist_->twist().linear.y, period);
 
-        // control height
-        output.linear.z = pid_.z.update(HeightCommandHandle(*pose_input_).getError(*pose_), twist_->twist().linear.z, period);
+      // control height
+      output.linear.z = pid_.z.update(HeightCommandHandle(*pose_input_).getError(*pose_), twist_->twist().linear.z, period);
 
-        // control yaw angle
-        output.angular.z = pid_.yaw.update(HeadingCommandHandle(*pose_input_).getError(*pose_), twist_->twist().angular.z, period);
+      // control yaw angle
+      output.angular.z = pid_.yaw.update(HeadingCommandHandle(*pose_input_).getError(*pose_), twist_->twist().angular.z, period);
     }
 
     // add twist command if available
@@ -176,24 +152,24 @@ public:
     // limit twist
     if (twist_limit_->enabled())
     {
-        double linear_xy = sqrt(output.linear.x*output.linear.x + output.linear.y*output.linear.y);
-        double limit_linear_xy  = std::max(twist_limit_->get()->linear.x, twist_limit_->get()->linear.y);
-        if (limit_linear_xy > 0.0 && linear_xy > limit_linear_xy) {
-            output.linear.x *= limit_linear_xy / linear_xy;
-            output.linear.y *= limit_linear_xy / linear_xy;
-        }
-        if (twist_limit_->get()->linear.z > 0.0 && fabs(output.linear.z) > twist_limit_->get()->linear.z) {
-            output.linear.z *= twist_limit_->get()->linear.z / fabs(output.linear.z);
-        }
-        double angular_xy = sqrt(output.angular.x*output.angular.x + output.angular.y*output.angular.y);
-        double limit_angular_xy  = std::max(twist_limit_->get()->angular.x, twist_limit_->get()->angular.y);
-        if (limit_angular_xy > 0.0 && angular_xy > limit_angular_xy) {
-            output.angular.x *= limit_angular_xy / angular_xy;
-            output.angular.y *= limit_angular_xy / angular_xy;
-        }
-        if (twist_limit_->get()->angular.z > 0.0 && fabs(output.angular.z) > twist_limit_->get()->angular.z) {
-            output.angular.z *= twist_limit_->get()->angular.z / fabs(output.angular.z);
-        }
+      double linear_xy = sqrt(output.linear.x*output.linear.x + output.linear.y*output.linear.y);
+      double limit_linear_xy  = std::max(twist_limit_->get()->linear.x, twist_limit_->get()->linear.y);
+      if (limit_linear_xy > 0.0 && linear_xy > limit_linear_xy) {
+        output.linear.x *= limit_linear_xy / linear_xy;
+        output.linear.y *= limit_linear_xy / linear_xy;
+      }
+      if (twist_limit_->get()->linear.z > 0.0 && fabs(output.linear.z) > twist_limit_->get()->linear.z) {
+        output.linear.z *= twist_limit_->get()->linear.z / fabs(output.linear.z);
+      }
+      double angular_xy = sqrt(output.angular.x*output.angular.x + output.angular.y*output.angular.y);
+      double limit_angular_xy  = std::max(twist_limit_->get()->angular.x, twist_limit_->get()->angular.y);
+      if (limit_angular_xy > 0.0 && angular_xy > limit_angular_xy) {
+        output.angular.x *= limit_angular_xy / angular_xy;
+        output.angular.y *= limit_angular_xy / angular_xy;
+      }
+      if (twist_limit_->get()->angular.z > 0.0 && fabs(output.angular.z) > twist_limit_->get()->angular.z) {
+        output.angular.z *= twist_limit_->get()->angular.z / fabs(output.angular.z);
+      }
     }
 
     // set twist output
@@ -211,8 +187,7 @@ private:
   geometry_msgs::PoseStamped pose_command_;
   geometry_msgs::TwistStamped twist_command_;
 
-  ros::NodeHandle *node_handle_;
-  // ros::CallbackQueue callback_queue_;
+  ros::NodeHandle node_handle_;
   ros::Subscriber pose_subscriber_;
   ros::Subscriber twist_subscriber_;
 
