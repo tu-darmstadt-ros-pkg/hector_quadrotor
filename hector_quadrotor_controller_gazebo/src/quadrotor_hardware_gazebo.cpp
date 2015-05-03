@@ -36,8 +36,8 @@ QuadrotorHardwareSim::QuadrotorHardwareSim()
 {
   this->registerInterface(static_cast<QuadrotorInterface *>(this));
 
-  wrench_output_ = addOutput<WrenchCommandHandle>("wrench");
-  motor_output_ = addOutput<MotorCommandHandle>("motor");
+  wrench_output_ = addInput<WrenchCommandHandle>("wrench");
+  motor_output_ = addInput<MotorCommandHandle>("motor");
 }
 
 QuadrotorHardwareSim::~QuadrotorHardwareSim()

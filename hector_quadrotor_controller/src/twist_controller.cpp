@@ -63,7 +63,6 @@ public:
     acceleration_  = interface->getAcceleration();
     twist_input_   = interface->addInput<TwistCommandHandle>("twist");
     wrench_output_ = interface->addOutput<WrenchCommandHandle>("wrench");
-    interface->claim(wrench_output_->getName());
     node_handle_ = root_nh;
 
     // subscribe to commanded twist (geometry_msgs/TwistStamped) and cmd_vel (geometry_msgs/Twist)

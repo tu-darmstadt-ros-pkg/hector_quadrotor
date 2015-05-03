@@ -58,7 +58,6 @@ public:
     twist_input_  = interface->addInput<TwistCommandHandle>("pose/twist");
     twist_limit_  = interface->addInput<TwistCommandHandle>("pose/twist_limit");
     twist_output_ = interface->addOutput<TwistCommandHandle>("twist");
-    interface->claim(twist_output_->getName());
 
     node_handle_ = root_nh;
 

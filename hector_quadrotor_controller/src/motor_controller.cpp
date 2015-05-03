@@ -60,7 +60,6 @@ public:
     // get interface handles
     wrench_input_  = interface->addInput<WrenchCommandHandle>("wrench");
     motor_output_  = interface->addOutput<MotorCommandHandle>("motor");
-    interface->claim(motor_output_->getName());
 
     // initialize NodeHandle
     delete node_handle_;
