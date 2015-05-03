@@ -4,7 +4,7 @@ project(hector_quadrotor_teleop)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp sensor_msgs geometry_msgs)
+find_package(catkin REQUIRED COMPONENTS roscpp sensor_msgs geometry_msgs hector_uav_msgs)
 include_directories(include ${catkin_INCLUDE_DIRS})
 
 ## System dependencies are found with CMake's conventions
@@ -28,7 +28,7 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 catkin_package(
     INCLUDE_DIRS
     LIBRARIES
-    CATKIN_DEPENDS roscpp sensor_msgs geometry_msgs
+    CATKIN_DEPENDS roscpp sensor_msgs geometry_msgs hector_uav_msgs
     DEPENDS
 )
 
@@ -47,7 +47,7 @@ target_link_libraries(quadrotor_teleop ${catkin_LIBRARIES})
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(@{name}_node @{name}_generate_messages_cpp)
+add_dependencies(quadrotor_teleop ${catkin_EXPORTED_TARGETS})
 
 #############
 ## Install ##
