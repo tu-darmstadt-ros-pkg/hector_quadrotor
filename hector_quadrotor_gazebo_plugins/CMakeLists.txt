@@ -46,7 +46,7 @@ endif()
 catkin_package(
     INCLUDE_DIRS include
     LIBRARIES
-    CATKIN_DEPENDS roscpp hector_gazebo_plugins hector_quadrotor_model geometry_msgs hector_uav_msgs
+    CATKIN_DEPENDS roscpp hector_gazebo_plugins hector_quadrotor_model geometry_msgs hector_uav_msgs dynamic_reconfigure
     DEPENDS gazebo
 )
 
