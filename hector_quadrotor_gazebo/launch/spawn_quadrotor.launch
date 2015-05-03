@@ -15,11 +15,14 @@
   <arg name="use_pose_estimation" if="$(arg use_ground_truth_for_control)" default="false"/>
   <arg name="use_pose_estimation" unless="$(arg use_ground_truth_for_control)" default="true"/>
 
+  <arg name="world_frame" default="world"/> <!-- This should actually be "/world". See https://github.com/ros-simulation/gazebo_ros_pkgs/pull/324 -->
+  <arg name="base_link_frame" default="$(arg tf_prefix)/base_link"/>
+
   <!-- send the robot XML to param server -->
-  <param name="robot_description" command="$(find xacro)/xacro.py '$(arg model)' base_link_frame:=$(arg tf_prefix)/base_link" />
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(arg model)' base_link_frame:=$(arg base_link_frame) world_frame:=$(arg world_frame)" />
   <param name="tf_prefix" type="string" value="$(arg tf_prefix)" />
-  <param name="base_link_frame" type="string" value="$(arg tf_prefix)/base_link"/>
-  <param name="world_frame" type="string" value="world"/>
+  <param name="base_link_frame" type="string" value="$(arg base_link_frame)"/>
+  <param name="world_frame" type="string" value="$(arg world_frame)"/>
 
   <!-- push robot_description to factory and spawn robot in gazebo -->
   <node name="spawn_robot" pkg="gazebo_ros" type="spawn_model"
@@ -39,14 +42,14 @@
   <!-- publish state and tf -->
   <node name="ground_truth_to_tf" pkg="message_to_tf" type="message_to_tf" output="screen">
     <param name="odometry_topic" value="ground_truth/state" />
-    <param name="frame_id" value="/world" />
+    <param name="frame_id" value="/$(arg world_frame)" />
     <param name="tf_prefix" value="$(arg tf_prefix)" if="$(arg use_ground_truth_for_tf)" />
     <param name="tf_prefix" value="$(arg tf_prefix)/ground_truth" unless="$(arg use_ground_truth_for_tf)" />
   </node>
   <group if="$(arg use_pose_estimation)">
     <node name="pose_estimation" pkg="hector_quadrotor_pose_estimation" type="hector_quadrotor_pose_estimation" output="screen">
       <rosparam file="$(find hector_quadrotor_pose_estimation)/params/simulation.yaml" />
-      <param name="nav_frame" value="$(arg tf_prefix)/nav" />
+      <param name="nav_frame" value="/$(arg tf_prefix)/nav" />
       <param name="publish_world_nav_transform" value="true" />
       <param name="tf_prefix" value="$(arg tf_prefix)" unless="$(arg use_ground_truth_for_tf)" />
       <param name="tf_prefix" value="$(arg tf_prefix)/pose_estimation" if="$(arg use_ground_truth_for_tf)" />
