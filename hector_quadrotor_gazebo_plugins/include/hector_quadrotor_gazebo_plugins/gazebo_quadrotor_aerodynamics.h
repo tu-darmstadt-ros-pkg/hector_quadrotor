@@ -77,6 +77,7 @@ private:
   double control_rate_;
   std::string wind_topic_;
   std::string wrench_topic_;
+  std::string frame_id_;
 
   common::Time last_time_;
 

@@ -9,6 +9,7 @@
         <alwaysOn>true</alwaysOn>
         <updateRate>0.0</updateRate>
         <bodyName>base_link</bodyName>
+        <frameId>$(arg base_link_frame)</frameId>
       </plugin>
     </gazebo>
   </xacro:macro>

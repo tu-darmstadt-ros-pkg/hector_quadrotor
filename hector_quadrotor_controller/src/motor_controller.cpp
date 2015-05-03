@@ -70,6 +70,7 @@ public:
     controller_nh.getParam("force_per_voltage", parameters_.force_per_voltage = 0.559966216);
     controller_nh.getParam("torque_per_voltage", parameters_.torque_per_voltage = 7.98598e-3);
     controller_nh.getParam("lever", parameters_.lever = 0.275);
+    root_nh.param<std::string>("base_link_frame", base_link_frame_, "base_link");
 
     // TODO: calculate these parameters from the quadrotor_propulsion parameters
 //    quadrotor_propulsion:
@@ -171,6 +172,7 @@ private:
 
   geometry_msgs::WrenchStamped wrench_;
   hector_uav_msgs::MotorCommand motor_;
+  std::string base_link_frame_;
 
   struct {
     double force_per_voltage;     // coefficient for linearized volts to force conversion for a single motor [N / V]

@@ -68,12 +68,14 @@ void GazeboQuadrotorAerodynamics::Load(physics::ModelPtr _model, sdf::ElementPtr
   param_namespace_ = "quadrotor_aerodynamics";
   wind_topic_ = "/wind";
   wrench_topic_ = "aerodynamics/wrench";
+  frame_id_ = link->GetName();
 
   // load parameters
   if (_sdf->HasElement("robotNamespace")) namespace_ = _sdf->GetElement("robotNamespace")->Get<std::string>();
   if (_sdf->HasElement("paramNamespace")) param_namespace_ = _sdf->GetElement("paramNamespace")->Get<std::string>();
   if (_sdf->HasElement("windTopicName"))  wind_topic_ = _sdf->GetElement("windTopicName")->Get<std::string>();
   if (_sdf->HasElement("wrenchTopic"))    wrench_topic_ = _sdf->GetElement("wrenchTopic")->Get<std::string>();
+  if (_sdf->HasElement("frameId"))    frame_id_= _sdf->GetElement("frameId")->Get<std::string>();
 
   // Make sure the ROS node for Gazebo has already been initialized
   if (!ros::isInitialized())
@@ -156,7 +158,7 @@ void GazeboQuadrotorAerodynamics::Update()
   if (wrench_publisher_) {
     geometry_msgs::WrenchStamped wrench_msg;
     wrench_msg.header.stamp = ros::Time(current_time.sec, current_time.nsec);
-    wrench_msg.header.frame_id = link->GetName();
+    wrench_msg.header.frame_id = frame_id_;
     wrench_msg.wrench = model_.getWrench();
     wrench_publisher_.publish(wrench_msg);
   }

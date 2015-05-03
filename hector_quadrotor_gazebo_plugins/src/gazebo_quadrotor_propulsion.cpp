@@ -75,6 +75,7 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
   status_topic_ = "motor_status";
   control_tolerance_ = ros::Duration();
   control_delay_ = ros::Duration();
+  frame_id_ = link->GetName();
 
   // load parameters
   if (_sdf->HasElement("robotNamespace"))   namespace_ = _sdf->GetElement("robotNamespace")->Get<std::string>();
@@ -85,6 +86,7 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
   if (_sdf->HasElement("wrenchTopic"))      wrench_topic_ = _sdf->GetElement("wrenchTopic")->Get<std::string>();
   if (_sdf->HasElement("supplyTopic"))      supply_topic_ = _sdf->GetElement("supplyTopic")->Get<std::string>();
   if (_sdf->HasElement("statusTopic"))      status_topic_ = _sdf->GetElement("statusTopic")->Get<std::string>();
+  if (_sdf->HasElement("frameId"))          frame_id_= _sdf->GetElement("frameId")->Get<std::string>();
 
   if (_sdf->HasElement("voltageTopicName")) {
     gzwarn << "[quadrotor_propulsion] Plugin parameter 'voltageTopicName' is deprecated! Plese change your config to use "
@@ -229,7 +231,7 @@ void GazeboQuadrotorPropulsion::Update()
   if (wrench_publisher_) {
     geometry_msgs::WrenchStamped wrench_msg;
     wrench_msg.header.stamp = ros::Time(current_time.sec, current_time.nsec);
-    wrench_msg.header.frame_id = link->GetName();
+    wrench_msg.header.frame_id = frame_id_;
     wrench_msg.wrench = model_.getWrench();
     wrench_publisher_.publish(wrench_msg);
   }
