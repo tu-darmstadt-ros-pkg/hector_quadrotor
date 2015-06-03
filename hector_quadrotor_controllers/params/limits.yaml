@@ -1,0 +1,32 @@
+pose:
+    position: # m
+        z:
+            min: 0.0
+    orientation: # rad
+        x:
+            max: &attitude_limit 0.4
+        y:
+            max: *attitude_limit
+twist:
+    linear: # m/s
+        x:
+            max: &vel_xy_limit 1.0
+        y:
+            max: *vel_xy_limit
+        z:
+            max: 0.5
+    angular: # rad/s
+        z:
+            max: 1.5708
+wrench:
+    force: # N
+        z:
+            min: 0.0
+            max: 15.7
+    torque: # Nm
+        x:
+            max: 1.0
+        y:
+            max: 1.0
+        z:
+            max: 1.0

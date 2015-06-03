@@ -26,11 +26,11 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 
-#include <hector_quadrotor_controller/quadrotor_interface.h>
+#include <hector_quadrotor_interface/quadrotor_interface.h>
 
 #include <cmath>
 
-namespace hector_quadrotor_controller {
+namespace hector_quadrotor_interface {
 
 QuadrotorInterface::QuadrotorInterface()
 {}
@@ -192,4 +192,4 @@ bool CommandHandle::start()      { return interface_->start(this); }
 void CommandHandle::stop()       { interface_->stop(this); }
 void CommandHandle::disconnect() { interface_->disconnect(this); }
 
-} // namespace hector_quadrotor_controller
+} // namespace hector_quadrotor_interface

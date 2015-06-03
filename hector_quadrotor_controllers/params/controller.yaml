@@ -1,0 +1,41 @@
+position:
+    type: hector_quadrotor_controllers/PositionController
+    x: &pos_xy
+        p: 2.0
+        i: 0.0
+        d: 0.0
+    y: *pos_xy
+    z:
+        p: 2.0
+        i: 0.0
+        d: 0.0
+    yaw:
+        p: 2.0
+        i: 0.0
+        d: 0.0
+velocity:
+    type: hector_quadrotor_controllers/VelocityController
+    x: &vel_xy
+        p: 0.5
+        i: 0.0
+        d: 0.0
+        publish_state: true
+    y: *vel_xy
+    z:
+        p: 10.0
+        i: 0.0
+        d: 0.0
+        publish_state: true
+attitude:
+    type: hector_quadrotor_controllers/AttitudeController
+    roll: &rollpitch
+        p: 300.0
+        i: 0.0
+        d: 20.0
+        publish_state: true
+    pitch: *rollpitch
+    yawrate:
+        p: 20.0
+        i: 0.0
+        d: 0.0
+        publish_state: true
