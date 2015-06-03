@@ -1,0 +1,3 @@
+bool enable # enable or disable motors
+---
+bool success # whether enabling or disabling was successful
