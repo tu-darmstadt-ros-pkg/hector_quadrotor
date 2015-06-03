@@ -1,13 +1,16 @@
 <launch>
+
+  <arg name="controllers" default="
+    controller/attitude
+    controller/velocity
+    controller/position"/>
+
   <rosparam ns="controller" file="$(find hector_quadrotor_controllers)/params/controller.yaml" />
   <rosparam ns="limits" file="$(find hector_quadrotor_controllers)/params/limits.yaml" />
   <rosparam file="$(find hector_quadrotor_controllers)/params/params.yaml" />
 
   <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="
-    controller/attitude
-    controller/velocity
-    controller/position
-    --shutdown-timeout 3"/>
+    $(arg controllers) --shutdown-timeout 3"/>
 
   <node name="pose_action" pkg="hector_quadrotor_actions" type="pose_action" output="screen">
     <remap from="pose" to="ground_truth_to_tf/pose" />

@@ -115,6 +115,8 @@ namespace hector_quadrotor_controllers
       yawrate_command_ = yawrate_limiter_->limit(yawrate_command_);
       thrust_command_ = thrust_limiter_->limit(thrust_command_);
 
+
+      // TODO move estop to gazebo plugin
       if(time > attitude_command_.header.stamp + ros::Duration(command_timeout_) ||
          time > yawrate_command_.header.stamp + ros::Duration(command_timeout_) ||
          time > thrust_command_.header.stamp + ros::Duration(command_timeout_) )

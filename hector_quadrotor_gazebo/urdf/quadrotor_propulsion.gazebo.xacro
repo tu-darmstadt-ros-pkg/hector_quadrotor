@@ -11,9 +11,15 @@
         <bodyName>base_link</bodyName>
         <frameId>$(arg base_link_frame)</frameId>
         <controlRate>100.0</controlRate>
-        <!-- <controlTolerance>0.01</controlTolerance> -->
+        <controlTolerance>0.01</controlTolerance>
         <controlDelay>0.01</controlDelay>
-        <motorStatusRate>100.0</motorStatusRate>
+        <motorStatusRate>0.0</motorStatusRate>
+        <triggerTopic></triggerTopic>
+        <topicName></topicName>
+        <pwmTopicName></pwmTopicName>
+        <supplyTopic></supplyTopic>
+        <wrenchTopic></wrenchTopic>
+        <statusTopic></statusTopic>
       </plugin>
     </gazebo>
   </xacro:macro>

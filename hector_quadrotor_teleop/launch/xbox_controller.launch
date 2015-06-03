@@ -2,7 +2,6 @@
 
 <launch>
   <arg name="joy_dev" default="/dev/input/js0" />
-  <arg name="robot_name" default=""/>
   <arg name="control_mode" default="position"/>
 
   <node name="joy" pkg="joy" type="joy_node" output="screen" >
@@ -16,7 +15,6 @@
   <!-- Axis 2 from joy message thus has to be set as '3' or '-3'(inverted mode) below-->
   <node name="teleop" pkg="hector_quadrotor_teleop" type="quadrotor_teleop" output="screen">
     <rosparam subst_value="true">
-      robot_namespace: $(arg robot_name)
       control_mode: $(arg control_mode)
       x_axis: 5
       y_axis: 4
