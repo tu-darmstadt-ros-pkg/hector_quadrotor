@@ -78,7 +78,7 @@ public:
   {
     pid_.x.reset();
     pid_.y.reset();
-    pid_.x.reset();
+    pid_.z.reset();
     pid_.yaw.reset();
   }
 
