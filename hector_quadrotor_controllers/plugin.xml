@@ -1,0 +1,22 @@
+<class_libraries>
+  <library path="lib/libhector_quadrotor_controllers">
+    <class name="hector_quadrotor_controllers/AttitudeController" type="hector_quadrotor_controllers::AttitudeController"
+           base_class_type="controller_interface::ControllerBase">
+      <description>
+        TODO
+      </description>
+    </class>
+    <class name="hector_quadrotor_controllers/VelocityController" type="hector_quadrotor_controllers::VelocityController"
+           base_class_type="controller_interface::ControllerBase">
+      <description>
+        TODO
+      </description>
+    </class>
+    <class name="hector_quadrotor_controllers/PositionController" type="hector_quadrotor_controllers::PositionController"
+           base_class_type="controller_interface::ControllerBase">
+      <description>
+        TODO
+      </description>
+    </class>
+  </library>
+</class_libraries>

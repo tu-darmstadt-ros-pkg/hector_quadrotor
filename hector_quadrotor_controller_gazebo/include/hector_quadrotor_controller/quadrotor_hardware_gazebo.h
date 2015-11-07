@@ -29,80 +29,81 @@
 #ifndef HECTOR_QUADROTOR_CONTROLLER_QUADROTOR_HARDWARE_GAZEBO_H
 #define HECTOR_QUADROTOR_CONTROLLER_QUADROTOR_HARDWARE_GAZEBO_H
 
+#include <ros/node_handle.h>
 #include <gazebo_ros_control/robot_hw_sim.h>
-#include <hector_quadrotor_controller/quadrotor_interface.h>
+
+#include <hector_quadrotor_interface/quadrotor_interface.h>
+#include <hector_quadrotor_interface/helpers.h>
+#include <hector_quadrotor_interface/limiters.h>
 
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/Imu.h>
 #include <hector_uav_msgs/MotorStatus.h>
+#include "hector_uav_msgs/EnableMotors.h"
 
-#include <ros/node_handle.h>
-#include <ros/callback_queue.h>
-
-namespace hector_quadrotor_controller_gazebo {
-
-using namespace hector_quadrotor_controller;
-using namespace hardware_interface;
-using namespace gazebo_ros_control;
-
-class QuadrotorHardwareSim : public RobotHWSim, public QuadrotorInterface
+namespace hector_quadrotor_controller_gazebo
 {
-public:
-  QuadrotorHardwareSim();
-  virtual ~QuadrotorHardwareSim();
 
-  virtual const ros::Time &getTimestamp() { return header_.stamp; }
+  // TODO remove
+  using namespace hector_quadrotor_interface;
+  using namespace hardware_interface;
+  using namespace gazebo_ros_control;
 
-  virtual PoseHandlePtr getPose()                 { return PoseHandlePtr(new PoseHandle(this, &pose_)); }
-  virtual TwistHandlePtr getTwist()               { return TwistHandlePtr(new TwistHandle(this, &twist_)); }
-  virtual AccelerationHandlePtr getAcceleration() { return AccelerationHandlePtr(new AccelerationHandle(this, &acceleration_)); }
-  virtual ImuHandlePtr getSensorImu()             { return ImuHandlePtr(new ImuHandle(this, &imu_)); }
-  virtual MotorStatusHandlePtr getMotorStatus()   { return MotorStatusHandlePtr(new MotorStatusHandle(this, &motor_status_)); }
+  class QuadrotorHardwareSim : public RobotHWSim
+  {
+  public:
+    QuadrotorHardwareSim();
 
-  virtual bool getMassAndInertia(double &mass, double inertia[3]);
+    virtual ~QuadrotorHardwareSim();
 
-  virtual bool initSim(
-      const std::string& robot_namespace,
-      ros::NodeHandle model_nh,
-      gazebo::physics::ModelPtr parent_model,
-      const urdf::Model *const urdf_model,
-      std::vector<transmission_interface::TransmissionInfo> transmissions);
+    virtual bool initSim(
+        const std::string &robot_namespace,
+        ros::NodeHandle model_nh,
+        gazebo::physics::ModelPtr parent_model,
+        const urdf::Model *const urdf_model,
+        std::vector<transmission_interface::TransmissionInfo> transmissions);
 
-  virtual void readSim(ros::Time time, ros::Duration period);
+    virtual void readSim(ros::Time time, ros::Duration period);
 
-  virtual void writeSim(ros::Time time, ros::Duration period);
+    virtual void writeSim(ros::Time time, ros::Duration period);
 
-private:
-  void stateCallback(const nav_msgs::OdometryConstPtr &state);
-  void imuCallback(const sensor_msgs::ImuConstPtr &imu);
-  void motorStatusCallback(const hector_uav_msgs::MotorStatusConstPtr &motor_status);
+    bool enableMotorsCb(hector_uav_msgs::EnableMotors::Request &req, hector_uav_msgs::EnableMotors::Response &res);
 
-protected:
-  std_msgs::Header header_;
-  Pose pose_;
-  Twist twist_;
-  Vector3 acceleration_;
-  Imu imu_;
-  MotorStatus motor_status_;
-  std::string base_link_frame_, world_frame_;
+  private:
 
-  WrenchCommandHandlePtr wrench_output_;
-  MotorCommandHandlePtr motor_output_;
+    bool enableMotors(bool enable);
 
-  gazebo::physics::ModelPtr model_;
-  gazebo::physics::LinkPtr link_;
-  gazebo::physics::PhysicsEnginePtr physics_;
+    double mass_;
+    double inertia_[3];
 
-  gazebo::math::Pose gz_pose_;
-  gazebo::math::Vector3 gz_velocity_, gz_acceleration_, gz_angular_velocity_;
+    std_msgs::Header header_;
+    geometry_msgs::Pose pose_;
+    geometry_msgs::Twist twist_;
+    geometry_msgs::Accel acceleration_;
+    sensor_msgs::Imu imu_;
+    hector_uav_msgs::MotorStatus motor_status_;
 
-  ros::CallbackQueue callback_queue_;
-  ros::Subscriber subscriber_state_;
-  ros::Subscriber subscriber_imu_;
-  ros::Subscriber subscriber_motor_status_;
-  ros::Publisher publisher_wrench_command_;
-  ros::Publisher publisher_motor_command_;
-};
+    QuadrotorInterface interface_;
+
+    AccelCommandHandlePtr accel_input_;
+
+    boost::shared_ptr<hector_quadrotor_interface::WrenchLimiter> wrench_limiter_;
+    std::string base_link_frame_, world_frame_;
+
+    gazebo::physics::ModelPtr model_;
+    gazebo::physics::LinkPtr link_;
+    gazebo::physics::PhysicsEnginePtr physics_;
+
+    gazebo::math::Pose gz_pose_;
+    gazebo::math::Vector3 gz_velocity_, gz_acceleration_, gz_angular_velocity_, gz_angular_acceleration_;
+
+    boost::shared_ptr<hector_quadrotor_interface::ImuSubscriberHelper> imu_sub_helper_;
+    boost::shared_ptr<hector_quadrotor_interface::OdomSubscriberHelper> odom_sub_helper_;
+
+    ros::Publisher wrench_pub_, motor_status_pub_;
+    ros::ServiceServer motor_status_srv_;
+
+  };
 
 } // namespace hector_quadrotor_controller_gazebo
 

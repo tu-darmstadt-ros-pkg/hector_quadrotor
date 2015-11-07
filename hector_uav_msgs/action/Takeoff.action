@@ -1,0 +1,4 @@
+# Takeoff action, no input required
+---
+---
+geometry_msgs/PoseStamped current_pose
