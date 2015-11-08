@@ -206,16 +206,16 @@ namespace hector_quadrotor_interface
 
   };
 
-  class StateSubsriberHelper
+  class StateSubscriberHelper
   {
   public:
-    StateSubsriberHelper(ros::NodeHandle nh, std::string topic, geometry_msgs::Pose &pose,
+    StateSubscriberHelper(ros::NodeHandle nh, std::string topic, geometry_msgs::Pose &pose,
                          geometry_msgs::Twist &twist, geometry_msgs::Accel &accel, std_msgs::Header &header)
         : pose_(pose), twist_(twist), accel_(accel), header_(header)
     {
       available_ = false;
       tf_sub_ = nh.subscribe<geometry_msgs::TransformStamped>(topic, 1,
-                                                              boost::bind(&StateSubsriberHelper::tfCb,
+                                                              boost::bind(&StateSubscriberHelper::tfCb,
                                                                           this, _1));
     }
 

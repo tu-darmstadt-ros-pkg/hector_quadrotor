@@ -39,9 +39,7 @@
 namespace hector_quadrotor_interface
 {
 
-  using namespace hardware_interface;
-
-  class QuadrotorInterface : public HardwareInterface
+  class QuadrotorInterface : public hardware_interface::HardwareInterface
   {
   public:
     QuadrotorInterface();

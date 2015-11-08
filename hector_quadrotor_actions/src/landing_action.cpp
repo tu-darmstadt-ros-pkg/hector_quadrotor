@@ -66,7 +66,7 @@ namespace hector_quadrotor_actions
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "takeoff_action");
+  ros::init(argc, argv, "landing_action");
 
   ros::NodeHandle nh;
   hector_quadrotor_actions::LandingActionServer server(nh);

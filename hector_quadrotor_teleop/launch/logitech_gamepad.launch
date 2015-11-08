@@ -19,8 +19,10 @@
       thrust_axis: 2
       yaw_axis: 1
 
-      slow_button: 4
-      go_button: 6
+      slow_button: 6
+      go_button: 4
       stop_button: 2
     </rosparam>
+
+  </node>
 </launch>

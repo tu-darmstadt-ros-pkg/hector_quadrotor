@@ -80,7 +80,7 @@ namespace hector_quadrotor_interface
       tf2::Vector3 v_target(pose_target.position.x, pose_target.position.y, pose_target.position.z);
       if ((v_current - v_target).length() > dist_tolerance)
       {
-        ROS_DEBUG_STREAM("Waiting for yaw " << (v_current - v_target).length());
+        ROS_DEBUG_STREAM("Waiting for distance " << (v_current - v_target).length());
         return false;
       }
     }

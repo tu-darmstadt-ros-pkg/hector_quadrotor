@@ -39,17 +39,14 @@
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/Imu.h>
 #include <hector_uav_msgs/MotorStatus.h>
-#include "hector_uav_msgs/EnableMotors.h"
+#include <hector_uav_msgs/EnableMotors.h>
 
 namespace hector_quadrotor_controller_gazebo
 {
 
-  // TODO remove
   using namespace hector_quadrotor_interface;
-  using namespace hardware_interface;
-  using namespace gazebo_ros_control;
 
-  class QuadrotorHardwareSim : public RobotHWSim
+  class QuadrotorHardwareSim : public gazebo_ros_control::RobotHWSim
   {
   public:
     QuadrotorHardwareSim();
