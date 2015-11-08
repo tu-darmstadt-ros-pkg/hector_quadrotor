@@ -22,11 +22,12 @@
   <arg name="base_link_frame" default="$(arg tf_prefix)/base_link"/>
 
   <!-- send the robot XML to param server -->
-  <param name="robot_description" command="$(find xacro)/xacro.py '$(arg model)' base_link_frame:=$(arg tf_prefix)/base_link" />
-  <param name="base_link_frame" type="string" value="$(arg tf_prefix)/base_link"/>
-  <param name="base_stabilized_frame" type="string" value="$(arg tf_prefix)/base_stabilized"/>
-  <param name="base_footprint_frame" type="string" value="$(arg tf_prefix)/base_footprint"/>
-  <param name="world_frame" type="string" value="world"/>
+  <param name="robot_description" command="$(find xacro)/xacro '$(arg model)' base_link_frame:=$(arg base_link_frame) world_frame:=$(arg world_frame)" />
+  <param name="tf_prefix" type="string" value="$(arg tf_prefix)"/> <!-- required for hector_pose_estimation and message_to_tf -->
+  <param name="base_link_frame" type="string" value="$(arg base_link_frame)" />
+  <param name="base_stabilized_frame" type="string" value="$(arg tf_prefix)/base_stabilized" />
+  <param name="base_footprint_frame" type="string" value="$(arg tf_prefix)/base_footprint" />
+  <param name="world_frame" type="string" value="$(arg world_frame)" />
 
   <!-- start robot state publisher -->
   <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen" >
