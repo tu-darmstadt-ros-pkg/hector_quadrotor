@@ -2,7 +2,7 @@
 
 <launch>
   <arg name="joy_dev" default="/dev/input/js0" />
-  <arg name="control_mode" default="position"/>
+  <arg name="control_mode" default="velocity"/>
 
   <node name="joy" pkg="joy" type="joy_node" output="screen" >
     <param name="dev" value="$(arg joy_dev)" />
