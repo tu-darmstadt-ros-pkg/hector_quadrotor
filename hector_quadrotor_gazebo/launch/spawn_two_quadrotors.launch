@@ -3,9 +3,6 @@
 <launch>
    <arg name="model" default="$(find hector_quadrotor_description)/urdf/quadrotor.gazebo.xacro" />
 
-   <!-- workaround https://github.com/ros-simulation/gazebo_ros_pkgs/pull/134 -->
-   <!-- <param name="robot_description" command="$(find xacro)/xacro.py '$(arg model)'" /> -->
-
    <group ns="uav1">
      <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor.launch">
        <arg name="name" value="uav1" />
