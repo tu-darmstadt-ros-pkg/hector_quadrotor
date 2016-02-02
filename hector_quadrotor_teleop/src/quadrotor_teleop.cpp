@@ -171,7 +171,7 @@ public:
   {
     if (button <= 0)
     {return 0;}
-    if ((size_t) button > joy->axes.size())
+    if ((size_t) button > joy->buttons.size())
     {return 0;}
     return joy->buttons[button - 1];
   }
