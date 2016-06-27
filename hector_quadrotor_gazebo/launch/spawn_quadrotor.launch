@@ -49,7 +49,7 @@
   <group if="$(arg use_pose_estimation)">
     <node name="pose_estimation" pkg="hector_quadrotor_pose_estimation" type="hector_quadrotor_pose_estimation" output="screen">
       <rosparam file="$(find hector_quadrotor_pose_estimation)/params/simulation.yaml" />
-      <param name="nav_frame" value="/$(arg tf_prefix)/nav" />
+      <param name="nav_frame" value="$(arg tf_prefix)/nav" />
       <param name="publish_world_nav_transform" value="true" />
       <param name="tf_prefix" value="$(arg tf_prefix)" unless="$(arg use_ground_truth_for_tf)" />
       <param name="tf_prefix" value="$(arg tf_prefix)/pose_estimation" if="$(arg use_ground_truth_for_tf)" />
