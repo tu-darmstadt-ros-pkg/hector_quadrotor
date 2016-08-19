@@ -14,7 +14,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 # Find Eigen3 headers
 # see http://wiki.ros.org/jade/Migration#Eigen_CMake_Module_in_cmake_modules
 # and https://github.com/ros/cmake_modules/issues/35
-find_package(Eigen3 REQUIRED)
+find_package(Eigen3)
 if(NOT EIGEN3_FOUND)
   # Fallback to cmake_modules
   find_package(cmake_modules REQUIRED)

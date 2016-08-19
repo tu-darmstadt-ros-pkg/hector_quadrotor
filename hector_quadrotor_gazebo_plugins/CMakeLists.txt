@@ -9,6 +9,7 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 
 # Depend on system install of Gazebo
 find_package(gazebo REQUIRED)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
 link_directories(${GAZEBO_LIBRARY_DIRS})
 include_directories(${GAZEBO_INCLUDE_DIRS})
 
