@@ -44,63 +44,63 @@
 namespace hector_quadrotor_controller_gazebo
 {
 
-  using namespace hector_quadrotor_interface;
+using namespace hector_quadrotor_interface;
 
-  class QuadrotorHardwareSim : public gazebo_ros_control::RobotHWSim
-  {
-  public:
-    QuadrotorHardwareSim();
+class QuadrotorHardwareSim : public gazebo_ros_control::RobotHWSim
+{
+public:
+  QuadrotorHardwareSim();
 
-    virtual ~QuadrotorHardwareSim();
+  virtual ~QuadrotorHardwareSim();
 
-    virtual bool initSim(
-        const std::string &robot_namespace,
-        ros::NodeHandle model_nh,
-        gazebo::physics::ModelPtr parent_model,
-        const urdf::Model *const urdf_model,
-        std::vector<transmission_interface::TransmissionInfo> transmissions);
+  virtual bool initSim(
+      const std::string &robot_namespace,
+      ros::NodeHandle model_nh,
+      gazebo::physics::ModelPtr parent_model,
+      const urdf::Model *const urdf_model,
+      std::vector<transmission_interface::TransmissionInfo> transmissions);
 
-    virtual void readSim(ros::Time time, ros::Duration period);
+  virtual void readSim(ros::Time time, ros::Duration period);
 
-    virtual void writeSim(ros::Time time, ros::Duration period);
+  virtual void writeSim(ros::Time time, ros::Duration period);
 
-    bool enableMotorsCb(hector_uav_msgs::EnableMotors::Request &req, hector_uav_msgs::EnableMotors::Response &res);
+  bool enableMotorsCb(hector_uav_msgs::EnableMotors::Request &req, hector_uav_msgs::EnableMotors::Response &res);
 
-  private:
+private:
 
-    bool enableMotors(bool enable);
+  bool enableMotors(bool enable);
 
-    double mass_;
-    double inertia_[3];
+  double mass_;
+  double inertia_[3];
 
-    std_msgs::Header header_;
-    geometry_msgs::Pose pose_;
-    geometry_msgs::Twist twist_;
-    geometry_msgs::Accel acceleration_;
-    sensor_msgs::Imu imu_;
-    hector_uav_msgs::MotorStatus motor_status_;
+  std_msgs::Header header_;
+  geometry_msgs::Pose pose_;
+  geometry_msgs::Twist twist_;
+  geometry_msgs::Accel acceleration_;
+  sensor_msgs::Imu imu_;
+  hector_uav_msgs::MotorStatus motor_status_;
 
-    QuadrotorInterface interface_;
+  QuadrotorInterface interface_;
 
-    AccelCommandHandlePtr accel_input_;
+  AccelCommandHandlePtr accel_input_;
 
-    boost::shared_ptr<hector_quadrotor_interface::WrenchLimiter> wrench_limiter_;
-    std::string base_link_frame_, world_frame_;
+  boost::shared_ptr<hector_quadrotor_interface::WrenchLimiter> wrench_limiter_;
+  std::string base_link_frame_, world_frame_;
 
-    gazebo::physics::ModelPtr model_;
-    gazebo::physics::LinkPtr link_;
-    gazebo::physics::PhysicsEnginePtr physics_;
+  gazebo::physics::ModelPtr model_;
+  gazebo::physics::LinkPtr link_;
+  gazebo::physics::PhysicsEnginePtr physics_;
 
-    gazebo::math::Pose gz_pose_;
-    gazebo::math::Vector3 gz_velocity_, gz_acceleration_, gz_angular_velocity_, gz_angular_acceleration_;
+  gazebo::math::Pose gz_pose_;
+  gazebo::math::Vector3 gz_velocity_, gz_acceleration_, gz_angular_velocity_, gz_angular_acceleration_;
 
-    boost::shared_ptr<hector_quadrotor_interface::ImuSubscriberHelper> imu_sub_helper_;
-    boost::shared_ptr<hector_quadrotor_interface::OdomSubscriberHelper> odom_sub_helper_;
+  boost::shared_ptr<hector_quadrotor_interface::ImuSubscriberHelper> imu_sub_helper_;
+  boost::shared_ptr<hector_quadrotor_interface::OdomSubscriberHelper> odom_sub_helper_;
 
-    ros::Publisher wrench_pub_, motor_status_pub_;
-    ros::ServiceServer motor_status_srv_;
+  ros::Publisher wrench_pub_, motor_status_pub_;
+  ros::ServiceServer motor_status_srv_;
 
-  };
+};
 
 } // namespace hector_quadrotor_controller_gazebo
 

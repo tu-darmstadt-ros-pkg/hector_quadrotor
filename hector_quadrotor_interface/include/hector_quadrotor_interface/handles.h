@@ -548,6 +548,6 @@ public:
 };
 typedef boost::shared_ptr<ThrustCommandHandle> ThrustCommandHandlePtr;
 
-} // namespace hector_quadrotor_controller
+} // namespace hector_quadrotor_interface
 
 #endif // HECTOR_QUADROTOR_INTERFACE_HANDLES_H

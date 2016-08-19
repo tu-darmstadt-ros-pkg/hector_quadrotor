@@ -39,159 +39,159 @@
 namespace hector_quadrotor_interface
 {
 
-  class QuadrotorInterface : public hardware_interface::HardwareInterface
+class QuadrotorInterface : public hardware_interface::HardwareInterface
+{
+public:
+  QuadrotorInterface();
+
+  virtual ~QuadrotorInterface();
+
+  // TODO template
+  void registerPose(geometry_msgs::Pose *pose){
+    pose_ = PoseHandlePtr(new PoseHandle(this, pose));
+  }
+
+  void registerTwist(geometry_msgs::Twist *twist){
+    twist_ = TwistHandlePtr(new TwistHandle(this, twist));
+  }
+
+  void registerAccel(geometry_msgs::Accel *accel){
+    accel_ = AccelerationHandlePtr(new AccelerationHandle(this, accel));
+  }
+  void registerSensorImu(sensor_msgs::Imu *imu){
+    imu_ = ImuHandlePtr(new ImuHandle(this, imu));
+  }
+
+  void registerMotorStatus(hector_uav_msgs::MotorStatus *motor_status){
+    motor_status_ = MotorStatusHandlePtr(new MotorStatusHandle(this, motor_status));
+  }
+
+  PoseHandlePtr getPose()
   {
-  public:
-    QuadrotorInterface();
+    return pose_;
+  }
 
-    virtual ~QuadrotorInterface();
+  TwistHandlePtr getTwist()
+  {
+    return twist_;
+  }
 
-    // TODO template
-    void registerPose(geometry_msgs::Pose *pose){
-      pose_ = PoseHandlePtr(new PoseHandle(this, pose));
-    }
+  AccelerationHandlePtr getAccel()
+  {
+    return accel_;
+  }
 
-    void registerTwist(geometry_msgs::Twist *twist){
-      twist_ = TwistHandlePtr(new TwistHandle(this, twist));
-    }
+  ImuHandlePtr getSensorImu()
+  {
+    return imu_;
+  }
 
-    void registerAccel(geometry_msgs::Accel *accel){
-      accel_ = AccelerationHandlePtr(new AccelerationHandle(this, accel));
-    }
-    void registerSensorImu(sensor_msgs::Imu *imu){
-      imu_ = ImuHandlePtr(new ImuHandle(this, imu));
-    }
+  MotorStatusHandlePtr getMotorStatus()
+  {
+    return motor_status_;
+  }
 
-    void registerMotorStatus(hector_uav_msgs::MotorStatus *motor_status){
-      motor_status_ = MotorStatusHandlePtr(new MotorStatusHandle(this, motor_status));
-    }
+  PoseHandlePtr pose_;
+  TwistHandlePtr twist_;
+  AccelerationHandlePtr accel_;
+  ImuHandlePtr imu_;
+  MotorStatusHandlePtr motor_status_;
 
-    PoseHandlePtr getPose()
+  template<typename HandleType>
+  boost::shared_ptr<HandleType> getHandle()
+  {
+    return boost::shared_ptr<HandleType>(new HandleType(this));
+  }
+
+  template<typename HandleType>
+  boost::shared_ptr<HandleType> addInput(const std::string &name)
+  {
+    boost::shared_ptr<HandleType> input = getInput<HandleType>(name);
+    if (input)
+    { return input; }
+
+    // create new input handle
+    input.reset(new HandleType(this, name));
+    inputs_[name] = input;
+
+    // connect to output of same name
+    if (outputs_.count(name))
     {
-      return pose_;
+      boost::shared_ptr<HandleType> output = boost::dynamic_pointer_cast<HandleType>(outputs_.at(name));
+      output->connectTo(*input);
     }
 
-    TwistHandlePtr getTwist()
+    return input;
+  }
+
+  template<typename HandleType>
+  boost::shared_ptr<HandleType> addOutput(const std::string &name)
+  {
+    boost::shared_ptr<HandleType> output = getOutput<HandleType>(name);
+    if (output)
+    { return output; }
+
+    // create new output handle
+    output.reset(new HandleType(this, name));
+    outputs_[name] = output;
+    *output = output->ownData(new typename HandleType::ValueType());
+
+    //claim resource
+    claim(name);
+
+    // connect to output of same name
+    if (inputs_.count(name))
     {
-      return twist_;
+      boost::shared_ptr<HandleType> input = boost::dynamic_pointer_cast<HandleType>(inputs_.at(name));
+      output->connectTo(*input);
     }
 
-    AccelerationHandlePtr getAccel()
-    {
-      return accel_;
-    }
+    return output;
+  }
 
-    ImuHandlePtr getSensorImu()
-    {
-      return imu_;
-    }
+  template<typename HandleType>
+  boost::shared_ptr<HandleType> getOutput(const std::string &name) const
+  {
+    if (!outputs_.count(name))
+    { return boost::shared_ptr<HandleType>(); }
+    return boost::static_pointer_cast<HandleType>(outputs_.at(name));
+  }
 
-    MotorStatusHandlePtr getMotorStatus()
-    {
-      return motor_status_;
-    }
+  template<typename HandleType>
+  boost::shared_ptr<HandleType> getInput(const std::string &name) const
+  {
+    if (!inputs_.count(name))
+    { return boost::shared_ptr<HandleType>(); }
+    return boost::static_pointer_cast<HandleType>(inputs_.at(name));
+  }
 
-    PoseHandlePtr pose_;
-    TwistHandlePtr twist_;
-    AccelerationHandlePtr accel_;
-    ImuHandlePtr imu_;
-    MotorStatusHandlePtr motor_status_;
+  template<typename HandleType>
+  typename HandleType::ValueType const *getCommand(const std::string &name) const
+  {
+    boost::shared_ptr<HandleType> output = getOutput<HandleType>(name);
+    if (!output || !output->connected())
+    { return 0; }
+    return &(output->command());
+  }
 
-    template<typename HandleType>
-    boost::shared_ptr<HandleType> getHandle()
-    {
-      return boost::shared_ptr<HandleType>(new HandleType(this));
-    }
+  const Pose *getPoseCommand() const;
+  const Twist *getTwistCommand() const;
+  const Wrench *getWrenchCommand() const;
+  const MotorCommand *getMotorCommand() const;
 
-    template<typename HandleType>
-    boost::shared_ptr<HandleType> addInput(const std::string &name)
-    {
-      boost::shared_ptr<HandleType> input = getInput<HandleType>(name);
-      if (input)
-      { return input; }
+  bool enabled(const CommandHandle *handle) const;
 
-      // create new input handle
-      input.reset(new HandleType(this, name));
-      inputs_[name] = input;
+  bool start(const CommandHandle *handle);
 
-      // connect to output of same name
-      if (outputs_.count(name))
-      {
-        boost::shared_ptr<HandleType> output = boost::dynamic_pointer_cast<HandleType>(outputs_.at(name));
-        output->connectTo(*input);
-      }
+  void stop(const CommandHandle *handle);
 
-      return input;
-    }
+  void disconnect(const CommandHandle *handle);
 
-    template<typename HandleType>
-    boost::shared_ptr<HandleType> addOutput(const std::string &name)
-    {
-      boost::shared_ptr<HandleType> output = getOutput<HandleType>(name);
-      if (output)
-      { return output; }
-
-      // create new output handle
-      output.reset(new HandleType(this, name));
-      outputs_[name] = output;
-      *output = output->ownData(new typename HandleType::ValueType());
-
-      //claim resource
-      claim(name);
-
-      // connect to output of same name
-      if (inputs_.count(name))
-      {
-        boost::shared_ptr<HandleType> input = boost::dynamic_pointer_cast<HandleType>(inputs_.at(name));
-        output->connectTo(*input);
-      }
-
-      return output;
-    }
-
-    template<typename HandleType>
-    boost::shared_ptr<HandleType> getOutput(const std::string &name) const
-    {
-      if (!outputs_.count(name))
-      { return boost::shared_ptr<HandleType>(); }
-      return boost::static_pointer_cast<HandleType>(outputs_.at(name));
-    }
-
-    template<typename HandleType>
-    boost::shared_ptr<HandleType> getInput(const std::string &name) const
-    {
-      if (!inputs_.count(name))
-      { return boost::shared_ptr<HandleType>(); }
-      return boost::static_pointer_cast<HandleType>(inputs_.at(name));
-    }
-
-    template<typename HandleType>
-    typename HandleType::ValueType const *getCommand(const std::string &name) const
-    {
-      boost::shared_ptr<HandleType> output = getOutput<HandleType>(name);
-      if (!output || !output->connected())
-      { return 0; }
-      return &(output->command());
-    }
-
-    const Pose *getPoseCommand() const;
-    const Twist *getTwistCommand() const;
-    const Wrench *getWrenchCommand() const;
-    const MotorCommand *getMotorCommand() const;
-
-    bool enabled(const CommandHandle *handle) const;
-
-    bool start(const CommandHandle *handle);
-
-    void stop(const CommandHandle *handle);
-
-    void disconnect(const CommandHandle *handle);
-
-  private:
-    std::map<std::string, CommandHandlePtr> inputs_;
-    std::map<std::string, CommandHandlePtr> outputs_;
-    std::map<std::string, const CommandHandle *> enabled_;
-  };
+private:
+  std::map<std::string, CommandHandlePtr> inputs_;
+  std::map<std::string, CommandHandlePtr> outputs_;
+  std::map<std::string, const CommandHandle *> enabled_;
+};
 
 } // namespace hector_quadrotor_interface
 
