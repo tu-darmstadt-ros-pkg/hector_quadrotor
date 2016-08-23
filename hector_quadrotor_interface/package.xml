@@ -10,6 +10,7 @@
   <url type="bugtracker">https://github.com/tu-darmstadt-ros-pkg/hector_quadrotor/issues</url>
 
   <author email="meyer@fsr.tu-darmstadt.de">Johannes Meyer</author>
+  <author email="pbovbel@clearpathrobotics.com">Paul Bovbel</author>
 
   <!-- Dependencies which this package needs to build itself. -->
   <buildtool_depend>catkin</buildtool_depend>

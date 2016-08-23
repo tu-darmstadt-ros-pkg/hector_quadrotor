@@ -1,16 +1,20 @@
-<package>build_depend
+<package>
   <name>hector_quadrotor_controllers</name>
   <version>0.0.0</version>
-  <description>TODO</description>
+  <description>hector_quadrotor_controllers provides controller plugins for quadrotor control using <a href="http://wiki.ros.org/ros_control">ros_control</a>.</description>
+  <maintainer email="meyer@fsr.tu-darmstadt.de">Johannes Meyer</maintainer>
 
   <license>BSD</license>
 
+  <url type="website">http://ros.org/wiki/hector_quadrotor_controller</url>
+  <url type="bugtracker">https://github.com/tu-darmstadt-ros-pkg/hector_quadrotor/issues</url>
+
+  <author email="meyer@fsr.tu-darmstadt.de">Johannes Meyer</author>
   <author email="pbovbel@clearpathrobotics.com">Paul Bovbel</author>
-  <maintainer email="pbovbel@clearpathrobotics.com">Paul Bovbel</maintainer>
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <build_depend>control_toolbox</build_depend>
+  <build_depend version_gte="1.14.0">control_toolbox</build_depend>
   <build_depend>controller_interface</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>hardware_interface</build_depend>
@@ -22,7 +26,7 @@
   <build_depend>topic_tools</build_depend>
   <build_depend>visualization_msgs</build_depend>
 
-  <run_depend>control_toolbox</run_depend>
+  <run_depend version_gte="1.14.0">control_toolbox</run_depend>
   <run_depend>controller_interface</run_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>hardware_interface</run_depend>
