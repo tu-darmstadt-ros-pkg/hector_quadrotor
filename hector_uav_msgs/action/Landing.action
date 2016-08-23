@@ -1,0 +1,7 @@
+# Landing pose, pose.z is ignored.
+# If no stamp is provided, landing_zone is assumed to be empty and
+# robot will land directly below
+geometry_msgs/PoseStamped landing_zone
+---
+---
+geometry_msgs/PoseStamped current_pose

@@ -12,22 +12,25 @@
 
   <author email="meyer@fsr.tu-darmstadt.de">Johannes Meyer</author>
 
-  <!-- Dependencies which this package needs to build itself. -->
   <buildtool_depend>catkin</buildtool_depend>
 
-  <!-- Dependencies needed to compile this package. -->
+  <build_depend>actionlib</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>hector_quadrotor_interface</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>hector_uav_msgs</build_depend>
+  <build_depend>tf2_geometry_msgs</build_depend>
 
-  <!-- Dependencies needed after this package is compiled. -->
-  <run_depend>roscpp</run_depend>
-  <run_depend>sensor_msgs</run_depend>
+  <run_depend>actionlib</run_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>hector_uav_msgs</run_depend>
+  <run_depend>hector_quadrotor_interface</run_depend>
   <run_depend>joy</run_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>tf2_geometry_msgs</run_depend>
 
-  <!-- Dependencies needed only for running tests. -->
 
 </package>

@@ -19,7 +19,7 @@
 
 
   <!-- Dependencies needed after this package is compiled. -->
-  <run_depend>hector_quadrotor_controller</run_depend>
+  <run_depend>hector_quadrotor_controllers</run_depend>
   <run_depend>hector_quadrotor_description</run_depend>
   <run_depend>hector_quadrotor_model</run_depend>
   <run_depend>hector_quadrotor_teleop</run_depend>
