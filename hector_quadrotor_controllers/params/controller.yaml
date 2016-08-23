@@ -1,0 +1,49 @@
+position:
+    type: hector_quadrotor_controllers/PositionController
+    x: &pos_xy
+        p: 2.0
+        i: 0.0
+        d: 0.0
+    y: *pos_xy
+    z:
+        p: 2.0
+        i: 0.0
+        d: 0.0
+    yaw:
+        p: 2.0
+        i: 0.0
+        d: 0.0
+velocity:
+    type: hector_quadrotor_controllers/VelocityController
+    x: &vel_xy # velocity error -> acceleration
+        max: 5.0
+        p: 2.0
+        i: 1.0
+        d: 0.0
+        antiwindup: true
+        i_clamp: 5.0
+        publish_state: true
+    y: *vel_xy
+    z: # velocity error -> thrust
+        max: 5.0
+        p: 5.0
+        i: 1.0
+        d: 0.0
+        antiwindup: true
+        i_clamp: 5.0
+        publish_state: true
+attitude:
+    type: hector_quadrotor_controllers/AttitudeController
+    roll: &rollpitch # angle error in radians => torque
+        max: 0.5
+        p: 100.0
+        i: 0.0
+        d: 20.0
+        publish_state: true
+    pitch: *rollpitch
+    yawrate: # angle errors => torque
+        max: 3.14
+        p: 5.0
+        i: 0.0
+        d: 0.5
+        publish_state: true

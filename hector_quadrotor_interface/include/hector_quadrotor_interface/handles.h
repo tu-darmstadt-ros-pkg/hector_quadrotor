@@ -1,5 +1,6 @@
 //=================================================================================================
-// Copyright (c) 2013, Johannes Meyer, TU Darmstadt
+// Copyright (c) 2012-2016, Institute of Flight Systems and Automatic Control,
+// Technische Universität Darmstadt.
 // All rights reserved.
 
 // Redistribution and use in source and binary forms, with or without
@@ -9,10 +10,9 @@
 //     * Redistributions in binary form must reproduce the above copyright
 //       notice, this list of conditions and the following disclaimer in the
 //       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the Flight Systems and Automatic Control group,
-//       TU Darmstadt, nor the names of its contributors may be used to
-//       endorse or promote products derived from this software without
-//       specific prior written permission.
+//     * Neither the name of hector_quadrotor nor the names of its contributors
+//       may be used to endorse or promote products derived from this software
+//       without specific prior written permission.
 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -26,11 +26,12 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 
-#ifndef HECTOR_QUADROTOR_CONTROLLER_HANDLES_H
-#define HECTOR_QUADROTOR_CONTROLLER_HANDLES_H
+#ifndef HECTOR_QUADROTOR_INTERFACE_HANDLES_H
+#define HECTOR_QUADROTOR_INTERFACE_HANDLES_H
 
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Twist.h>
+#include <geometry_msgs/Accel.h>
 #include <geometry_msgs/Wrench.h>
 #include <sensor_msgs/Imu.h>
 #include <hector_uav_msgs/MotorStatus.h>
@@ -39,13 +40,14 @@
 #include <hector_uav_msgs/YawrateCommand.h>
 #include <hector_uav_msgs/ThrustCommand.h>
 
-namespace hector_quadrotor_controller {
+namespace hector_quadrotor_interface {
 
 class QuadrotorInterface;
 
 using geometry_msgs::Pose;
 using geometry_msgs::Point;
 using geometry_msgs::Quaternion;
+using geometry_msgs::Accel;
 using geometry_msgs::Twist;
 using geometry_msgs::Vector3;
 using geometry_msgs::Wrench;
@@ -118,12 +120,14 @@ public:
 };
 typedef boost::shared_ptr<TwistHandle> TwistHandlePtr;
 
-class AccelerationHandle : public Handle_<AccelerationHandle, Vector3>
+class AccelerationHandle : public Handle_<AccelerationHandle, Accel>
 {
 public:
   using Base::operator=;
 
-  AccelerationHandle(QuadrotorInterface *interface, const Vector3 *acceleration) : Base(interface, acceleration, "acceleration") {}
+  AccelerationHandle() : Base("acceleration") {}
+  AccelerationHandle(QuadrotorInterface *interface) : Base(interface, "acceleration") {}
+  AccelerationHandle(QuadrotorInterface *interface, const Accel *acceleration) : Base(interface, acceleration, "acceleration") {}
   virtual ~AccelerationHandle() {}
 
   const ValueType& acceleration() const { return *get(); }
@@ -139,7 +143,7 @@ public:
 
   virtual bool connected() const { return PoseHandle::connected() && TwistHandle::connected(); }
 };
-typedef boost::shared_ptr<PoseHandle> PoseHandlePtr;
+typedef boost::shared_ptr<StateHandle> StateHandlePtr;
 
 class ImuHandle : public Handle_<ImuHandle, Imu>
 {
@@ -170,8 +174,8 @@ typedef boost::shared_ptr<MotorStatusHandle> MotorStatusHandlePtr;
 class CommandHandle
 {
 public:
-  CommandHandle() : interface_(0), new_value_(false) {}
-  CommandHandle(QuadrotorInterface *interface, const std::string& name, const std::string& field) : interface_(interface), name_(name), field_(field), new_value_(false) {}
+  CommandHandle() : interface_(0), preempted_(false), new_value_(false) {}
+  CommandHandle(QuadrotorInterface *interface, const std::string& name, const std::string& field) : interface_(interface), name_(name), field_(field), preempted_(false), new_value_(false) {}
   virtual ~CommandHandle() {}
 
   virtual const std::string& getName() const { return name_; }
@@ -185,6 +189,10 @@ public:
   bool start();
   void stop();
   void disconnect();
+
+  bool preempt();
+  void setPreempted();
+  bool preempted();
 
   template <typename T> T* ownData(T* data) { my_.reset(data); return data; }
 
@@ -207,6 +215,8 @@ private:
   const std::string name_;
   const std::string field_;
   boost::shared_ptr<void> my_;
+
+  bool preempted_;
 
 protected:
   mutable bool new_value_;
@@ -243,7 +253,7 @@ public:
   ValueType& command() { return *get(); }
   const ValueType& getCommand() const { this->new_value_ = false; return *get(); }
   void setCommand(const ValueType& command) { this->new_value_ = true; *get() = command; }
-  bool getCommand(ValueType& command) const { command = *get(); return this->wasNew(); }
+  bool getCommand(ValueType& command) const { command = *getCommand(); return this->wasNew(); }
 
   bool update(ValueType& command) const {
     if (!connected()) return false;
@@ -383,6 +393,19 @@ public:
   virtual ~TwistCommandHandle() {}
 };
 typedef boost::shared_ptr<TwistCommandHandle> TwistCommandHandlePtr;
+
+class AccelCommandHandle : public CommandHandle_<AccelCommandHandle, Accel>
+{
+public:
+
+  using Base::operator=;
+
+  AccelCommandHandle() {}
+  AccelCommandHandle(QuadrotorInterface *interface, const std::string& name, const std::string& field = std::string()) : Base(interface, name, field) {}
+  AccelCommandHandle(Accel* command) { *this = command; }
+  virtual ~AccelCommandHandle() {}
+};
+typedef boost::shared_ptr<AccelCommandHandle> AccelCommandHandlePtr;
 
 class HorizontalVelocityCommandHandle : public CommandHandle_<HorizontalVelocityCommandHandle, Vector3, TwistCommandHandle>
 {
@@ -531,6 +554,6 @@ public:
 };
 typedef boost::shared_ptr<ThrustCommandHandle> ThrustCommandHandlePtr;
 
-} // namespace hector_quadrotor_controller
+} // namespace hector_quadrotor_interface
 
-#endif // HECTOR_QUADROTOR_CONTROLLER_HANDLES_H
+#endif // HECTOR_QUADROTOR_INTERFACE_HANDLES_H
