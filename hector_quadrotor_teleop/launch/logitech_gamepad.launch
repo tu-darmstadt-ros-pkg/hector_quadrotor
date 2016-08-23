@@ -6,6 +6,8 @@
 
   <node name="joy" pkg="joy" type="joy_node" output="screen" >
     <param name="dev" value="$(arg joy_dev)" />
+    <param name="autorepeat_rate" value="10" />
+    <param name="coalesce_interval" value="0.01" />
   </node>
 
   <!-- Note that axis IDs are those from the joystick message plus one, to be able to invert axes by specifiying either positive or negative axis numbers.-->

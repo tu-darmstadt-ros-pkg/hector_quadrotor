@@ -66,27 +66,22 @@ private:
 
   struct Axis
   {
-    int axis;
-    double max_;
-    double min_;
-    bool first_;
-
     Axis()
-    {
-      //Prevent publishing until first non-zero received
-      first_ = false;
-    }
+      : axis(0), factor(0.0), offset(0.0)
+    {}
 
-    void setLimits(double min, double max)
-    {
-      min_ = min;
-      max_ = max;
-    }
+    int axis;
+    double factor;
+    double offset;
   };
 
   struct Button
   {
-    int button_;
+    Button()
+      : button(0)
+    {}
+
+    int button;
   };
 
   struct
@@ -108,7 +103,6 @@ private:
 
   double slow_factor_;
   std::string base_link_frame_, base_stabilized_frame_, world_frame_;
-  double repeat_rate_;
 
 public:
   Teleop()
@@ -121,13 +115,12 @@ public:
     private_nh.param<int>("thrust_axis", axes_.thrust.axis, -3);
     private_nh.param<int>("yaw_axis", axes_.yaw.axis, 1);
 
-    private_nh.param<double>("yaw_velocity_max", axes_.yaw.max_, 90.0 * M_PI / 180.0);
-    private_nh.param<double>("yaw_velocity_min", axes_.yaw.min_, -axes_.yaw.max_);
+    private_nh.param<double>("yaw_velocity_max", axes_.yaw.factor, 90.0);
 
-    private_nh.param<int>("slow_button", buttons_.slow.button_, 4);
-    private_nh.param<int>("go_button", buttons_.go.button_, 1);
-    private_nh.param<int>("stop_button", buttons_.stop.button_, 2);
-    private_nh.param<int>("interrupt_button", buttons_.interrupt.button_, 3);
+    private_nh.param<int>("slow_button", buttons_.slow.button, 4);
+    private_nh.param<int>("go_button", buttons_.go.button, 1);
+    private_nh.param<int>("stop_button", buttons_.stop.button, 2);
+    private_nh.param<int>("interrupt_button", buttons_.interrupt.button, 3);
     private_nh.param<double>("slow_factor", slow_factor_, 0.2);
 
     // TODO dynamic reconfig
@@ -135,26 +128,18 @@ public:
     private_nh.param<std::string>("control_mode", control_mode, "twist");
 
     ros::NodeHandle robot_nh;
-    ros::NodeHandle limit_nh(robot_nh, "limits");
 
     // TODO factor out
     robot_nh.param<std::string>("base_link_frame", base_link_frame_, "base_link");
     robot_nh.param<std::string>("world_frame", world_frame_, "world");
     robot_nh.param<std::string>("base_stabilized_frame", base_stabilized_frame_, "base_stabilized");
 
-    ros::NodeHandle joy_nh("joy");
-    private_nh.param<double>("autorepeat_rate", repeat_rate_, 100.0);
-
     if (control_mode == "attitude")
     {
-
-      hector_quadrotor_interface::AttitudeCommandLimiter attitude_limiter(limit_nh, "pose/orientation");
-      hector_quadrotor_interface::YawrateCommandLimiter yawrate_limiter(limit_nh, "twist/angular");
-      hector_quadrotor_interface::ThrustCommandLimiter thrust_limiter(limit_nh, "wrench/force");
-      axes_.y.setLimits(attitude_limiter.roll_.min_, attitude_limiter.roll_.max_);
-      axes_.x.setLimits(attitude_limiter.pitch_.min_, attitude_limiter.pitch_.max_);
-      axes_.thrust.setLimits(thrust_limiter.thrust_.min_, thrust_limiter.thrust_.max_);
-      axes_.yaw.setLimits(yawrate_limiter.turnrate_.min_, yawrate_limiter.turnrate_.max_);
+      private_nh.param<double>("pitch_max", axes_.x.factor, 30.0);
+      private_nh.param<double>("roll_max", axes_.y.factor, 30.0);
+      private_nh.param<double>("thrust_max", axes_.thrust.factor, 10.0);
+      private_nh.param<double>("thrust_offset", axes_.thrust.offset, 10.0);
 
       joy_subscriber_ = node_handle_.subscribe<sensor_msgs::Joy>("joy", 1,
                                                                  boost::bind(&Teleop::joyAttitudeCallback, this, _1));
@@ -167,11 +152,9 @@ public:
     }
     else if (control_mode == "velocity")
     {
-      hector_quadrotor_interface::TwistLimiter twist_limiter(limit_nh, "twist");
-      axes_.x.setLimits(twist_limiter.linear_.x_.min_, twist_limiter.linear_.x_.max_);
-      axes_.y.setLimits(twist_limiter.linear_.y_.min_, twist_limiter.linear_.y_.max_);
-      axes_.z.setLimits(twist_limiter.linear_.z_.min_, twist_limiter.linear_.z_.max_);
-      axes_.yaw.setLimits(twist_limiter.angular_.z_.min_, twist_limiter.angular_.z_.max_);
+      private_nh.param<double>("x_velocity_max", axes_.x.factor, 2.0);
+      private_nh.param<double>("y_velocity_max", axes_.y.factor, 2.0);
+      private_nh.param<double>("z_velocity_max", axes_.z.factor, 2.0);
 
       joy_subscriber_ = node_handle_.subscribe<sensor_msgs::Joy>("joy", 1,
                                                                  boost::bind(&Teleop::joyTwistCallback, this, _1));
@@ -180,11 +163,9 @@ public:
     }
     else if (control_mode == "position")
     {
-      hector_quadrotor_interface::TwistLimiter twist_limiter(limit_nh, "twist");
-      axes_.x.setLimits(twist_limiter.linear_.x_.min_, twist_limiter.linear_.x_.max_);
-      axes_.y.setLimits(twist_limiter.linear_.y_.min_, twist_limiter.linear_.y_.max_);
-      axes_.z.setLimits(twist_limiter.linear_.z_.min_, twist_limiter.linear_.z_.max_);
-      axes_.yaw.setLimits(twist_limiter.angular_.z_.min_, twist_limiter.angular_.z_.max_);
+      private_nh.param<double>("x_velocity_max", axes_.x.factor, 2.0);
+      private_nh.param<double>("y_velocity_max", axes_.y.factor, 2.0);
+      private_nh.param<double>("z_velocity_max", axes_.z.factor, 2.0);
 
       joy_subscriber_ = node_handle_.subscribe<sensor_msgs::Joy>("joy", 1,
                                                                  boost::bind(&Teleop::joyPoseCallback, this, _1));
@@ -196,10 +177,10 @@ public:
       position_.pose.orientation.y = 0;
       position_.pose.orientation.z = 0;
       position_.pose.orientation.w = 1;
-
-    }else
+    }
+    else
     {
-      ROS_ERROR("Unsupported control mode");
+      ROS_ERROR_STREAM("Unsupported control mode: " << control_mode);
     }
 
     motor_enable_service_ = robot_nh.serviceClient<hector_uav_msgs::EnableMotors>(
@@ -226,14 +207,19 @@ public:
     attitude.header.frame_id = yawrate.header.frame_id = base_stabilized_frame_;
     thrust.header.frame_id = base_link_frame_;
 
-    attitude.roll = -getAxis(joy, axes_.y);
-    attitude.pitch = getAxis(joy, axes_.x);
+    attitude.roll = -getAxis(joy, axes_.y) * M_PI/180.0;
+    attitude.pitch = getAxis(joy, axes_.x) * M_PI/180.0;
+    if (getButton(joy, buttons_.slow))
+    {
+      attitude.roll *= slow_factor_;
+      attitude.pitch *= slow_factor_;
+    }
     attitude_publisher_.publish(attitude);
 
     thrust.thrust = getAxis(joy, axes_.thrust);
     thrust_publisher_.publish(thrust);
 
-    yawrate.turnrate = getAxis(joy, axes_.yaw);
+    yawrate.turnrate = getAxis(joy, axes_.yaw) * M_PI/180.0;
     if (getButton(joy, buttons_.slow))
     {
       yawrate.turnrate *= slow_factor_;
@@ -241,13 +227,13 @@ public:
 
     yawrate_publisher_.publish(yawrate);
 
-    if (getButton(joy, buttons_.go))
-    {
-      enableMotors(true);
-    }
     if (getButton(joy, buttons_.stop))
     {
       enableMotors(false);
+    }
+    else if (getButton(joy, buttons_.go))
+    {
+      enableMotors(true);
     }
   }
 
@@ -260,7 +246,7 @@ public:
     velocity.twist.linear.x = getAxis(joy, axes_.x);
     velocity.twist.linear.y = getAxis(joy, axes_.y);
     velocity.twist.linear.z = getAxis(joy, axes_.z);
-    velocity.twist.angular.z = getAxis(joy, axes_.yaw);
+    velocity.twist.angular.z = getAxis(joy, axes_.yaw) * M_PI/180.0;
     if (getButton(joy, buttons_.slow))
     {
       velocity.twist.linear.x *= slow_factor_;
@@ -269,28 +255,35 @@ public:
       velocity.twist.angular.z *= slow_factor_;
     }
     velocity_publisher_.publish(velocity);
-    if (getButton(joy, buttons_.go))
-    {
-      enableMotors(true);
-    }
+
     if (getButton(joy, buttons_.stop))
     {
       enableMotors(false);
+    }
+    else if (getButton(joy, buttons_.go))
+    {
+      enableMotors(true);
     }
   }
 
   void joyPoseCallback(const sensor_msgs::JoyConstPtr &joy)
   {
-    position_.header.stamp = ros::Time::now();
+    ros::Time now = ros::Time::now();
+    double dt = 0.0;
+    if (!position_.header.stamp.isZero()) {
+      dt = std::max(0.0, std::min(1.0, (now - position_.header.stamp).toSec()));
+    }
+    position_.header.stamp = now;
     position_.header.frame_id = world_frame_;
-    position_.pose.position.x += (cos(yaw) * getAxis(joy, axes_.x) - sin(yaw) * getAxis(joy, axes_.y)) / repeat_rate_;
-    position_.pose.position.y += (cos(yaw) * getAxis(joy, axes_.y) + sin(yaw) * getAxis(joy, axes_.x)) / repeat_rate_;
-    position_.pose.position.z += getAxis(joy, axes_.z) / repeat_rate_;
-    yaw += getAxis(joy, axes_.yaw) / repeat_rate_;
+    position_.pose.position.x += (cos(yaw) * getAxis(joy, axes_.x) - sin(yaw) * getAxis(joy, axes_.y)) * dt;
+    position_.pose.position.y += (cos(yaw) * getAxis(joy, axes_.y) + sin(yaw) * getAxis(joy, axes_.x)) * dt;
+    position_.pose.position.z += getAxis(joy, axes_.z) * dt;
+    yaw += getAxis(joy, axes_.yaw) * M_PI/180.0 * dt;
 
     tf2::Quaternion q;
     q.setRPY(0.0, 0.0, yaw);
     position_.pose.orientation = tf2::toMsg(q);
+
     if (getButton(joy, buttons_.go))
     {
       hector_uav_msgs::PoseGoal goal;
@@ -307,50 +300,34 @@ public:
     }
   }
 
-  double getAxis(const sensor_msgs::JoyConstPtr &joy, Axis axis)
+  double getAxis(const sensor_msgs::JoyConstPtr &joy, const Axis &axis)
   {
     if (axis.axis == 0 || std::abs(axis.axis) > joy->axes.size())
     {
-      return 0;
       ROS_ERROR_STREAM("Axis " << axis.axis << " out of range, joy has " << joy->axes.size() << " axes");
+      return 0;
     }
 
-    double output = std::abs(axis.axis) / axis.axis * joy->axes[std::abs(axis.axis) - 1];
-
-    if (!axis.first_)
-    {
-      if (output == 0.0)
-      {
-        // Return semantic 0.0 without scaling if axis hasn't received first message
-        return 0.0;
-      }
-      else
-      {
-        // Received first message, so clear flag
-        axis.first_ = true;
-      }
-    }
-
-    // Scale axis with min/max
-    output = (output + 1) * (axis.max_ - axis.min_) / 2 + axis.min_;
+    double output = std::abs(axis.axis) / axis.axis * joy->axes[std::abs(axis.axis) - 1] * axis.factor + axis.offset;
 
     // TODO keep or remove deadzone? may not be needed
-    if (std::abs(output) < axis.max_ * 0.2)
-    {
-      output = 0.0;
-    }
+    // if (std::abs(output) < axis.max_ * 0.2)
+    // {
+    //   output = 0.0;
+    // }
 
     return output;
   }
 
-  bool getButton(const sensor_msgs::JoyConstPtr &joy, Button button)
+  bool getButton(const sensor_msgs::JoyConstPtr &joy, const Button &button)
   {
-    if (button.button_ <= 0 || button.button_ > joy->buttons.size())
+    if (button.button <= 0 || button.button > joy->buttons.size())
     {
-      ROS_ERROR_STREAM("Button " << button.button_ << " out of range, joy has " << joy->buttons.size() << " buttons");
+      ROS_ERROR_STREAM("Button " << button.button << " out of range, joy has " << joy->buttons.size() << " buttons");
       return false;
     }
-    return joy->buttons[button.button_ - 1] > 0;
+
+    return joy->buttons[button.button - 1] > 0;
   }
 
   bool enableMotors(bool enable)
@@ -360,6 +337,7 @@ public:
       ROS_WARN("Motor enable service not found");
       return false;
     }
+
     hector_uav_msgs::EnableMotors srv;
     srv.request.enable = enable;
     return motor_enable_service_.call(srv);
