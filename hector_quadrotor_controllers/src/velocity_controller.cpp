@@ -187,7 +187,7 @@ public:
     boost::mutex::scoped_lock lock(command_mutex_);
 
     // Get twist command input
-    if (twist_input_->enabled())
+    if (twist_input_->connected() && twist_input_->enabled())
     {
       twist_command_.twist = twist_input_->getCommand();
       twist_command_.header.stamp = time;

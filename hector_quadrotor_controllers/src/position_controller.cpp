@@ -139,9 +139,6 @@ public:
     updatePoseCommand(*command);
     if (!(pose_input_->connected())) *pose_input_ = &pose_command_;
     pose_input_->start();
-
-    // (re)enable position control
-    twist_output_->start();
   }
 
   void twistLimitCallback(const geometry_msgs::TwistConstPtr &limit)
@@ -158,18 +155,19 @@ public:
     boost::mutex::scoped_lock lock(command_mutex_);
     Twist output;
 
-    // check command timeout
-    // TODO
-
     // Get pose command command input
     // return if no pose command is available
     if (pose_input_->connected() && pose_input_->enabled())
     {
       updatePoseCommand(pose_input_->getCommand());
+      twist_output_->start();
     } else {
-      this->stopRequest(time);
+      reset();
       return;
     }
+
+    // check command timeout
+    // TODO
 
     // Check if pose control was preempted
     if (twist_output_->preempted()) {
