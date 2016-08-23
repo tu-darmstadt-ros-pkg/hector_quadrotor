@@ -42,7 +42,8 @@ QuadrotorHardwareSim::QuadrotorHardwareSim()
   interface_.registerSensorImu(&imu_);
   interface_.registerTwist(&twist_);
 
-  accel_input_ = interface_.addInput<AccelCommandHandle>("accel");
+  wrench_output_ = interface_.addInput<WrenchCommandHandle>("wrench");
+  motor_output_ = interface_.addInput<MotorCommandHandle>("motor");
 }
 
 QuadrotorHardwareSim::~QuadrotorHardwareSim()
@@ -57,8 +58,6 @@ bool QuadrotorHardwareSim::initSim(
     const urdf::Model *const urdf_model,
     std::vector<transmission_interface::TransmissionInfo> transmissions)
 {
-  ros::NodeHandle limits_nh(model_nh, "limits");
-
   // store parent model pointer
   model_ = parent_model;
   link_ = model_->GetLink();
@@ -101,15 +100,13 @@ bool QuadrotorHardwareSim::initSim(
 
   motor_status_.on = true;
   motor_status_.header.frame_id = base_link_frame_;
-  motor_status_pub_ = model_nh.advertise<hector_uav_msgs::MotorStatus>("motor_status", 10);
 
-  motor_status_srv_ = model_nh.advertiseService("enable_motors", &QuadrotorHardwareSim::enableMotorsCb, this);
+  enable_motors_server_ = model_nh.advertiseService("enable_motors", &QuadrotorHardwareSim::enableMotorsCallback, this);
 
-  wrench_limiter_ = boost::make_shared<WrenchLimiter>(limits_nh, "wrench");
+  wrench_limiter_.init(model_nh, "wrench_limits");
 
-  getMassAndInertia(model_nh, mass_, inertia_);
-
-  wrench_pub_ = model_nh.advertise<geometry_msgs::WrenchStamped>("command/wrench", 1);
+  wrench_command_publisher_ = model_nh.advertise<geometry_msgs::WrenchStamped>("command/wrench", 1);
+  motor_command_publisher_ = model_nh.advertise<geometry_msgs::WrenchStamped>("command/motor", 1);
 
   return true;
 }
@@ -175,39 +172,41 @@ void QuadrotorHardwareSim::readSim(ros::Time time, ros::Duration period)
     imu_.linear_acceleration.y = gz_linear_acceleration_body.y;
     imu_.linear_acceleration.z = gz_linear_acceleration_body.z;
   }
-
-  motor_status_.header.stamp = time;
-  motor_status_pub_.publish(motor_status_);
-
 }
 
 void QuadrotorHardwareSim::writeSim(ros::Time time, ros::Duration period)
 {
+  bool result_written = false;
 
-  if (accel_input_->connected() && accel_input_->enabled() && motor_status_.on && motor_status_.running)
-  {
+  if (motor_output_->connected() && motor_output_->enabled()) {
+    motor_command_publisher_.publish(motor_output_->getCommand());
+    result_written = true;
+  }
+
+  if (wrench_output_->connected() && wrench_output_->enabled()) {
     geometry_msgs::WrenchStamped wrench;
     wrench.header.stamp = time;
     wrench.header.frame_id = base_link_frame_;
 
-    // Convert accelerations into force and torque
-    wrench.wrench.torque.x = accel_input_->getCommand().angular.x * inertia_[0];
-    wrench.wrench.torque.y = accel_input_->getCommand().angular.y * inertia_[1];
-    wrench.wrench.torque.z = accel_input_->getCommand().angular.z * inertia_[2];
-    wrench.wrench.force.z = accel_input_->getCommand().linear.z * mass_;
+    if (motor_status_.on && motor_status_.running) {
+      wrench.wrench = wrench_limiter_(wrench_output_->getCommand());
 
-    wrench.wrench = wrench_limiter_->limit(wrench.wrench);
+      if (!result_written) {
+        gazebo::math::Vector3 force(wrench.wrench.force.x, wrench.wrench.force.y, wrench.wrench.force.z);
+        gazebo::math::Vector3 torque(wrench.wrench.torque.x, wrench.wrench.torque.y, wrench.wrench.torque.z);
+        link_->AddRelativeForce(force);
+        link_->AddRelativeTorque(torque - link_->GetInertial()->GetCoG().Cross(force));
+      }
 
-    wrench_pub_.publish(wrench);
+    } else {
+      wrench.wrench = geometry_msgs::Wrench();
+    }
 
-    gazebo::math::Vector3 force(wrench.wrench.force.x, wrench.wrench.force.y, wrench.wrench.force.z);
-    gazebo::math::Vector3 torque(wrench.wrench.torque.x, wrench.wrench.torque.y, wrench.wrench.torque.z);
-    link_->AddRelativeForce(force);
-    link_->AddRelativeTorque(torque - link_->GetInertial()->GetCoG().Cross(force));
+    wrench_command_publisher_.publish(wrench);
   }
 }
 
-bool QuadrotorHardwareSim::enableMotorsCb(hector_uav_msgs::EnableMotors::Request &req, hector_uav_msgs::EnableMotors::Response &res)
+bool QuadrotorHardwareSim::enableMotorsCallback(hector_uav_msgs::EnableMotors::Request &req, hector_uav_msgs::EnableMotors::Response &res)
 {
   res.success = enableMotors(req.enable);
   return true;
@@ -222,5 +221,4 @@ bool QuadrotorHardwareSim::enableMotors(bool enable)
 } // namespace hector_quadrotor_controller_gazebo
 
 #include <pluginlib/class_list_macros.h>
-
 PLUGINLIB_EXPORT_CLASS(hector_quadrotor_controller_gazebo::QuadrotorHardwareSim, gazebo_ros_control::RobotHWSim)

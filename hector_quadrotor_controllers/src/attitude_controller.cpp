@@ -2,13 +2,14 @@
 
 #include <controller_interface/controller.h>
 #include <control_toolbox/pid.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
-#include <geometry_msgs/AccelStamped.h>
+#include <geometry_msgs/WrenchStamped.h>
 
 #include <hector_quadrotor_interface/limiters.h>
 #include <hector_quadrotor_interface/quadrotor_interface.h>
 #include <hector_quadrotor_interface/helpers.h>
+
+#include <tf/transform_listener.h> // for tf::getPrefixParam()
 
 #include <boost/thread/mutex.hpp>
 #include <std_msgs/Bool.h>
@@ -33,7 +34,6 @@ public:
   virtual bool init(hector_quadrotor_interface::QuadrotorInterface *interface, ros::NodeHandle &root_nh,
             ros::NodeHandle &controller_nh)
   {
-
     pose_ = interface->getPose();
     twist_ = interface->getTwist();
     accel_ = interface->getAccel();
@@ -41,14 +41,21 @@ public:
     root_nh.param<std::string>("base_link_frame", base_link_frame_, "base_link");
     root_nh.param<std::string>("base_stabilized_frame", base_stabilized_frame_, "base_stabilized");
     root_nh.param<double>("estop_deceleration", estop_deceleration_, 1.0);
-    root_nh.param<double>("command_timeout", command_timeout_, 0.05);
+    double command_timeout_sec = 0.0;
+    root_nh.param<double>("command_timeout", command_timeout_sec, 0.0);
+    command_timeout_ = ros::Duration(command_timeout_sec);
+
+    // resolve frames
+    tf_prefix_ = tf::getPrefixParam(root_nh);
+    base_link_frame_ = tf::resolve(tf_prefix_, base_link_frame_);
+    base_stabilized_frame_ = tf::resolve(tf_prefix_, base_stabilized_frame_);
 
     getMassAndInertia(root_nh, mass_, inertia_);
 
     attitude_input_ = interface->addInput<AttitudeCommandHandle>("attitude");
     yawrate_input_ = interface->addInput<YawrateCommandHandle>("yawrate");
     thrust_input_ = interface->addInput<ThrustCommandHandle>("thrust");
-    accel_output_ = interface->addOutput<AccelCommandHandle>("accel");
+    wrench_output_ = interface->addOutput<WrenchCommandHandle>("wrench");
 
     // subscribe to attitude, yawrate, and thrust
     attitude_subscriber_helper_ = boost::make_shared<AttitudeSubscriberHelper>(ros::NodeHandle(root_nh, "command"),
@@ -62,12 +69,8 @@ public:
     pid_.pitch.init(ros::NodeHandle(controller_nh, "pitch"));
     pid_.yawrate.init(ros::NodeHandle(controller_nh, "yawrate"));
 
-    ros::NodeHandle limit_nh(root_nh, "limits");
-    attitude_limiter_ = boost::make_shared<hector_quadrotor_interface::AttitudeCommandLimiter>(limit_nh,
-                                                                                                "pose/orientation");
-    yawrate_limiter_ = boost::make_shared<hector_quadrotor_interface::YawrateCommandLimiter>(limit_nh,
-                                                                                              "twist/angular");
-    thrust_limiter_ = boost::make_shared<hector_quadrotor_interface::ThrustCommandLimiter>(limit_nh, "wrench/force");
+    attitude_limiter_.init(controller_nh);
+    yawrate_limiter_.init(controller_nh, "yawrate");
 
     estop_ = false;
     estop_sub_ = root_nh.subscribe("estop", 1, &AttitudeController::estopCb, this);
@@ -80,18 +83,18 @@ public:
     pid_.roll.reset();
     pid_.pitch.reset();
     pid_.yawrate.reset();
-    accel_control_ = geometry_msgs::AccelStamped();
+    wrench_control_ = geometry_msgs::WrenchStamped();
   }
 
   virtual void starting(const ros::Time &time)
   {
     reset();
-    accel_output_->start();
+    wrench_output_->start();
   }
 
   virtual void stopping(const ros::Time &time)
   {
-    accel_output_->stop();
+    wrench_output_->stop();
   }
 
   virtual void update(const ros::Time &time, const ros::Duration &period)
@@ -111,24 +114,24 @@ public:
       thrust_command_ = thrust_input_->getCommand();
     }
 
-    attitude_command_ = attitude_limiter_->limit(attitude_command_);
-    yawrate_command_ = yawrate_limiter_->limit(yawrate_command_);
-    thrust_command_ = thrust_limiter_->limit(thrust_command_);
-
+    attitude_command_ = attitude_limiter_(attitude_command_);
+    yawrate_command_ = yawrate_limiter_(yawrate_command_);
+    thrust_command_ = thrust_limiter_(thrust_command_);
 
     // TODO move estop to gazebo plugin
-    if(time > attitude_command_.header.stamp + ros::Duration(command_timeout_) ||
-       time > yawrate_command_.header.stamp + ros::Duration(command_timeout_) ||
-       time > thrust_command_.header.stamp + ros::Duration(command_timeout_) )
+    if (!command_timeout_.isZero() && (
+            time > attitude_command_.header.stamp + command_timeout_ ||
+            time > yawrate_command_.header.stamp + command_timeout_ ||
+            time > thrust_command_.header.stamp + command_timeout_ ) )
     {
-      if(!command_estop_){
+      if (!command_estop_) {
         estop_thrust_command_ = thrust_command_;
       }
-      ROS_WARN_STREAM_THROTTLE(1.0, "No command received for "
+      ROS_WARN_STREAM_THROTTLE_NAMED(1.0, "attitude_controller", "No command received for "
                                     << (time - std::min(std::min(attitude_command_.header.stamp, yawrate_command_.header.stamp), thrust_command_.header.stamp)).toSec() <<
           "s, triggering estop");
       command_estop_ = true;
-    }else if(command_estop_){
+    } else if (command_estop_) {
       command_estop_ = false;
     }
 
@@ -147,24 +150,48 @@ public:
     {
       attitude_command_.roll = attitude_command_.pitch = yawrate_command_.turnrate = 0;
       estop_thrust_command_.thrust -= estop_deceleration_ * mass_ * period.toSec();
-      if(estop_thrust_command_.thrust < 0) estop_thrust_command_.thrust = 0;
+      if (estop_thrust_command_.thrust < 0) estop_thrust_command_.thrust = 0;
       thrust_command_ = estop_thrust_command_;
     }
-    accel_control_.accel.angular.x = pid_.roll.computeCommand(attitude_command_.roll - roll, period);
-    accel_control_.accel.angular.y = pid_.pitch.computeCommand(attitude_command_.pitch - pitch, period);
-    accel_control_.accel.angular.z = pid_.yawrate.computeCommand(yawrate_command_.turnrate - twist_body.angular.z,
+
+    // Control approach:
+    // 1. We consider the roll and pitch commands as desired accelerations in the base_stabilized frame,
+    //    not considering wind (inverse of the calculation in velocity_controller.cpp).
+    Vector3 acceleration_command_base_stabilized;
+    const double gravity = 9.8065;
+    acceleration_command_base_stabilized.x =  sin(attitude_command_.pitch) * gravity;
+    acceleration_command_base_stabilized.y = -sin(attitude_command_.roll)  * gravity;
+    acceleration_command_base_stabilized.z = gravity;
+
+    // 2. Transform desired acceleration to the body frame (via the world frame).
+    //    The result is independent of the yaw angle because the yaw rotation will be undone in the second step).
+    double sin_yaw, cos_yaw;
+    sincos(yaw, &sin_yaw, &cos_yaw);
+    Vector3 acceleration_command_world, acceleration_command_body;
+    acceleration_command_world.x = cos_yaw * acceleration_command_base_stabilized.x - sin_yaw * acceleration_command_base_stabilized.y;
+    acceleration_command_world.y = sin_yaw * acceleration_command_base_stabilized.x + cos_yaw * acceleration_command_base_stabilized.y;
+    acceleration_command_world.z = acceleration_command_base_stabilized.z;
+    acceleration_command_body = pose_->toBody(acceleration_command_world);
+
+    // 3. Control error is proportional to the desired acceleration in the body frame!
+    wrench_control_.wrench.torque.x = pid_.roll.computeCommand(inertia_[0] * (-acceleration_command_body.y / gravity), period);
+    wrench_control_.wrench.torque.y = pid_.pitch.computeCommand(inertia_[1] * (acceleration_command_body.x / gravity), period);
+    wrench_control_.wrench.torque.z = pid_.yawrate.computeCommand(inertia_[2] * (yawrate_command_.turnrate - twist_body.angular.z),
                                                                  period);
-    accel_control_.accel.linear.z = thrust_command_.thrust / mass_;
+    wrench_control_.wrench.force.x  = 0.0;
+    wrench_control_.wrench.force.y  = 0.0;
+    wrench_control_.wrench.force.z = thrust_command_.thrust;
 
     // set wrench output
-    accel_control_.header.stamp = time;
-    accel_control_.header.frame_id = base_link_frame_;
-    accel_output_->setCommand(accel_control_.accel);
-
+    wrench_control_.header.stamp = time;
+    wrench_control_.header.frame_id = base_link_frame_;
+    wrench_output_->setCommand(wrench_control_.wrench);
   }
 
   void estopCb(const std_msgs::BoolConstPtr &estop_msg)
   {
+    boost::mutex::scoped_lock lock(command_mutex_);
+
     bool estop = static_cast<bool>(estop_msg->data);
     if (estop_ == false && estop == true)
     {
@@ -182,25 +209,26 @@ private:
   AttitudeCommandHandlePtr attitude_input_;
   YawrateCommandHandlePtr yawrate_input_;
   ThrustCommandHandlePtr thrust_input_;
-  AccelCommandHandlePtr accel_output_;
+  WrenchCommandHandlePtr wrench_output_;
 
   boost::shared_ptr<hector_quadrotor_interface::AttitudeSubscriberHelper> attitude_subscriber_helper_;
 
   hector_uav_msgs::AttitudeCommand attitude_command_;
   hector_uav_msgs::YawrateCommand yawrate_command_;
   hector_uav_msgs::ThrustCommand thrust_command_;
-  geometry_msgs::AccelStamped accel_control_;
+  geometry_msgs::WrenchStamped wrench_control_;
 
-  boost::shared_ptr<hector_quadrotor_interface::AttitudeCommandLimiter> attitude_limiter_;
-  boost::shared_ptr<hector_quadrotor_interface::YawrateCommandLimiter> yawrate_limiter_;
-  boost::shared_ptr<hector_quadrotor_interface::ThrustCommandLimiter> thrust_limiter_;
+  hector_quadrotor_interface::AttitudeCommandLimiter attitude_limiter_;
+  hector_quadrotor_interface::YawrateCommandLimiter yawrate_limiter_;
+  hector_quadrotor_interface::ThrustCommandLimiter thrust_limiter_;
   std::string base_link_frame_, base_stabilized_frame_;
+  std::string tf_prefix_;
 
   ros::Subscriber estop_sub_;
   bool estop_, command_estop_;
   hector_uav_msgs::ThrustCommand estop_thrust_command_;
   double estop_deceleration_;
-  double command_timeout_;
+  ros::Duration command_timeout_;
 
   struct
   {
@@ -211,7 +239,6 @@ private:
   double inertia_[3];
 
   boost::mutex command_mutex_;
-
 };
 
 } // namespace hector_quadrotor_controllers

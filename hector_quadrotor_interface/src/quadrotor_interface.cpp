@@ -48,21 +48,29 @@ bool QuadrotorInterface::enabled(const CommandHandle *handle) const
 bool QuadrotorInterface::start(const CommandHandle *handle)
 {
   if (!handle || !handle->connected()) return false;
-  if (enabled(handle)) return true;
   std::string resource = handle->getName();
-  enabled_[resource] = handle;
-  ROS_DEBUG_NAMED("quadrotor_interface", "Enabled %s control", resource.c_str());
-  return true;
+  std::map<std::string, const CommandHandle *>::iterator it = enabled_.find(resource);
+  if (it == enabled_.end()) {
+    enabled_[resource] = handle;
+    ROS_INFO_NAMED("quadrotor_interface", "Enabled %s control", resource.c_str());
+    return true;
+  } else if (it->second == handle) {
+    return true;
+  }
+  return false;
 }
 
-void QuadrotorInterface::stop(const CommandHandle *handle)
+bool QuadrotorInterface::stop(const CommandHandle *handle)
 {
-  if (!handle) return;
-  if (!enabled(handle)) return;
+  if (!handle) return false;
   std::string resource = handle->getName();
-  std::map<std::string, const CommandHandle *>::iterator it = enabled_.lower_bound(resource);
-  if (it != enabled_.end() && it->second == handle) enabled_.erase(it);
-  ROS_DEBUG_NAMED("quadrotor_interface", "Disabled %s control", resource.c_str());
+  std::map<std::string, const CommandHandle *>::iterator it = enabled_.find(resource);
+  if (it != enabled_.end() && it->second == handle) {
+    enabled_.erase(it);
+    ROS_INFO_NAMED("quadrotor_interface", "Disabled %s control", resource.c_str());
+    return true;
+  }
+  return false;
 }
 
 void QuadrotorInterface::disconnect(const CommandHandle *handle)
@@ -77,6 +85,19 @@ void QuadrotorInterface::disconnect(const CommandHandle *handle)
     const CommandHandlePtr& output = outputs_.at(resource);
     if (output.get() != handle) output->reset();
   }
+}
+
+bool QuadrotorInterface::preempt(const CommandHandle *handle) {
+  std::string resource = handle->getName();
+  if (outputs_.count(resource))
+  {
+    CommandHandlePtr output = outputs_.at(resource);
+    if (output) {
+      output->setPreempted();
+      return true;
+    }
+  }
+  return false;
 }
 
 const Pose *QuadrotorInterface::getPoseCommand()          const { return getCommand<PoseCommandHandle>("pose"); }
@@ -188,8 +209,12 @@ double HeadingCommandHandle::getError(const PoseHandle &pose) const {
 }
 
 bool CommandHandle::enabled()    { return interface_->enabled(this); }
-bool CommandHandle::start()      { return interface_->start(this); }
-void CommandHandle::stop()       { interface_->stop(this); }
+bool CommandHandle::start()      { preempted_ = false; return interface_->start(this); }
+void CommandHandle::stop()       { preempted_ = false; interface_->stop(this); }
 void CommandHandle::disconnect() { interface_->disconnect(this); }
+
+bool CommandHandle::preempt()      { return interface_->preempt(this); }
+void CommandHandle::setPreempted() { preempted_ = true; }
+bool CommandHandle::preempted()    { return preempted_; }
 
 } // namespace hector_quadrotor_interface

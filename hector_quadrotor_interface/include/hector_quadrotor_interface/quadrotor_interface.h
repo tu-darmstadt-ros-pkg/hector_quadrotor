@@ -107,18 +107,17 @@ public:
   boost::shared_ptr<HandleType> addInput(const std::string &name)
   {
     boost::shared_ptr<HandleType> input = getInput<HandleType>(name);
-    if (input)
-    { return input; }
+    if (input) { return input; }
 
     // create new input handle
     input.reset(new HandleType(this, name));
     inputs_[name] = input;
 
-    // connect to output of same name
+    // connect to outputs of same name
     if (outputs_.count(name))
     {
       boost::shared_ptr<HandleType> output = boost::dynamic_pointer_cast<HandleType>(outputs_.at(name));
-      output->connectTo(*input);
+      if (output) output->connectTo(*input);
     }
 
     return input;
@@ -128,8 +127,7 @@ public:
   boost::shared_ptr<HandleType> addOutput(const std::string &name)
   {
     boost::shared_ptr<HandleType> output = getOutput<HandleType>(name);
-    if (output)
-    { return output; }
+    if (output) { return output; }
 
     // create new output handle
     output.reset(new HandleType(this, name));
@@ -139,11 +137,11 @@ public:
     //claim resource
     claim(name);
 
-    // connect to output of same name
+    // connect to inputs of same name
     if (inputs_.count(name))
     {
       boost::shared_ptr<HandleType> input = boost::dynamic_pointer_cast<HandleType>(inputs_.at(name));
-      output->connectTo(*input);
+      if (input) output->connectTo(*input);
     }
 
     return output;
@@ -152,17 +150,15 @@ public:
   template<typename HandleType>
   boost::shared_ptr<HandleType> getOutput(const std::string &name) const
   {
-    if (!outputs_.count(name))
-    { return boost::shared_ptr<HandleType>(); }
-    return boost::static_pointer_cast<HandleType>(outputs_.at(name));
+    if (!outputs_.count(name)) { return boost::shared_ptr<HandleType>(); }
+    return boost::dynamic_pointer_cast<HandleType>(outputs_.at(name));
   }
 
   template<typename HandleType>
   boost::shared_ptr<HandleType> getInput(const std::string &name) const
   {
-    if (!inputs_.count(name))
-    { return boost::shared_ptr<HandleType>(); }
-    return boost::static_pointer_cast<HandleType>(inputs_.at(name));
+    if (!inputs_.count(name)) { return boost::shared_ptr<HandleType>(); }
+    return boost::dynamic_pointer_cast<HandleType>(inputs_.at(name));
   }
 
   template<typename HandleType>
@@ -180,12 +176,11 @@ public:
   const MotorCommand *getMotorCommand() const;
 
   bool enabled(const CommandHandle *handle) const;
-
   bool start(const CommandHandle *handle);
-
-  void stop(const CommandHandle *handle);
-
+  bool stop(const CommandHandle *handle);
   void disconnect(const CommandHandle *handle);
+
+  bool preempt(const CommandHandle *handle);
 
 private:
   std::map<std::string, CommandHandlePtr> inputs_;

@@ -4,17 +4,17 @@ pose:
             min: 0.0
     orientation: # rad
         x:
-            max: &attitude_limit 0.4
+            max: &attitude_limit 0.5
         y:
             max: *attitude_limit
 twist:
     linear: # m/s
         x:
-            max: &vel_xy_limit 2.0
+            max: &vel_xy_limit 6.0
         y:
             max: *vel_xy_limit
         z:
-            max: 1.0
+            max: 5.0
     angular: # rad/s
         z:
             max: 3.14
@@ -22,7 +22,7 @@ wrench:
     force: # N
         z:
             min: 0.0
-            max: 100.0
+            max: 30.0
     torque: # Nm
         x:
             max: 10.0

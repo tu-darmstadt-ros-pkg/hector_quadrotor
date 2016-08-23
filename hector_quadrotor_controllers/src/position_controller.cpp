@@ -1,3 +1,31 @@
+//=================================================================================================
+// Copyright (c) 2016, Johannes Meyer, TU Darmstadt
+// All rights reserved.
+
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Flight Systems and Automatic Control group,
+//       TU Darmstadt, nor the names of its contributors may be used to
+//       endorse or promote products derived from this software without
+//       specific prior written permission.
+
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY
+// DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+// ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//=================================================================================================
+
 #include <controller_interface/controller.h>
 #include <control_toolbox/pid.h>
 #include <geometry_msgs/TwistStamped.h>
@@ -6,9 +34,11 @@
 #include <ros/subscriber.h>
 #include <hector_quadrotor_interface/limiters.h>
 #include <boost/thread/mutex.hpp>
-#include "geometry_msgs/PoseStamped.h"
-#include "tf2/LinearMath/Matrix3x3.h"
-#include "tf2/LinearMath/Quaternion.h"
+#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Twist.h>
+#include <tf/transform_listener.h> // for tf::getPrefixParam()
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <visualization_msgs/Marker.h>
 #include <cstdlib>
@@ -36,13 +66,19 @@ public:
             ros::NodeHandle &root_nh,
             ros::NodeHandle &controller_nh)
   {
-    // TODO factor out
+    // get interface handles
     pose_ = interface->getPose();
     twist_ = interface->getTwist();
-    motor_status_ = interface->getMotorStatus();
+
     root_nh.param<std::string>("base_link_frame", base_link_frame_, "base_link");
-    root_nh.param<std::string>("world_frame", world_frame_, "world");
+    root_nh.param<std::string>("world_frame", world_frame_, "/world");
     root_nh.param<std::string>("base_stabilized_frame", base_stabilized_frame_, "base_stabilized");
+
+    // resolve frames
+    tf_prefix_ = tf::getPrefixParam(root_nh);
+    world_frame_ = tf::resolve(tf_prefix_, world_frame_);
+    base_link_frame_ = tf::resolve(tf_prefix_, base_link_frame_);
+    base_stabilized_frame_ = tf::resolve(tf_prefix_, base_stabilized_frame_);
 
     // Initialize PID controllers
     pid_.x.init(ros::NodeHandle(controller_nh, "x"));
@@ -50,18 +86,23 @@ public:
     pid_.z.init(ros::NodeHandle(controller_nh, "z"));
     pid_.yaw.init(ros::NodeHandle(controller_nh, "yaw"));
 
+    position_limiter_.init(controller_nh);
+
     // Setup pose visualization marker output
     initMarker(root_nh.getNamespace());
     marker_publisher_ = root_nh.advertise<visualization_msgs::Marker>("command/pose_marker", 1);
 
     // Initialize inputs/outputs
     pose_input_ = interface->addInput<PoseCommandHandle>("pose");
+    twist_input_  = interface->addInput<TwistCommandHandle>("pose/twist");
+    twist_limit_input_  = interface->addInput<TwistCommandHandle>("pose/twist_limit");
     twist_output_ = interface->addOutput<TwistCommandHandle>("twist");
 
-    position_limiter_ = boost::make_shared<hector_quadrotor_interface::PointLimiter>(root_nh, "limits/pose/position");
-
+    // subscribe to commanded pose and velocity
     pose_subscriber_ = root_nh.subscribe<geometry_msgs::PoseStamped>("command/pose", 1, boost::bind(
-        &PositionController::poseCommandCb, this, _1));
+        &PositionController::poseCommandCallback, this, _1));
+    twist_limit_subscriber_ = root_nh.subscribe<geometry_msgs::Twist>("command/twist_limit", 1, boost::bind(
+        &PositionController::twistLimitCallback, this, _1));
 
     return true;
   }
@@ -73,7 +114,6 @@ public:
     pid_.z.reset();
     pid_.yaw.reset();
 
-    twist_control_ = geometry_msgs::Twist();
     // Set commanded pose to robot's current pose
     updatePoseCommand(pose_->pose());
   }
@@ -81,7 +121,6 @@ public:
   virtual void starting(const ros::Time &time)
   {
     reset();
-    twist_output_->start();
   }
 
   virtual void stopping(const ros::Time &time)
@@ -89,23 +128,58 @@ public:
     twist_output_->stop();
   }
 
-  void poseCommandCb(const geometry_msgs::PoseStampedConstPtr &command)
+  void poseCommandCallback(const geometry_msgs::PoseStampedConstPtr &command)
   {
+    boost::mutex::scoped_lock lock(command_mutex_);
+
+    ros::Time start_time = command->header.stamp;
+    if (start_time.isZero()) start_time = ros::Time::now();
+    if (!isRunning()) this->startRequest(start_time);
+
     updatePoseCommand(*command);
+    if (!(pose_input_->connected())) *pose_input_ = &pose_command_;
+    pose_input_->start();
+
+    // (re)enable position control
+    twist_output_->start();
+  }
+
+  void twistLimitCallback(const geometry_msgs::TwistConstPtr &limit)
+  {
+    boost::mutex::scoped_lock lock(command_mutex_);
+
+    twist_limit_ = *limit;
+    if (!(twist_limit_input_->connected())) *twist_limit_input_ = &twist_limit_;
+    twist_limit_input_->start();
   }
 
   virtual void update(const ros::Time &time, const ros::Duration &period)
   {
     boost::mutex::scoped_lock lock(command_mutex_);
+    Twist output;
+
+    // check command timeout
+    // TODO
 
     // Get pose command command input
+    // return if no pose command is available
     if (pose_input_->connected() && pose_input_->enabled())
     {
       updatePoseCommand(pose_input_->getCommand());
+    } else {
+      this->stopRequest(time);
+      return;
+    }
+
+    // Check if pose control was preempted
+    if (twist_output_->preempted()) {
+      ROS_INFO_NAMED("position_controller", "Position control preempted!");
+      this->stopRequest(time);
+      return;
     }
 
     Pose pose = pose_->pose();
-    Twist twist = twist_->twist();
+//    Twist twist = twist_->twist();
 
     double yaw_command;
     {
@@ -117,11 +191,11 @@ public:
 
     double yaw = pose_->getYaw();
 
-    pose_command_.position = position_limiter_->limit(pose_command_.position);
+    pose_command_.position = position_limiter_(pose_command_.position);
 
-    twist_control_.linear.x = pid_.x.computeCommand(pose_command_.position.x - pose.position.x, period);
-    twist_control_.linear.y = pid_.y.computeCommand(pose_command_.position.y - pose.position.y, period);
-    twist_control_.linear.z = pid_.z.computeCommand(pose_command_.position.z - pose.position.z, period);
+    output.linear.x = pid_.x.computeCommand(pose_command_.position.x - pose.position.x, period);
+    output.linear.y = pid_.y.computeCommand(pose_command_.position.y - pose.position.y, period);
+    output.linear.z = pid_.z.computeCommand(pose_command_.position.z - pose.position.z, period);
 
     double yaw_error = yaw_command - yaw;
     // detect wrap around pi and compensate
@@ -133,29 +207,56 @@ public:
     {
       yaw_error += 2 * M_PI;
     }
-    twist_control_.angular.z = pid_.yaw.computeCommand(yaw_error, period);
+    output.angular.z = pid_.yaw.computeCommand(yaw_error, period);
 
-    // rotate by yaw
+    // add twist command if available
+    if (twist_input_->connected() && twist_input_->enabled())
     {
-      Twist temp = twist_control_;
-      twist_control_.linear.x = sin(yaw) * temp.linear.y + cos(yaw) * temp.linear.x;
-      twist_control_.linear.y = cos(yaw) * temp.linear.y - sin(yaw) * temp.linear.x;
-      twist_control_.angular.x = sin(yaw) * temp.angular.y + cos(yaw) * temp.angular.x;
-      twist_control_.angular.y = cos(yaw) * temp.angular.y - sin(yaw) * temp.angular.x;
+      output.linear.x  += twist_input_->getCommand().linear.x;
+      output.linear.y  += twist_input_->getCommand().linear.y;
+      output.linear.z  += twist_input_->getCommand().linear.z;
+      output.angular.x += twist_input_->getCommand().angular.x;
+      output.angular.y += twist_input_->getCommand().angular.y;
+      output.angular.z += twist_input_->getCommand().angular.z;
     }
 
-    // TODO pass down stamp from pose command
-    twist_output_->setCommand(twist_control_);
+    // limit twist
+    if (twist_limit_input_->connected() && twist_limit_input_->enabled())
+    {
+      twist_limit_ = twist_limit_input_->getCommand();
+
+      double linear_xy = sqrt(output.linear.x*output.linear.x + output.linear.y*output.linear.y);
+      double limit_linear_xy  = std::max(twist_limit_.linear.x, twist_limit_.linear.y);
+      if (limit_linear_xy > 0.0 && linear_xy > limit_linear_xy) {
+        output.linear.x *= limit_linear_xy / linear_xy;
+        output.linear.y *= limit_linear_xy / linear_xy;
+      }
+      if (twist_limit_.linear.z > 0.0 && fabs(output.linear.z) > twist_limit_.linear.z) {
+        output.linear.z *= twist_limit_.linear.z / fabs(output.linear.z);
+      }
+      double angular_xy = sqrt(output.angular.x*output.angular.x + output.angular.y*output.angular.y);
+      double limit_angular_xy  = std::max(twist_limit_.angular.x, twist_limit_.angular.y);
+      if (limit_angular_xy > 0.0 && angular_xy > limit_angular_xy) {
+        output.angular.x *= limit_angular_xy / angular_xy;
+        output.angular.y *= limit_angular_xy / angular_xy;
+      }
+      if (twist_limit_.angular.z > 0.0 && fabs(output.angular.z) > twist_limit_.angular.z) {
+        output.angular.z *= twist_limit_.angular.z / fabs(output.angular.z);
+      }
+    }
+
+    // set twist output
+    twist_output_->setCommand(output);
   }
 
 private:
-
   void updatePoseCommand(const geometry_msgs::PoseStamped &new_pose)
   {
     // TODO TF to world frame
-    if(new_pose.header.frame_id != world_frame_){
-      ROS_WARN_STREAM_THROTTLE(1.0, "Pose commands must be given in the " << world_frame_ << " frame, ignoring command");
-    }else
+    if (new_pose.header.frame_id != world_frame_) {
+      ROS_WARN_STREAM_THROTTLE_NAMED(1.0, "position_controller", "Pose commands must be given in the " << world_frame_ << " frame, ignoring command");
+    }
+    else
     {
       updatePoseCommand(new_pose.pose);
     }
@@ -164,7 +265,6 @@ private:
   void updatePoseCommand(const geometry_msgs::Pose &new_pose)
   {
     {
-      boost::mutex::scoped_lock lock(command_mutex_);
       pose_command_.position = new_pose.position;
       // Strip non-yaw components from orientation
       tf2::Quaternion q;
@@ -194,22 +294,24 @@ private:
 
   PoseHandlePtr pose_;
   TwistHandlePtr twist_;
-  MotorStatusHandlePtr motor_status_;
 
-  TwistCommandHandlePtr twist_output_;
   PoseCommandHandlePtr pose_input_;
+  TwistCommandHandlePtr twist_input_;
+  TwistCommandHandlePtr twist_limit_input_;
+  TwistCommandHandlePtr twist_output_;
 
-  boost::shared_ptr<hector_quadrotor_interface::PointLimiter> position_limiter_;
+  hector_quadrotor_interface::PointLimiter position_limiter_;
 
-  ros::Subscriber pose_subscriber_;
+  ros::Subscriber pose_subscriber_, twist_limit_subscriber_;
   ros::Publisher marker_publisher_;
 
   visualization_msgs::Marker pose_marker_;
 
   geometry_msgs::Pose pose_command_;
-  geometry_msgs::Twist twist_control_;
+  geometry_msgs::Twist twist_limit_;
 
   std::string base_link_frame_, base_stabilized_frame_, world_frame_;
+  std::string tf_prefix_;
 
   struct
   {
@@ -217,7 +319,6 @@ private:
   } pid_;
 
   boost::mutex command_mutex_;
-
 };
 
 } // namespace hector_quadrotor_controllers

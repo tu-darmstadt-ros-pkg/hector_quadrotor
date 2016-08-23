@@ -4,9 +4,10 @@
   <arg name="name" default="quadrotor"/>
   <arg name="model" default="$(find hector_quadrotor_description)/urdf/quadrotor.gazebo.xacro"/>
   <arg name="controllers" default="
-    controller/attitude
+    controller/position
     controller/velocity
-    controller/position"/>
+    controller/attitude
+    "/>
   <arg name="tf_prefix" default="$(optenv ROS_NAMESPACE)"/>
 
   <arg name="x" default="0.0"/>
@@ -59,11 +60,15 @@
     <param name="state_topic" value="state" />
     <param name="imu_topic" value="imu" />
   </group>
+  <remap from="pose" to="ground_truth_to_tf/pose"  if="$(arg use_ground_truth_for_control)" />
 
   <!-- load controllers -->
   <include file="$(find hector_quadrotor_controllers)/launch/controller.launch">
     <arg name="controllers" value="$(arg controllers)"/>
   </include>
+
+  <!-- load actions -->
+  <include file="$(find hector_quadrotor_actions)/launch/actions.launch" />
 
   <!-- load aerodynamic and motor parameters -->
   <arg name="motors" default="robbe_2827-34_epp1045" />

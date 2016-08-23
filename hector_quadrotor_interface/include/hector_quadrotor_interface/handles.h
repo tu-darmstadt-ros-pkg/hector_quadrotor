@@ -174,8 +174,8 @@ typedef boost::shared_ptr<MotorStatusHandle> MotorStatusHandlePtr;
 class CommandHandle
 {
 public:
-  CommandHandle() : interface_(0), new_value_(false) {}
-  CommandHandle(QuadrotorInterface *interface, const std::string& name, const std::string& field) : interface_(interface), name_(name), field_(field), new_value_(false) {}
+  CommandHandle() : interface_(0), preempted_(false), new_value_(false) {}
+  CommandHandle(QuadrotorInterface *interface, const std::string& name, const std::string& field) : interface_(interface), name_(name), field_(field), preempted_(false), new_value_(false) {}
   virtual ~CommandHandle() {}
 
   virtual const std::string& getName() const { return name_; }
@@ -189,6 +189,10 @@ public:
   bool start();
   void stop();
   void disconnect();
+
+  bool preempt();
+  void setPreempted();
+  bool preempted();
 
   template <typename T> T* ownData(T* data) { my_.reset(data); return data; }
 
@@ -211,6 +215,8 @@ private:
   const std::string name_;
   const std::string field_;
   boost::shared_ptr<void> my_;
+
+  bool preempted_;
 
 protected:
   mutable bool new_value_;
@@ -247,7 +253,7 @@ public:
   ValueType& command() { return *get(); }
   const ValueType& getCommand() const { this->new_value_ = false; return *get(); }
   void setCommand(const ValueType& command) { this->new_value_ = true; *get() = command; }
-  bool getCommand(ValueType& command) const { command = *get(); return this->wasNew(); }
+  bool getCommand(ValueType& command) const { command = *getCommand(); return this->wasNew(); }
 
   bool update(ValueType& command) const {
     if (!connected()) return false;

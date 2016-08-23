@@ -1,12 +1,13 @@
+<?xml version="1.0"?>
 <package>
   <name>hector_quadrotor_actions</name>
   <version>0.0.0</version>
-  <description>TODO</description>
+  <description>The hector_quadrotor_actions package provides action server implementations for some complex behaviors of the quadrotor.</description>
+  <maintainer email="johannes@intermodalics.eu">Johannes Meyer</maintainer>
 
   <license>BSD</license>
 
   <author email="pbovbel@clearpathrobotics.com">Paul Bovbel</author>
-  <maintainer email="pbovbel@clearpathrobotics.com">Paul Bovbel</maintainer>
 
   <buildtool_depend>catkin</buildtool_depend>
 

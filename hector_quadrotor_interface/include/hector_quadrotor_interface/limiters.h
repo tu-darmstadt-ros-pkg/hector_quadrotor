@@ -1,15 +1,43 @@
+//=================================================================================================
+// Copyright (c) 2016, Johannes Meyer, TU Darmstadt
+// All rights reserved.
+
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the Flight Systems and Automatic Control group,
+//       TU Darmstadt, nor the names of its contributors may be used to
+//       endorse or promote products derived from this software without
+//       specific prior written permission.
+
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY
+// DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+// ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//=================================================================================================
+
 #ifndef HECTOR_QUADROTOR_INTERFACE_LIMITERS_H
 #define HECTOR_QUADROTOR_INTERFACE_LIMITERS_H
 
-#include "ros/node_handle.h"
+#include <ros/node_handle.h>
 #include <limits>
-#include "geometry_msgs/Wrench.h"
-#include "geometry_msgs/Vector3.h"
-#include "geometry_msgs/Twist.h"
-#include "geometry_msgs/Point.h"
-#include "hector_uav_msgs/AttitudeCommand.h"
-#include "hector_uav_msgs/ThrustCommand.h"
-#include "hector_uav_msgs/YawrateCommand.h"
+#include <geometry_msgs/Wrench.h>
+#include <geometry_msgs/Vector3.h>
+#include <geometry_msgs/Twist.h>
+#include <geometry_msgs/Point.h>
+#include <hector_uav_msgs/AttitudeCommand.h>
+#include <hector_uav_msgs/ThrustCommand.h>
+#include <hector_uav_msgs/YawrateCommand.h>
 
 namespace hector_quadrotor_interface
 {
@@ -17,15 +45,23 @@ namespace hector_quadrotor_interface
 using namespace geometry_msgs;
 using namespace hector_uav_msgs;
 
-template<typename T>
+template <typename T>
 class FieldLimiter
 {
 public:
-  FieldLimiter(ros::NodeHandle nh, std::string field)
+  FieldLimiter()
+    : min_(-std::numeric_limits<T>::max())
+    , max_( std::numeric_limits<T>::max())
+  {}
+
+  void init(const ros::NodeHandle &nh, const std::string &field = std::string())
   {
-    nh.param<T>(field + "/max", max_, std::numeric_limits<T>::max());
-    nh.param<T>(field + "/min", min_, -max_);
-    ROS_INFO_STREAM("limits " << nh.getNamespace() + "/" + field << " initialized " << field << " with min " << min_ << " and max " << max_);
+    std::string prefix = !field.empty() ? field + "/" : "";
+    if (nh.hasParam(prefix + "max") || nh.hasParam(prefix + "min")) {
+      nh.param<T>(prefix + "max", max_, std::numeric_limits<T>::max());
+      nh.param<T>(prefix + "min", min_, -max_);
+      ROS_INFO_STREAM("Limits " << nh.getNamespace() + "/" + field << " initialized " << field << " with min " << min_ << " and max " << max_);
+    }
   }
 
   T limit(const T &value)
@@ -33,151 +69,197 @@ public:
     return std::max(min_, std::min(max_, value));
   }
 
-  FieldLimiter()
+  T operator()(const T &value)
   {
-  };
-  T min_, max_;
+    return limit(value);
+  }
 
+  T min_, max_;
 };
 
 class PointLimiter
 {
 public:
-  PointLimiter(ros::NodeHandle nh, std::string field)
-      : nh_(ros::NodeHandle(nh, field)), x_(nh_, "x"), y_(nh_, "y"), z_(nh_, "z")
+  void init(const ros::NodeHandle &nh, const std::string &field = std::string())
   {
+    ros::NodeHandle field_nh(nh, field);
+    x.init(field_nh, "x");
+    y.init(field_nh, "y");
+    z.init(field_nh, "z");
   }
 
   Point limit(const Point &input)
   {
     Point output;
-    output.x = x_.limit(input.x);
-    output.y = y_.limit(input.y);
-    output.z = z_.limit(input.z);
+    output.x = x.limit(input.x);
+    output.y = y.limit(input.y);
+    output.z = z.limit(input.z);
     return output;
   }
 
-  ros::NodeHandle nh_;
-  FieldLimiter<double> x_, y_, z_;
+  Point operator()(const Point &input)
+  {
+    return limit(input);
+  }
+
+  FieldLimiter<double> x, y, z;
 };
 
 class Vector3Limiter
 {
 public:
-  Vector3Limiter(ros::NodeHandle nh, std::string field)
-      : nh_(ros::NodeHandle(nh, field)), x_(nh_, "x"), y_(nh_, "y"), z_(nh_, "z")
+  void init(const ros::NodeHandle &nh, const std::string &field = std::string())
   {
+    ros::NodeHandle field_nh(nh, field);
+    x.init(field_nh, "x");
+    y.init(field_nh, "y");
+    z.init(field_nh, "z");
   }
 
   Vector3 limit(const Vector3 &input)
   {
     Vector3 output;
-    output.x = x_.limit(input.x);
-    output.y = y_.limit(input.y);
-    output.z = z_.limit(input.z);
+    output.x = x.limit(input.x);
+    output.y = y.limit(input.y);
+    output.z = z.limit(input.z);
     return output;
   }
 
-  ros::NodeHandle nh_;
-  FieldLimiter<double> x_, y_, z_;
+  Vector3 operator()(const Vector3 &input)
+  {
+    return limit(input);
+  }
+
+  FieldLimiter<double> x, y, z;
 };
 
 
 class TwistLimiter
 {
 public:
-  TwistLimiter(ros::NodeHandle nh, std::string field)
-      : linear_(ros::NodeHandle(nh, field), "linear"), angular_(ros::NodeHandle(nh, field), "angular")
+  void init(const ros::NodeHandle &nh, const std::string &field = std::string())
   {
+    ros::NodeHandle field_nh(nh, field);
+    linear.init(field_nh, "linear");
+    angular.init(field_nh, "angular");
   }
 
   Twist limit(const Twist &input)
   {
     Twist output;
-    output.linear = linear_.limit(input.linear);
-    output.angular = angular_.limit(input.angular);
+    output.linear = linear.limit(input.linear);
+    output.angular = angular.limit(input.angular);
     return output;
   }
 
-  Vector3Limiter linear_, angular_;
+  Twist operator()(const Twist &input)
+  {
+    return limit(input);
+  }
+
+  Vector3Limiter linear, angular;
 };
 
 class WrenchLimiter
 {
 public:
-  WrenchLimiter(ros::NodeHandle nh, std::string field)
-      : force_(ros::NodeHandle(nh, field), "force"), torque_(ros::NodeHandle(nh, field), "torque")
+  void init(const ros::NodeHandle &nh, const std::string &field = std::string())
   {
+    ros::NodeHandle field_nh(nh, field);
+    force.init(field_nh, "force");
+    torque.init(field_nh, "torque");
   }
 
   Wrench limit(const Wrench &input)
   {
     Wrench output;
-    output.force = force_.limit(input.force);
-    output.torque = torque_.limit(input.torque);
+    output.force = force.limit(input.force);
+    output.torque = torque.limit(input.torque);
     return output;
   }
 
-  Vector3Limiter force_, torque_;
+  Wrench operator()(const Wrench &input)
+  {
+    return limit(input);
+  }
+
+  Vector3Limiter force, torque;
 };
 
 class AttitudeCommandLimiter
 {
 public:
-  AttitudeCommandLimiter(ros::NodeHandle nh, std::string field)
-      : roll_(ros::NodeHandle(nh, field), "x"), pitch_(ros::NodeHandle(nh, field), "y")
+  void init(const ros::NodeHandle &nh, const std::string &field = std::string())
   {
+    ros::NodeHandle field_nh(nh, field);
+    roll.init(field_nh, "roll");
+    pitch.init(field_nh, "pitch");
   }
 
   AttitudeCommand limit(const AttitudeCommand &input)
   {
     AttitudeCommand output;
     output.header = input.header;
-    output.roll = roll_.limit(input.roll);
-    output.pitch = pitch_.limit(input.pitch);
+    output.roll = roll.limit(input.roll);
+    output.pitch = pitch.limit(input.pitch);
     return output;
   }
 
-  FieldLimiter<double> roll_, pitch_;
+  AttitudeCommand operator()(const AttitudeCommand &input)
+  {
+    return limit(input);
+  }
+
+  FieldLimiter<double> roll, pitch;
 };
 
 class YawrateCommandLimiter
 {
 
 public:
-  YawrateCommandLimiter(ros::NodeHandle nh, std::string field)
-      : turnrate_(ros::NodeHandle(nh, field), "z")
+  void init(const ros::NodeHandle &nh, const std::string &field = std::string())
   {
+    turnrate.init(nh, field);
   }
 
   YawrateCommand limit(const YawrateCommand &input)
   {
     YawrateCommand output;
     output.header = input.header;
-    output.turnrate = turnrate_.limit(input.turnrate);
+    output.turnrate = turnrate.limit(input.turnrate);
     return output;
   }
 
-  FieldLimiter<double> turnrate_;
+  YawrateCommand operator()(const YawrateCommand &input)
+  {
+    return limit(input);
+  }
+
+  FieldLimiter<double> turnrate;
 };
 
 class ThrustCommandLimiter
 {
 public:
-  ThrustCommandLimiter(ros::NodeHandle nh, std::string field)
-      : thrust_(ros::NodeHandle(nh, field), "z")
+  void init(const ros::NodeHandle &nh, const std::string &field = std::string())
   {
+    thrust.init(nh, field);
   }
 
   ThrustCommand limit(const ThrustCommand &input)
   {
     ThrustCommand output;
     output.header = input.header;
-    output.thrust = thrust_.limit(input.thrust);
+    output.thrust = thrust.limit(input.thrust);
     return output;
   }
 
-  FieldLimiter<double> thrust_;
+  ThrustCommand operator()(const ThrustCommand &input)
+  {
+    return limit(input);
+  }
+
+  FieldLimiter<double> thrust;
 };
 
 } // namespace hector_quadrotor_interface

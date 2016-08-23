@@ -2,6 +2,7 @@
 #include <actionlib/client/simple_action_client.h>
 
 #include <hector_uav_msgs/PoseAction.h>
+#include <geometry_msgs/PoseStamped.h>
 
 #include <hector_quadrotor_interface/helpers.h>
 #include <hector_quadrotor_actions/base_action.h>
@@ -39,7 +40,7 @@ public:
       if (pose_server_.get()->isPreemptRequested())
       {
 
-        if(!pose_server_.get()->isNewGoalAvailable())
+        if (!pose_server_.get()->isNewGoalAvailable())
         {
           //Stop moving
           pose_pub_.publish(pose_server_.getPose());
@@ -58,12 +59,15 @@ public:
       if(!hector_quadrotor_interface::poseWithinTolerance(feedback.current_pose.pose, goal->target_pose.pose, dist_tolerance_, yaw_tolerance_))
       {
         last_time_out_of_tolerance_ = ros::Time::now();
-      }else if (last_time_out_of_tolerance_ + ros::Duration(time_in_tolerance_ ) < ros::Time::now()){
+      }
+      else if (last_time_out_of_tolerance_ + ros::Duration(time_in_tolerance_ ) < ros::Time::now())
+      {
         pose_server_.get()->setSucceeded();
         return;
       }
 
-      if (ros::Time::now() > start + ros::Duration(action_timeout_)){
+      if (ros::Time::now() > start + ros::Duration(action_timeout_))
+      {
         pose_server_.get()->setAborted();
         return;
       }
@@ -74,7 +78,6 @@ public:
   }
 
 private:
-
   hector_quadrotor_actions::BaseActionServer<hector_uav_msgs::PoseAction> pose_server_;
   ros::Publisher pose_pub_;
 

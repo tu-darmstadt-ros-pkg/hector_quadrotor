@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   hector_quadrotor_interface
   hector_uav_msgs
   roscpp
+  tf
   tf2_geometry_msgs
   visualization_msgs
   )

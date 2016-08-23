@@ -50,7 +50,6 @@ class QuadrotorHardwareSim : public gazebo_ros_control::RobotHWSim
 {
 public:
   QuadrotorHardwareSim();
-
   virtual ~QuadrotorHardwareSim();
 
   virtual bool initSim(
@@ -64,14 +63,10 @@ public:
 
   virtual void writeSim(ros::Time time, ros::Duration period);
 
-  bool enableMotorsCb(hector_uav_msgs::EnableMotors::Request &req, hector_uav_msgs::EnableMotors::Response &res);
+  bool enableMotorsCallback(hector_uav_msgs::EnableMotors::Request &req, hector_uav_msgs::EnableMotors::Response &res);
 
 private:
-
   bool enableMotors(bool enable);
-
-  double mass_;
-  double inertia_[3];
 
   std_msgs::Header header_;
   geometry_msgs::Pose pose_;
@@ -82,9 +77,10 @@ private:
 
   QuadrotorInterface interface_;
 
-  AccelCommandHandlePtr accel_input_;
+  WrenchCommandHandlePtr wrench_output_;
+  MotorCommandHandlePtr motor_output_;
 
-  boost::shared_ptr<hector_quadrotor_interface::WrenchLimiter> wrench_limiter_;
+  hector_quadrotor_interface::WrenchLimiter wrench_limiter_;
   std::string base_link_frame_, world_frame_;
 
   gazebo::physics::ModelPtr model_;
@@ -97,9 +93,9 @@ private:
   boost::shared_ptr<hector_quadrotor_interface::ImuSubscriberHelper> imu_sub_helper_;
   boost::shared_ptr<hector_quadrotor_interface::OdomSubscriberHelper> odom_sub_helper_;
 
-  ros::Publisher wrench_pub_, motor_status_pub_;
-  ros::ServiceServer motor_status_srv_;
-
+  ros::Publisher wrench_command_publisher_;
+  ros::Publisher motor_command_publisher_;
+  ros::ServiceServer enable_motors_server_;
 };
 
 } // namespace hector_quadrotor_controller_gazebo

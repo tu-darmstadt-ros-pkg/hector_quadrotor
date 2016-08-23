@@ -17,7 +17,7 @@
   <build_depend>hector_quadrotor_interface</build_depend>
   <build_depend>hector_uav_msgs</build_depend>
   <build_depend>roscpp</build_depend>
-  <build_depend>tf2</build_depend>
+  <build_depend>tf</build_depend>
   <build_depend>tf2_geometry_msgs</build_depend>
   <build_depend>topic_tools</build_depend>
   <build_depend>visualization_msgs</build_depend>
@@ -29,7 +29,7 @@
   <run_depend>hector_quadrotor_interface</run_depend>
   <run_depend>hector_uav_msgs</run_depend>
   <run_depend>roscpp</run_depend>
-  <run_depend>tf2</run_depend>
+  <run_depend>tf</run_depend>
   <run_depend>tf2_geometry_msgs</run_depend>
   <run_depend>topic_tools</run_depend>
   <run_depend>visualization_msgs</run_depend>
