@@ -26,7 +26,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 
-#include <hector_quadrotor_controller/quadrotor_hardware_gazebo.h>
+#include <hector_quadrotor_controller_gazebo/quadrotor_hardware_gazebo.h>
 
 #include <geometry_msgs/WrenchStamped.h>
 
