@@ -118,12 +118,14 @@ public:
 };
 typedef boost::shared_ptr<TwistHandle> TwistHandlePtr;
 
-class AccelerationHandle : public Handle_<AccelerationHandle, Vector3>
+class AccelerationHandle : public Handle_<AccelerationHandle, Twist>
 {
 public:
   using Base::operator=;
 
-  AccelerationHandle(QuadrotorInterface *interface, const Vector3 *acceleration) : Base(interface, acceleration, "acceleration") {}
+  AccelerationHandle() : Base("acceleration") {}
+  AccelerationHandle(QuadrotorInterface *interface) : Base(interface, "acceleration") {}
+  AccelerationHandle(QuadrotorInterface *interface, const Twist *acceleration) : Base(interface, acceleration, "acceleration") {}
   virtual ~AccelerationHandle() {}
 
   const ValueType& acceleration() const { return *get(); }

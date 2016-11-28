@@ -122,9 +122,12 @@ void QuadrotorHardwareSim::stateCallback(const nav_msgs::OdometryConstPtr &state
     const double acceleration_time_constant = 0.1;
     double dt((state->header.stamp - header_.stamp).toSec());
     if (dt > 0.0) {
-      acceleration_.x = ((state->twist.twist.linear.x - twist_.linear.x) + acceleration_time_constant * acceleration_.x) / (dt + acceleration_time_constant);
-      acceleration_.y = ((state->twist.twist.linear.y - twist_.linear.y) + acceleration_time_constant * acceleration_.y) / (dt + acceleration_time_constant);
-      acceleration_.z = ((state->twist.twist.linear.z - twist_.linear.z) + acceleration_time_constant * acceleration_.z) / (dt + acceleration_time_constant);
+      acceleration_.linear.x = ((state->twist.twist.linear.x - twist_.linear.x) + acceleration_time_constant * acceleration_.linear.x) / (dt + acceleration_time_constant);
+      acceleration_.linear.y = ((state->twist.twist.linear.y - twist_.linear.y) + acceleration_time_constant * acceleration_.linear.y) / (dt + acceleration_time_constant);
+      acceleration_.linear.z = ((state->twist.twist.linear.z - twist_.linear.z) + acceleration_time_constant * acceleration_.linear.z) / (dt + acceleration_time_constant);
+      acceleration_.angular.x = ((state->twist.twist.angular.x - twist_.angular.x) + acceleration_time_constant * acceleration_.angular.x) / (dt + acceleration_time_constant);
+      acceleration_.angular.y = ((state->twist.twist.angular.y - twist_.angular.y) + acceleration_time_constant * acceleration_.angular.y) / (dt + acceleration_time_constant);
+      acceleration_.angular.z = ((state->twist.twist.angular.z - twist_.angular.z) + acceleration_time_constant * acceleration_.angular.z) / (dt + acceleration_time_constant);
     }
   }
 
@@ -147,11 +150,12 @@ void QuadrotorHardwareSim::readSim(ros::Time time, ros::Duration period)
   callback_queue_.callAvailable();
 
   // read state from Gazebo
-  const double acceleration_time_constant = 0.1;
   gz_pose_             =  link_->GetWorldPose();
-  gz_acceleration_     = ((link_->GetWorldLinearVel() - gz_velocity_) + acceleration_time_constant * gz_acceleration_) / (period.toSec() + acceleration_time_constant);
+  gz_acceleration_     = link_->GetWorldLinearAccel();
+  gz_angular_acceleration_ = link_->GetWorldAngularAccel();
   gz_velocity_         =  link_->GetWorldLinearVel();
   gz_angular_velocity_ =  link_->GetWorldAngularVel();
+
 
   if (!subscriber_state_) {
     header_.frame_id = world_frame_;
@@ -169,9 +173,13 @@ void QuadrotorHardwareSim::readSim(ros::Time time, ros::Duration period)
     twist_.angular.x = gz_angular_velocity_.x;
     twist_.angular.y = gz_angular_velocity_.y;
     twist_.angular.z = gz_angular_velocity_.z;
-    acceleration_.x = gz_acceleration_.x;
-    acceleration_.y = gz_acceleration_.y;
-    acceleration_.z = gz_acceleration_.z;
+    acceleration_.linear.x = gz_acceleration_.x;
+    acceleration_.linear.y = gz_acceleration_.y;
+    acceleration_.linear.z = gz_acceleration_.z;
+    acceleration_.angular.x = gz_angular_acceleration_.x;
+    acceleration_.angular.y = gz_angular_acceleration_.y;
+    acceleration_.angular.z = gz_angular_acceleration_.z;
+
   }
 
   if (!subscriber_imu_) {

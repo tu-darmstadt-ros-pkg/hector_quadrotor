@@ -80,8 +80,7 @@ private:
 protected:
   std_msgs::Header header_;
   Pose pose_;
-  Twist twist_;
-  Vector3 acceleration_;
+  Twist twist_, acceleration_;
   Imu imu_;
   MotorStatus motor_status_;
   std::string base_link_frame_, world_frame_;
@@ -94,7 +93,7 @@ protected:
   gazebo::physics::PhysicsEnginePtr physics_;
 
   gazebo::math::Pose gz_pose_;
-  gazebo::math::Vector3 gz_velocity_, gz_acceleration_, gz_angular_velocity_;
+  gazebo::math::Vector3 gz_velocity_, gz_acceleration_, gz_angular_velocity_, gz_angular_acceleration_;
 
   ros::CallbackQueue callback_queue_;
   ros::Subscriber subscriber_state_;
