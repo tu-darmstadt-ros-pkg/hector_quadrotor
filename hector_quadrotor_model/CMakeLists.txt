@@ -4,15 +4,27 @@ project(hector_quadrotor_model)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS geometry_msgs hector_uav_msgs roscpp cmake_modules)
+find_package(catkin REQUIRED COMPONENTS geometry_msgs hector_uav_msgs roscpp)
 include_directories(include ${catkin_INCLUDE_DIRS})
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS thread)
 include_directories(${Boost_INCLUDE_DIRS})
 
-find_package(Eigen REQUIRED)
-include_directories(${EIGEN_INCLUDE_DIRS})
+# Find Eigen3 headers
+# see http://wiki.ros.org/jade/Migration#Eigen_CMake_Module_in_cmake_modules
+# and https://github.com/ros/cmake_modules/issues/35
+find_package(Eigen3)
+if(NOT EIGEN3_FOUND)
+  # Fallback to cmake_modules
+  find_package(cmake_modules REQUIRED)
+  find_package(Eigen REQUIRED)
+  set(EIGEN3_FOUND ${EIGEN_FOUND})
+  set(EIGEN3_INCLUDE_DIR ${EIGEN_INCLUDE_DIRS})
+  # set(EIGEN3_LIBRARIES ${EIGEN_LIBRARIES})
+  # Possibly map additional variables to the EIGEN3_ prefix.
+endif()
+include_directories(${EIGEN3_INCLUDE_DIR})
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
