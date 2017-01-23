@@ -38,7 +38,7 @@ bool getMassAndInertia(const ros::NodeHandle &nh, double &mass, double inertia[3
   std::string robot_description;
   if (!nh.getParam("robot_description", robot_description))
   {
-    ROS_ERROR_STREAM("getMassAndIntertia couldn't find URDF at " << nh.getNamespace() << "/robot_description");
+    ROS_ERROR_STREAM("getMassAndInertia() couldn't find URDF at " << nh.getNamespace() << "/robot_description");
     return false;
   }
 
@@ -50,7 +50,7 @@ bool getMassAndInertia(const ros::NodeHandle &nh, double &mass, double inertia[3
   catch (std::exception ex)
   {
     ROS_ERROR_STREAM(
-        "getMassAndIntertia couldn't parse URDF at " << nh.getNamespace() << "/robot_description: " << ex.what());
+        "getMassAndInertia() couldn't parse URDF at " << nh.getNamespace() << "/robot_description: " << ex.what());
     return false;
   }
 
@@ -58,7 +58,7 @@ bool getMassAndInertia(const ros::NodeHandle &nh, double &mass, double inertia[3
   if (!inertial || !inertial->mass || !inertial->ixx || !inertial->iyy || !inertial->izz)
   {
     ROS_ERROR_STREAM(
-        "getMassAndIntertia requires intertial information stored on the root link " << nh.getNamespace() <<
+        "getMassAndInertia() requires inertial information stored on the root link " << nh.getNamespace() <<
         "/robot_description");
     return false;
   }
