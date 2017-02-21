@@ -23,19 +23,19 @@ add_executable(landing_action
   src/landing_action.cpp
   )
 target_link_libraries(landing_action ${catkin_LIBRARIES})
-add_dependencies(landing_action hector_uav_msgs_generate_message_cpp)
+add_dependencies(landing_action ${catkin_EXPORTED_TARGETS})
 
 add_executable(pose_action
   src/pose_action.cpp
   )
 target_link_libraries(pose_action ${catkin_LIBRARIES})
-add_dependencies(pose_action hector_uav_msgs_generate_message_cpp)
+add_dependencies(pose_action ${catkin_EXPORTED_TARGETS})
 
 add_executable(takeoff_action
   src/takeoff_action.cpp
   )
 target_link_libraries(takeoff_action ${catkin_LIBRARIES})
-add_dependencies(takeoff_action hector_uav_msgs_generate_message_cpp)
+add_dependencies(takeoff_action ${catkin_EXPORTED_TARGETS})
 
 install(TARGETS landing_action pose_action takeoff_action
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
