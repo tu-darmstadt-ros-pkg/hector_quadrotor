@@ -59,9 +59,8 @@ private:
   boost::shared_ptr<TakeoffClient> takeoff_client_;
   boost::shared_ptr<PoseClient> pose_client_;
 
-  geometry_msgs::PoseStamped position_;
-
-  double yaw;
+  geometry_msgs::PoseStamped pose_;
+  double yaw_;
 
   struct Axis
   {
@@ -169,13 +168,13 @@ public:
       joy_subscriber_ = node_handle_.subscribe<sensor_msgs::Joy>("joy", 1,
                                                                  boost::bind(&Teleop::joyPoseCallback, this, _1));
 
-      position_.pose.position.x = 0;
-      position_.pose.position.y = 0;
-      position_.pose.position.z = 0;
-      position_.pose.orientation.x = 0;
-      position_.pose.orientation.y = 0;
-      position_.pose.orientation.z = 0;
-      position_.pose.orientation.w = 1;
+      pose_.pose.position.x = 0;
+      pose_.pose.position.y = 0;
+      pose_.pose.position.z = 0;
+      pose_.pose.orientation.x = 0;
+      pose_.pose.orientation.y = 0;
+      pose_.pose.orientation.z = 0;
+      pose_.pose.orientation.w = 1;
     }
     else
     {
@@ -269,24 +268,25 @@ public:
   {
     ros::Time now = ros::Time::now();
     double dt = 0.0;
-    if (!position_.header.stamp.isZero()) {
-      dt = std::max(0.0, std::min(1.0, (now - position_.header.stamp).toSec()));
+    if (!pose_.header.stamp.isZero()) {
+      dt = std::max(0.0, std::min(1.0, (now - pose_.header.stamp).toSec()));
     }
-    position_.header.stamp = now;
-    position_.header.frame_id = world_frame_;
-    position_.pose.position.x += (cos(yaw) * getAxis(joy, axes_.x) - sin(yaw) * getAxis(joy, axes_.y)) * dt;
-    position_.pose.position.y += (cos(yaw) * getAxis(joy, axes_.y) + sin(yaw) * getAxis(joy, axes_.x)) * dt;
-    position_.pose.position.z += getAxis(joy, axes_.z) * dt;
-    yaw += getAxis(joy, axes_.yaw) * M_PI/180.0 * dt;
-
-    tf2::Quaternion q;
-    q.setRPY(0.0, 0.0, yaw);
-    position_.pose.orientation = tf2::toMsg(q);
 
     if (getButton(joy, buttons_.go))
     {
+      pose_.header.stamp = now;
+      pose_.header.frame_id = world_frame_;
+      pose_.pose.position.x += (cos(yaw_) * getAxis(joy, axes_.x) - sin(yaw_) * getAxis(joy, axes_.y)) * dt;
+      pose_.pose.position.y += (cos(yaw_) * getAxis(joy, axes_.y) + sin(yaw_) * getAxis(joy, axes_.x)) * dt;
+      pose_.pose.position.z += getAxis(joy, axes_.z) * dt;
+      yaw_ += getAxis(joy, axes_.yaw) * M_PI/180.0 * dt;
+
+      tf2::Quaternion q;
+      q.setRPY(0.0, 0.0, yaw_);
+      pose_.pose.orientation = tf2::toMsg(q);
+
       hector_uav_msgs::PoseGoal goal;
-      goal.target_pose = position_;
+      goal.target_pose = pose_;
       pose_client_->sendGoal(goal);
     }
     if (getButton(joy, buttons_.interrupt))
