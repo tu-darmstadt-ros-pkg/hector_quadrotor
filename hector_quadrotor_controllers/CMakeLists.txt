@@ -26,7 +26,7 @@ add_library(hector_quadrotor_controllers
   src/position_controller.cpp
   )
 target_link_libraries(hector_quadrotor_controllers ${catkin_LIBRARIES})
-add_dependencies(hector_quadrotor_controllers hector_uav_msgs_generate_message_cpp)
+add_dependencies(hector_quadrotor_controllers ${catkin_EXPORTED_TARGETS})
 
 install(TARGETS hector_quadrotor_controllers
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
