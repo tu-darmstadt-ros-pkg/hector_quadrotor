@@ -67,6 +67,7 @@ public:
     pose_ = interface->getPose();
     twist_ = interface->getTwist();
 //    acceleration_  = interface->getAcceleration();
+    motor_status_ = interface->getMotorStatus();
 
     // load parameters
     root_nh.param<std::string>("base_link_frame", base_link_frame_, "base_link");
@@ -110,17 +111,13 @@ public:
     pid_.y.reset();
     pid_.z.reset();
 
-    attitude_control_ = hector_uav_msgs::AttitudeCommand();
-    yawrate_control_ = hector_uav_msgs::YawrateCommand();
-    thrust_control_ = hector_uav_msgs::ThrustCommand();
+    // Reset command
+    twist_command_ = TwistStamped();
   }
 
   virtual void starting(const ros::Time &time)
   {
     reset();
-    attitude_output_->start();
-    yawrate_output_->start();
-    thrust_output_->start();
   }
 
   virtual void stopping(const ros::Time &time)
@@ -194,6 +191,16 @@ public:
       twist_command_.header.frame_id = world_frame_;
     }
 
+    // Reset if motors are not running
+    if (motor_status_->motorStatus().running == false) {
+      reset();
+    }
+
+    // Start outputs
+    attitude_output_->start();
+    yawrate_output_->start();
+    thrust_output_->start();
+
     // Limit twist input
     Twist command = twist_limiter_(twist_command_.twist);
 
@@ -244,25 +251,29 @@ public:
     ROS_DEBUG_STREAM_NAMED("velocity_controller", "acceleration_command_world: [" << acceleration_command.x << " " << acceleration_command.y << " " << acceleration_command.z << "]");
     ROS_DEBUG_STREAM_NAMED("velocity_controller", "acceleration_command_body:  [" << acceleration_command_base_stabilized.x << " " << acceleration_command_base_stabilized.y << " " << acceleration_command_base_stabilized.z << "]");
 
-    attitude_control_.roll    = -asin(acceleration_command_base_stabilized.y / gravity);
-    attitude_control_.pitch   =  asin(acceleration_command_base_stabilized.x / gravity);
-    yawrate_control_.turnrate = command.angular.z;
-    thrust_control_.thrust    = mass_ * ((acceleration_command.z - gravity) * load_factor + gravity);
+    hector_uav_msgs::AttitudeCommand attitude_control;
+    hector_uav_msgs::YawrateCommand yawrate_control;
+    hector_uav_msgs::ThrustCommand thrust_control;
+    attitude_control.roll    = -asin(acceleration_command_base_stabilized.y / gravity);
+    attitude_control.pitch   =  asin(acceleration_command_base_stabilized.x / gravity);
+    yawrate_control.turnrate = command.angular.z;
+    thrust_control.thrust    = mass_ * ((acceleration_command.z - gravity) * load_factor + gravity);
 
     // pass down time stamp from twist command
-    attitude_control_.header.stamp = twist_command_.header.stamp;
-    yawrate_control_.header.stamp = twist_command_.header.stamp;
-    thrust_control_.header.stamp = twist_command_.header.stamp;
+    attitude_control.header.stamp = twist_command_.header.stamp;
+    yawrate_control.header.stamp = twist_command_.header.stamp;
+    thrust_control.header.stamp = twist_command_.header.stamp;
 
     // Update output from controller
-    attitude_output_->setCommand(attitude_control_);
-    yawrate_output_->setCommand(yawrate_control_);
-    thrust_output_->setCommand(thrust_control_);
+    attitude_output_->setCommand(attitude_control);
+    yawrate_output_->setCommand(yawrate_control);
+    thrust_output_->setCommand(thrust_control);
   }
 
 private:
   PoseHandlePtr pose_;
   TwistHandlePtr twist_;
+  MotorStatusHandlePtr motor_status_;
 
   TwistCommandHandlePtr twist_input_;
   AttitudeCommandHandlePtr attitude_output_;
@@ -273,9 +284,6 @@ private:
   ros::Subscriber cmd_vel_subscriber_;
 
   geometry_msgs::TwistStamped twist_command_;
-  hector_uav_msgs::AttitudeCommand attitude_control_;
-  hector_uav_msgs::YawrateCommand yawrate_control_;
-  hector_uav_msgs::ThrustCommand thrust_control_;
 
   hector_quadrotor_interface::TwistLimiter twist_limiter_;
   std::string base_link_frame_, base_stabilized_frame_, world_frame_;

@@ -52,7 +52,7 @@ bool QuadrotorInterface::start(const CommandHandle *handle)
   std::map<std::string, const CommandHandle *>::iterator it = enabled_.find(resource);
   if (it == enabled_.end()) {
     enabled_[resource] = handle;
-    ROS_INFO_NAMED("quadrotor_interface", "Enabled %s control", resource.c_str());
+    ROS_INFO_NAMED("quadrotor_interface", "Enabled %s output", resource.c_str());
     return true;
   } else if (it->second == handle) {
     return true;

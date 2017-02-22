@@ -55,6 +55,7 @@ class PositionController : public controller_interface::Controller<QuadrotorInte
 {
 public:
   PositionController()
+    : pose_command_valid_(false), twist_limit_valid_(false)
   {
   }
 
@@ -69,6 +70,7 @@ public:
     // get interface handles
     pose_ = interface->getPose();
     twist_ = interface->getTwist();
+    motor_status_ = interface->getMotorStatus();
 
     root_nh.param<std::string>("base_link_frame", base_link_frame_, "base_link");
     root_nh.param<std::string>("world_frame", world_frame_, "/world");
@@ -116,6 +118,7 @@ public:
 
     // Set commanded pose to robot's current pose
     updatePoseCommand(pose_->pose());
+    pose_command_valid_ = false;
   }
 
   virtual void starting(const ros::Time &time)
@@ -126,6 +129,8 @@ public:
   virtual void stopping(const ros::Time &time)
   {
     twist_output_->stop();
+    pose_command_valid_ = false;
+//    twist_limit_valid_ = false;
   }
 
   void poseCommandCallback(const geometry_msgs::PoseStampedConstPtr &command)
@@ -137,8 +142,6 @@ public:
     if (!isRunning()) this->startRequest(start_time);
 
     updatePoseCommand(*command);
-    if (!(pose_input_->connected())) *pose_input_ = &pose_command_;
-    pose_input_->start();
   }
 
   void twistLimitCallback(const geometry_msgs::TwistConstPtr &limit)
@@ -146,8 +149,7 @@ public:
     boost::mutex::scoped_lock lock(command_mutex_);
 
     twist_limit_ = *limit;
-    if (!(twist_limit_input_->connected())) *twist_limit_input_ = &twist_limit_;
-    twist_limit_input_->start();
+    twist_limit_valid_ = true;
   }
 
   virtual void update(const ros::Time &time, const ros::Duration &period)
@@ -156,14 +158,16 @@ public:
     Twist output;
 
     // Get pose command command input
-    // return if no pose command is available
     if (pose_input_->connected() && pose_input_->enabled())
     {
       updatePoseCommand(pose_input_->getCommand());
-      twist_output_->start();
-    } else {
-      reset();
-      return;
+    }
+
+    // Get twist limit input
+    if (twist_limit_input_->connected() && twist_limit_input_->enabled())
+    {
+      twist_limit_ = twist_limit_input_->getCommand();
+      twist_limit_valid_ = true;
     }
 
     // check command timeout
@@ -171,9 +175,27 @@ public:
 
     // Check if pose control was preempted
     if (twist_output_->preempted()) {
-      ROS_INFO_NAMED("position_controller", "Position control preempted!");
-      this->stopRequest(time);
+      if (pose_command_valid_) {
+        ROS_INFO_NAMED("position_controller", "Position control preempted!");
+      }
+      pose_command_valid_ = false;
+    }
+
+    // Check if motors are running
+    if (motor_status_->motorStatus().running == false) {
+      if (pose_command_valid_) {
+        ROS_INFO_NAMED("position_controller", "Disabled position control while motors are not running.");
+      }
+      pose_command_valid_ = false;
+    }
+
+    // Abort if no pose command is available
+    if (!pose_command_valid_) {
+      reset();
+      twist_output_->stop();
       return;
+    } else {
+      twist_output_->start();
     }
 
     Pose pose = pose_->pose();
@@ -219,10 +241,8 @@ public:
     }
 
     // limit twist
-    if (twist_limit_input_->connected() && twist_limit_input_->enabled())
+    if (twist_limit_valid_)
     {
-      twist_limit_ = twist_limit_input_->getCommand();
-
       double linear_xy = sqrt(output.linear.x*output.linear.x + output.linear.y*output.linear.y);
       double limit_linear_xy  = std::max(twist_limit_.linear.x, twist_limit_.linear.y);
       if (limit_linear_xy > 0.0 && linear_xy > limit_linear_xy) {
@@ -271,6 +291,7 @@ private:
       tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
       q.setRPY(0, 0, yaw);
       pose_command_.orientation = tf2::toMsg(q);
+      pose_command_valid_ = true;
     }
     pose_marker_.pose = pose_command_;
     marker_publisher_.publish(pose_marker_);
@@ -292,6 +313,7 @@ private:
 
   PoseHandlePtr pose_;
   TwistHandlePtr twist_;
+  MotorStatusHandlePtr motor_status_;
 
   PoseCommandHandlePtr pose_input_;
   TwistCommandHandlePtr twist_input_;
@@ -307,6 +329,7 @@ private:
 
   geometry_msgs::Pose pose_command_;
   geometry_msgs::Twist twist_limit_;
+  bool pose_command_valid_, twist_limit_valid_;
 
   std::string base_link_frame_, base_stabilized_frame_, world_frame_;
   std::string tf_prefix_;

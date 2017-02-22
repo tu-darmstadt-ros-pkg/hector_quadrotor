@@ -65,6 +65,7 @@ public:
     pose_ = interface->getPose();
     twist_ = interface->getTwist();
     accel_ = interface->getAccel();
+    motor_status_ = interface->getMotorStatus();
 
     root_nh.param<std::string>("base_link_frame", base_link_frame_, "base_link");
     root_nh.param<std::string>("base_stabilized_frame", base_stabilized_frame_, "base_stabilized");
@@ -147,7 +148,8 @@ public:
     thrust_command_ = thrust_limiter_(thrust_command_);
 
     // TODO move estop to gazebo plugin
-    if (!command_timeout_.isZero() && (
+    if ((motor_status_->motorStatus().running == true) &&
+        !command_timeout_.isZero() && (
             time > attitude_command_.header.stamp + command_timeout_ ||
             time > yawrate_command_.header.stamp + command_timeout_ ||
             time > thrust_command_.header.stamp + command_timeout_ ) )
@@ -233,6 +235,7 @@ private:
   PoseHandlePtr pose_;
   TwistHandlePtr twist_;
   AccelerationHandlePtr accel_;
+  MotorStatusHandlePtr motor_status_;
 
   AttitudeCommandHandlePtr attitude_input_;
   YawrateCommandHandlePtr yawrate_input_;
