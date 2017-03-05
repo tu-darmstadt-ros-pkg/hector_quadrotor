@@ -254,8 +254,8 @@ public:
     hector_uav_msgs::AttitudeCommand attitude_control;
     hector_uav_msgs::YawrateCommand yawrate_control;
     hector_uav_msgs::ThrustCommand thrust_control;
-    attitude_control.roll    = -asin(acceleration_command_base_stabilized.y / gravity);
-    attitude_control.pitch   =  asin(acceleration_command_base_stabilized.x / gravity);
+    attitude_control.roll    = -asin(std::min(std::max(acceleration_command_base_stabilized.y / gravity, -1.0), 1.0));
+    attitude_control.pitch   =  asin(std::min(std::max(acceleration_command_base_stabilized.x / gravity, -1.0), 1.0));
     yawrate_control.turnrate = command.angular.z;
     thrust_control.thrust    = mass_ * ((acceleration_command.z - gravity) * load_factor + gravity);
 

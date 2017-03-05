@@ -188,13 +188,12 @@ public:
     // 1. We consider the roll and pitch commands as desired accelerations in the base_stabilized frame,
     //    not considering wind (inverse of the calculation in velocity_controller.cpp).
     Vector3 acceleration_command_base_stabilized;
-    const double gravity = 9.8065;
-    acceleration_command_base_stabilized.x =  sin(attitude_command_.pitch) * gravity;
-    acceleration_command_base_stabilized.y = -sin(attitude_command_.roll)  * gravity;
-    acceleration_command_base_stabilized.z = gravity;
+    acceleration_command_base_stabilized.x =  sin(attitude_command_.pitch);
+    acceleration_command_base_stabilized.y = -sin(attitude_command_.roll);
+    acceleration_command_base_stabilized.z = 1.0;
 
     // 2. Transform desired acceleration to the body frame (via the world frame).
-    //    The result is independent of the yaw angle because the yaw rotation will be undone in the second step).
+    //    The result is independent of the yaw angle because the yaw rotation will be undone in the toBody() step.
     double sin_yaw, cos_yaw;
     sincos(yaw, &sin_yaw, &cos_yaw);
     Vector3 acceleration_command_world, acceleration_command_body;
@@ -204,10 +203,9 @@ public:
     acceleration_command_body = pose_->toBody(acceleration_command_world);
 
     // 3. Control error is proportional to the desired acceleration in the body frame!
-    wrench_control_.wrench.torque.x = pid_.roll.computeCommand(inertia_[0] * (-acceleration_command_body.y / gravity), period);
-    wrench_control_.wrench.torque.y = pid_.pitch.computeCommand(inertia_[1] * (acceleration_command_body.x / gravity), period);
-    wrench_control_.wrench.torque.z = pid_.yawrate.computeCommand(inertia_[2] * (yawrate_command_.turnrate - twist_body.angular.z),
-                                                                 period);
+    wrench_control_.wrench.torque.x = inertia_[0] * pid_.roll.computeCommand(-acceleration_command_body.y, period);
+    wrench_control_.wrench.torque.y = inertia_[1] * pid_.pitch.computeCommand(acceleration_command_body.x, period);
+    wrench_control_.wrench.torque.z = inertia_[2] * pid_.yawrate.computeCommand((yawrate_command_.turnrate - twist_body.angular.z), period);
     wrench_control_.wrench.force.x  = 0.0;
     wrench_control_.wrench.force.y  = 0.0;
     wrench_control_.wrench.force.z = thrust_command_.thrust;

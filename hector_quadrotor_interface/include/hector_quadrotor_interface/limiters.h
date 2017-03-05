@@ -50,15 +50,15 @@ class FieldLimiter
 {
 public:
   FieldLimiter()
-    : min_(-std::numeric_limits<T>::max())
-    , max_( std::numeric_limits<T>::max())
+    : min_(-std::numeric_limits<T>::infinity())
+    , max_( std::numeric_limits<T>::infinity())
   {}
 
   void init(const ros::NodeHandle &nh, const std::string &field = std::string())
   {
     std::string prefix = !field.empty() ? field + "/" : "";
     if (nh.hasParam(prefix + "max") || nh.hasParam(prefix + "min")) {
-      nh.param<T>(prefix + "max", max_, std::numeric_limits<T>::max());
+      nh.param<T>(prefix + "max", max_, std::numeric_limits<T>::infinity());
       nh.param<T>(prefix + "min", min_, -max_);
       ROS_INFO_STREAM("Limits " << nh.getNamespace() + "/" + field << " initialized " << field << " with min " << min_ << " and max " << max_);
     }
@@ -114,6 +114,8 @@ public:
     x.init(field_nh, "x");
     y.init(field_nh, "y");
     z.init(field_nh, "z");
+    field_nh.param("max", absolute_maximum, std::numeric_limits<double>::infinity());
+    field_nh.param("max_xy", absolute_maximum_xy, std::numeric_limits<double>::infinity());
   }
 
   Vector3 limit(const Vector3 &input)
@@ -122,6 +124,21 @@ public:
     output.x = x.limit(input.x);
     output.y = y.limit(input.y);
     output.z = z.limit(input.z);
+
+    double absolute_value_xy = sqrt(output.x * output.x + output.y * output.y);
+    if (absolute_value_xy > absolute_maximum_xy) {
+      output.x *= absolute_maximum_xy / absolute_value_xy;
+      output.y *= absolute_maximum_xy / absolute_value_xy;
+      output.z *= absolute_maximum_xy / absolute_value_xy;
+    }
+
+    double absolute_value = sqrt(output.x * output.x + output.y * output.y + output.z * output.z);
+    if (absolute_value > absolute_maximum) {
+      output.x *= absolute_maximum / absolute_value;
+      output.y *= absolute_maximum / absolute_value;
+      output.z *= absolute_maximum / absolute_value;
+    }
+
     return output;
   }
 
@@ -131,6 +148,7 @@ public:
   }
 
   FieldLimiter<double> x, y, z;
+  double absolute_maximum, absolute_maximum_xy;
 };
 
 
@@ -194,6 +212,7 @@ public:
     ros::NodeHandle field_nh(nh, field);
     roll.init(field_nh, "roll");
     pitch.init(field_nh, "pitch");
+    field_nh.param("max_roll_pitch", absolute_max, std::numeric_limits<double>::infinity());
   }
 
   AttitudeCommand limit(const AttitudeCommand &input)
@@ -202,6 +221,13 @@ public:
     output.header = input.header;
     output.roll = roll.limit(input.roll);
     output.pitch = pitch.limit(input.pitch);
+
+    double absolute_value = sqrt(output.roll * output.roll + output.pitch * output.pitch);
+    if (absolute_value > absolute_max) {
+      output.roll *= absolute_max / absolute_value;
+      output.pitch *= absolute_max / absolute_value;
+    }
+
     return output;
   }
 
@@ -211,6 +237,7 @@ public:
   }
 
   FieldLimiter<double> roll, pitch;
+  double absolute_max;
 };
 
 class YawrateCommandLimiter
