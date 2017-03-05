@@ -61,6 +61,11 @@ public:
     imu_sub_ = nh.subscribe<sensor_msgs::Imu>(topic, 1, boost::bind(&ImuSubscriberHelper::imuCallback, this, _1));
   }
 
+  ~ImuSubscriberHelper()
+  {
+    imu_sub_.shutdown();
+  }
+
 private:
   sensor_msgs::Imu &imu_;
   ros::Subscriber imu_sub_;
@@ -83,6 +88,11 @@ public:
   {
     odom_sub_ = nh.subscribe<nav_msgs::Odometry>(topic, 1,
                                                  boost::bind(&OdomSubscriberHelper::odomCallback, this, _1));
+  }
+
+  ~OdomSubscriberHelper()
+  {
+    odom_sub_.shutdown();
   }
 
 private:
@@ -138,6 +148,11 @@ public:
     pose_sub_ = nh.subscribe<geometry_msgs::PoseStamped>(topic, 1,
                                                          boost::bind(&PoseSubscriberHelper::poseCallback, this,
                                                                      _1));
+  }
+
+  ~PoseSubscriberHelper()
+  {
+    pose_sub_.shutdown();
   }
 
   geometry_msgs::PoseStampedConstPtr get() const { return pose_; }
@@ -246,6 +261,11 @@ public:
                                                                         this, _1));
   }
 
+  ~StateSubscriberHelper()
+  {
+    tf_sub_.shutdown();
+  }
+
   bool isAvailable(){ return available_; }
 
 private:
@@ -321,6 +341,13 @@ public:
         &AttitudeSubscriberHelper::yawrateCommandCb, this, _1));
     thrust_subscriber_ = nh.subscribe<hector_uav_msgs::ThrustCommand>("thrust", 1, boost::bind(
         &AttitudeSubscriberHelper::thrustCommandCb, this, _1));
+  }
+
+  ~AttitudeSubscriberHelper()
+  {
+    attitude_subscriber_.shutdown();
+    yawrate_subscriber_.shutdown();
+    thrust_subscriber_.shutdown();
   }
 
 private:

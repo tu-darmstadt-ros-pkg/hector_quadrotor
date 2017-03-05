@@ -61,6 +61,8 @@ public:
 
   virtual ~PositionController()
   {
+    pose_subscriber_.shutdown();
+    twist_limit_subscriber_.shutdown();
   }
 
   virtual bool init(QuadrotorInterface *interface,

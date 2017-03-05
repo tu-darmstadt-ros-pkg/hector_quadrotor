@@ -58,6 +58,8 @@ public:
 
   virtual ~VelocityController()
   {
+    twist_subscriber_.shutdown();
+    cmd_vel_subscriber_.shutdown();
   }
 
   virtual bool init(hector_quadrotor_interface::QuadrotorInterface *interface, ros::NodeHandle &root_nh,

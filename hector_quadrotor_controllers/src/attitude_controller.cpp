@@ -57,6 +57,8 @@ public:
 
   virtual ~AttitudeController()
   {
+    attitude_subscriber_helper_.reset();
+    estop_sub_.shutdown();
   }
 
   virtual bool init(hector_quadrotor_interface::QuadrotorInterface *interface, ros::NodeHandle &root_nh,
