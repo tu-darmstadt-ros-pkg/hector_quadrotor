@@ -1,0 +1,5 @@
+<launch>
+  <node name="pose_action" pkg="hector_quadrotor_actions" type="pose_action" output="screen" />
+  <node name="landing_action" pkg="hector_quadrotor_actions" type="landing_action" output="screen" />
+  <node name="takeoff_action" pkg="hector_quadrotor_actions" type="takeoff_action" output="screen" />
+</launch>

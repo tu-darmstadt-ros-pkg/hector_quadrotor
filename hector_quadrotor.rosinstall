@@ -1,4 +1,4 @@
-- git: {local-name: hector_quadrotor, uri: 'https://github.com/tu-darmstadt-ros-pkg/hector_quadrotor.git', version: indigo-devel}
+- git: {local-name: hector_quadrotor, uri: 'https://github.com/tu-darmstadt-ros-pkg/hector_quadrotor.git', version: kinetic-devel}
 - git: {local-name: hector_localization, uri: 'https://github.com/tu-darmstadt-ros-pkg/hector_localization.git', version: catkin}
-- git: {local-name: hector_gazebo, uri: 'https://github.com/tu-darmstadt-ros-pkg/hector_gazebo.git', version: indigo-devel}
-- git: {local-name: hector_models, uri: 'https://github.com/tu-darmstadt-ros-pkg/hector_models.git', version: indigo-devel}
+- git: {local-name: hector_gazebo, uri: 'https://github.com/tu-darmstadt-ros-pkg/hector_gazebo.git', version: kinetic-devel}
+- git: {local-name: hector_models, uri: 'https://github.com/tu-darmstadt-ros-pkg/hector_models.git', version: kinetic-devel}

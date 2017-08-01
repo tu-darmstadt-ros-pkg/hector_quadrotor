@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+
+<launch>
+  <arg name="joy_dev" default="/dev/input/js0" />
+  <arg name="control_mode" default="velocity"/>
+
+  <node name="joy" pkg="joy" type="joy_node" output="screen" >
+    <param name="dev" value="$(arg joy_dev)" />
+    <param name="autorepeat_rate" value="10" />
+    <param name="coalesce_interval" value="0.01" />
+  </node>
+
+  <!-- Note that axis IDs are those from the joystick message plus one, to be able to invert axes by specifiying either positive or negative axis numbers.-->
+  <!-- Axis 2 from joy message thus has to be set as '3' or '-3'(inverted mode) below-->
+  <node name="teleop" pkg="hector_quadrotor_teleop" type="quadrotor_teleop" output="screen">
+    <rosparam subst_value="true">
+      control_mode: $(arg control_mode)
+      x_axis: 4
+      y_axis: 3
+      z_axis: 2
+      thrust_axis: 2
+      yaw_axis: 1
+
+      slow_button: 12
+      go_button: 13
+      stop_button: 15
+    </rosparam>
+
+  </node>
+</launch>

@@ -17,28 +17,24 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <!-- Dependencies needed to compile this package. -->
-  <build_depend>gazebo_plugins</build_depend>
-  <build_depend>hector_gazebo_plugins</build_depend>
-  <build_depend>hector_sensors_gazebo</build_depend>
+  <!-- required to check available plugins -->
   <build_depend>hector_quadrotor_gazebo_plugins</build_depend>
   <build_depend>hector_quadrotor_controller_gazebo</build_depend>
-  <build_depend>message_to_tf</build_depend>
-  <build_depend>robot_state_publisher</build_depend>
 
   <!-- Dependencies needed after this package is compiled. -->
   <run_depend>gazebo_plugins</run_depend>
   <run_depend>hector_gazebo_plugins</run_depend>
   <run_depend>hector_sensors_gazebo</run_depend>
+  <run_depend>hector_quadrotor_actions</run_depend>
   <run_depend>hector_quadrotor_description</run_depend>
   <run_depend>hector_quadrotor_model</run_depend>
   <run_depend>hector_quadrotor_gazebo_plugins</run_depend>
   <run_depend>hector_quadrotor_controller_gazebo</run_depend>
+  <run_depend>hector_quadrotor_controllers</run_depend>
   <run_depend>hector_quadrotor_pose_estimation</run_depend>
   <run_depend>hector_quadrotor_teleop</run_depend>
   <run_depend>hector_uav_msgs</run_depend>
   <run_depend>message_to_tf</run_depend>
   <run_depend>robot_state_publisher</run_depend>
-
-  <!-- Dependencies needed only for running tests. -->
 
 </package>

@@ -1,0 +1,45 @@
+<package>
+  <name>hector_quadrotor_interface</name>
+  <version>0.3.5</version>
+  <description>hector_quadrotor_interface provides libraries and a node for quadrotor control using <a href="http://wiki.ros.org/ros_control">ros_control</a>.</description>
+  <maintainer email="meyer@fsr.tu-darmstadt.de">Johannes Meyer</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://ros.org/wiki/hector_quadrotor_interface</url>
+  <url type="bugtracker">https://github.com/tu-darmstadt-ros-pkg/hector_quadrotor/issues</url>
+
+  <author email="meyer@fsr.tu-darmstadt.de">Johannes Meyer</author>
+  <author email="pbovbel@clearpathrobotics.com">Paul Bovbel</author>
+
+  <!-- Dependencies which this package needs to build itself. -->
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Dependencies needed to compile this package. -->
+  <build_depend>roscpp</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>hector_uav_msgs</build_depend>
+  <build_depend>std_srvs</build_depend>
+  <build_depend>hardware_interface</build_depend>
+  <build_depend>controller_interface</build_depend>
+  <build_depend>tf2</build_depend>
+  <build_depend>tf2_geometry_msgs</build_depend>
+  <build_depend>urdf</build_depend>
+
+  <!-- Dependencies needed after this package is compiled. -->
+  <run_depend>roscpp</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>nav_msgs</run_depend>
+  <run_depend>hector_uav_msgs</run_depend>
+  <run_depend>std_srvs</run_depend>
+  <run_depend>hardware_interface</run_depend>
+  <run_depend>controller_interface</run_depend>
+  <run_depend>tf2</run_depend>
+  <run_depend>tf2_geometry_msgs</run_depend>
+  <run_depend>urdf</run_depend>
+  <!-- Dependencies needed only for running tests. -->
+
+</package>
