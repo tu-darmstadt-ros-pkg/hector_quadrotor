@@ -19,7 +19,7 @@
 
   <!-- Dependencies needed to compile this package. -->
   <build_depend>roscpp</build_depend>
-  <build_depend>libgazebo7-dev</build_depend>
+  <build_depend>gazebo_dev</build_depend>
   <build_depend>hector_gazebo_plugins</build_depend>
   <build_depend>hector_quadrotor_model</build_depend>
   <build_depend>geometry_msgs</build_depend>
