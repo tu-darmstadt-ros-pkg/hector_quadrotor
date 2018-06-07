@@ -42,7 +42,7 @@ bool getMassAndInertia(const ros::NodeHandle &nh, double &mass, double inertia[3
     return false;
   }
 
-  boost::shared_ptr<urdf::ModelInterface> model;
+  urdf::ModelInterfaceSharedPtr model;
   try
   {
     model = urdf::parseURDF(robot_description);
@@ -54,7 +54,7 @@ bool getMassAndInertia(const ros::NodeHandle &nh, double &mass, double inertia[3
     return false;
   }
 
-  boost::shared_ptr<urdf::Inertial> inertial = model->getRoot()->inertial;
+  urdf::InertialSharedPtr inertial = model->getRoot()->inertial;
   if (!inertial || !inertial->mass || !inertial->ixx || !inertial->iyy || !inertial->izz)
   {
     ROS_ERROR_STREAM(
