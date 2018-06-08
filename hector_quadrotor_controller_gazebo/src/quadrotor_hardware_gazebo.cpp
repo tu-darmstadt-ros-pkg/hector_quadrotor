@@ -61,7 +61,11 @@ bool QuadrotorHardwareSim::initSim(
   // store parent model pointer
   model_ = parent_model;
   link_ = model_->GetLink();
+#if (GAZEBO_MAJOR_VERSION >= 8)
+  physics_ = model_->GetWorld()->Physics();
+#else
   physics_ = model_->GetWorld()->GetPhysicsEngine();
+#endif
 
   model_nh.param<std::string>("world_frame", world_frame_, "world");
   model_nh.param<std::string>("base_link_frame", base_link_frame_, "base_link");
@@ -115,6 +119,17 @@ void QuadrotorHardwareSim::readSim(ros::Time time, ros::Duration period)
 {
   // read state from Gazebo
   const double acceleration_time_constant = 0.1;
+#if (GAZEBO_MAJOR_VERSION >= 8)
+  gz_acceleration_ = ((link_->WorldLinearVel() - gz_velocity_) + acceleration_time_constant * gz_acceleration_) /
+                     (period.toSec() + acceleration_time_constant);
+  gz_angular_acceleration_ =
+      ((link_->WorldLinearVel() - gz_angular_velocity_) + acceleration_time_constant * gz_angular_acceleration_) /
+      (period.toSec() + acceleration_time_constant);
+
+  gz_pose_ = link_->WorldPose();
+  gz_velocity_ = link_->WorldLinearVel();
+  gz_angular_velocity_ = link_->WorldAngularVel();
+#else
   gz_acceleration_ = ((link_->GetWorldLinearVel() - gz_velocity_) + acceleration_time_constant * gz_acceleration_) /
                      (period.toSec() + acceleration_time_constant);
   gz_angular_acceleration_ =
@@ -124,6 +139,7 @@ void QuadrotorHardwareSim::readSim(ros::Time time, ros::Duration period)
   gz_pose_ = link_->GetWorldPose();
   gz_velocity_ = link_->GetWorldLinearVel();
   gz_angular_velocity_ = link_->GetWorldAngularVel();
+#endif
 
   // Use when Gazebo patches accel = 0 bug
 //    gz_acceleration_ = link_->GetWorldLinearAccel();
@@ -133,6 +149,27 @@ void QuadrotorHardwareSim::readSim(ros::Time time, ros::Duration period)
   {
     header_.frame_id = world_frame_;
     header_.stamp = time;
+#if (GAZEBO_MAJOR_VERSION >= 8)
+    pose_.position.x = gz_pose_.Pos().X();
+    pose_.position.y = gz_pose_.Pos().Y();
+    pose_.position.z = gz_pose_.Pos().Z();
+    pose_.orientation.w = gz_pose_.Rot().W();
+    pose_.orientation.x = gz_pose_.Rot().X();
+    pose_.orientation.y = gz_pose_.Rot().Y();
+    pose_.orientation.z = gz_pose_.Rot().Z();
+    twist_.linear.x = gz_velocity_.X();
+    twist_.linear.y = gz_velocity_.Y();
+    twist_.linear.z = gz_velocity_.Z();
+    twist_.angular.x = gz_angular_velocity_.X();
+    twist_.angular.y = gz_angular_velocity_.Y();
+    twist_.angular.z = gz_angular_velocity_.Z();
+    acceleration_.linear.x = gz_acceleration_.X();
+    acceleration_.linear.y = gz_acceleration_.Y();
+    acceleration_.linear.z = gz_acceleration_.Z();
+    acceleration_.angular.x = gz_angular_acceleration_.X();
+    acceleration_.angular.y = gz_angular_acceleration_.Y();
+    acceleration_.angular.z = gz_angular_acceleration_.Z();
+#else
     pose_.position.x = gz_pose_.pos.x;
     pose_.position.y = gz_pose_.pos.y;
     pose_.position.z = gz_pose_.pos.z;
@@ -152,10 +189,28 @@ void QuadrotorHardwareSim::readSim(ros::Time time, ros::Duration period)
     acceleration_.angular.x = gz_angular_acceleration_.x;
     acceleration_.angular.y = gz_angular_acceleration_.y;
     acceleration_.angular.z = gz_angular_acceleration_.z;
+#endif
   }
 
   if (!imu_sub_helper_)
   {
+#if (GAZEBO_MAJOR_VERSION >= 8)
+    imu_.orientation.w = gz_pose_.Rot().W();
+    imu_.orientation.x = gz_pose_.Rot().X();
+    imu_.orientation.y = gz_pose_.Rot().Y();
+    imu_.orientation.z = gz_pose_.Rot().Z();
+
+    ignition::math::Vector3d gz_angular_velocity_body = gz_pose_.Rot().RotateVectorReverse(gz_angular_velocity_);
+    imu_.angular_velocity.x = gz_angular_velocity_body.X();
+    imu_.angular_velocity.y = gz_angular_velocity_body.Y();
+    imu_.angular_velocity.z = gz_angular_velocity_body.Z();
+
+    ignition::math::Vector3d gz_linear_acceleration_body = gz_pose_.Rot().RotateVectorReverse(
+        gz_acceleration_ - model_->GetWorld()->Gravity());
+    imu_.linear_acceleration.x = gz_linear_acceleration_body.X();
+    imu_.linear_acceleration.y = gz_linear_acceleration_body.Y();
+    imu_.linear_acceleration.z = gz_linear_acceleration_body.Z();
+#else
     imu_.orientation.w = gz_pose_.rot.w;
     imu_.orientation.x = gz_pose_.rot.x;
     imu_.orientation.y = gz_pose_.rot.y;
@@ -171,6 +226,7 @@ void QuadrotorHardwareSim::readSim(ros::Time time, ros::Duration period)
     imu_.linear_acceleration.x = gz_linear_acceleration_body.x;
     imu_.linear_acceleration.y = gz_linear_acceleration_body.y;
     imu_.linear_acceleration.z = gz_linear_acceleration_body.z;
+#endif
   }
 }
 
@@ -192,10 +248,19 @@ void QuadrotorHardwareSim::writeSim(ros::Time time, ros::Duration period)
       wrench.wrench = wrench_limiter_(wrench_output_->getCommand());
 
       if (!result_written) {
+#if (GAZEBO_MAJOR_VERSION >= 8)
+        ignition::math::Vector3d force(wrench.wrench.force.x, wrench.wrench.force.y, wrench.wrench.force.z);
+        ignition::math::Vector3d torque(wrench.wrench.torque.x, wrench.wrench.torque.y, wrench.wrench.torque.z);
+#else
         gazebo::math::Vector3 force(wrench.wrench.force.x, wrench.wrench.force.y, wrench.wrench.force.z);
         gazebo::math::Vector3 torque(wrench.wrench.torque.x, wrench.wrench.torque.y, wrench.wrench.torque.z);
+#endif
         link_->AddRelativeForce(force);
+#if (GAZEBO_MAJOR_VERSION >= 8)
+        link_->AddRelativeTorque(torque - link_->GetInertial()->CoG().Cross(force));
+#else
         link_->AddRelativeTorque(torque - link_->GetInertial()->GetCoG().Cross(force));
+#endif
       }
 
     } else {

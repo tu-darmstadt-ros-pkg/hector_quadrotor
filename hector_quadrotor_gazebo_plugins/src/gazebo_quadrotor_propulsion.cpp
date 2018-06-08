@@ -35,10 +35,45 @@
 #include <rosgraph_msgs/Clock.h>
 #include <geometry_msgs/WrenchStamped.h>
 
+#if (GAZEBO_MAJOR_VERSION >= 8)
+namespace hector_quadrotor_model {
+
+template <typename Message, typename T> static inline void toVector(const Message& msg, ignition::math::Vector3<T>& vector)
+{
+  vector.X() = msg.x;
+  vector.Y() = msg.y;
+  vector.Z() = msg.z;
+}
+
+template <typename Message, typename T> static inline void fromVector(const ignition::math::Vector3<T>& vector, Message& msg)
+{
+  msg.x = vector.X();
+  msg.y = vector.Y();
+  msg.z = vector.Z();
+}
+
+template <typename Message, typename T> static inline void toQuaternion(const Message& msg, ignition::math::Quaternion<T>& quaternion)
+{
+  quaternion.W() = msg.w;
+  quaternion.X() = msg.x;
+  quaternion.Y() = msg.y;
+  quaternion.Z() = msg.z;
+}
+
+template <typename Message, typename T> static inline void fromQuaternion(const ignition::math::Quaternion<T>& quaternion, Message& msg)
+{
+  msg.w = quaternion.W();
+  msg.x = quaternion.X();
+  msg.y = quaternion.Y();
+  msg.z = quaternion.Z();
+}
+
+} // namespace hector_quadrotor_model
+#endif
+
 namespace gazebo {
 
 using namespace common;
-using namespace math;
 using namespace hector_quadrotor_model;
 
 GazeboQuadrotorPropulsion::GazeboQuadrotorPropulsion()
@@ -48,7 +83,11 @@ GazeboQuadrotorPropulsion::GazeboQuadrotorPropulsion()
 
 GazeboQuadrotorPropulsion::~GazeboQuadrotorPropulsion()
 {
+#if (GAZEBO_MAJOR_VERSION < 8)
   event::Events::DisconnectWorldUpdateBegin(updateConnection);
+#endif
+  updateConnection.reset();
+
   if (node_handle_) {
     node_handle_->shutdown();
     if (callback_queue_thread_.joinable())
@@ -191,7 +230,11 @@ void GazeboQuadrotorPropulsion::Load(physics::ModelPtr _model, sdf::ElementPtr _
 void GazeboQuadrotorPropulsion::Update()
 {
   // Get simulator time
+#if (GAZEBO_MAJOR_VERSION >= 8)
+  Time current_time = world->SimTime();
+#else
   Time current_time = world->GetSimTime();
+#endif
   Time dt = current_time - last_time_;
   last_time_ = current_time;
   if (dt <= 0.0) return;
@@ -215,15 +258,24 @@ void GazeboQuadrotorPropulsion::Update()
 
   // fill input vector u for propulsion model
   geometry_msgs::Twist twist;
+#if (GAZEBO_MAJOR_VERSION >= 8)
+  fromVector(link->RelativeLinearVel(), twist.linear);
+  fromVector(link->RelativeAngularVel(), twist.angular);
+#else
   fromVector(link->GetRelativeLinearVel(), twist.linear);
   fromVector(link->GetRelativeAngularVel(), twist.angular);
+#endif
   model_.setTwist(twist);
 
   // update the model
   model_.update(dt.Double());
 
   // get wrench from model
-  Vector3 force, torque;
+#if (GAZEBO_MAJOR_VERSION >= 8)
+  ignition::math::Vector3d force, torque;
+#else
+  math::Vector3 force, torque;
+#endif
   toVector(model_.getWrench().force, force);
   toVector(model_.getWrench().torque, torque);
 
@@ -252,7 +304,11 @@ void GazeboQuadrotorPropulsion::Update()
 
   // set force and torque in gazebo
   link->AddRelativeForce(force);
+#if (GAZEBO_MAJOR_VERSION >= 8)
+  link->AddRelativeTorque(torque - link->GetInertial()->CoG().Cross(force));
+#else
   link->AddRelativeTorque(torque - link->GetInertial()->GetCoG().Cross(force));
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////////////

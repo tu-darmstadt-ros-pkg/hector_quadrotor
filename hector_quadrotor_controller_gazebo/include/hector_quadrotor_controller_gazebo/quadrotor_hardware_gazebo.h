@@ -87,8 +87,13 @@ private:
   gazebo::physics::LinkPtr link_;
   gazebo::physics::PhysicsEnginePtr physics_;
 
+#if (GAZEBO_MAJOR_VERSION >= 8)
+  ignition::math::Pose3d gz_pose_;
+  ignition::math::Vector3d gz_velocity_, gz_acceleration_, gz_angular_velocity_, gz_angular_acceleration_;
+#else
   gazebo::math::Pose gz_pose_;
   gazebo::math::Vector3 gz_velocity_, gz_acceleration_, gz_angular_velocity_, gz_angular_acceleration_;
+#endif
 
   boost::shared_ptr<hector_quadrotor_interface::ImuSubscriberHelper> imu_sub_helper_;
   boost::shared_ptr<hector_quadrotor_interface::OdomSubscriberHelper> odom_sub_helper_;

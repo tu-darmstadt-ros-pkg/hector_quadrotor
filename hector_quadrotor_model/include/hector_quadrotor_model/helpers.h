@@ -114,20 +114,20 @@ template <typename Message, typename Vector> static inline void fromVector(const
   msg.z = vector.z;
 }
 
-template <typename Message, typename Quaternion> static inline void toQuaternion(const Message& msg, Quaternion& vector)
+template <typename Message, typename Quaternion> static inline void toQuaternion(const Message& msg, Quaternion& quaternion)
 {
-  vector.w = msg.w;
-  vector.x = msg.x;
-  vector.y = msg.y;
-  vector.z = msg.z;
+  quaternion.w = msg.w;
+  quaternion.x = msg.x;
+  quaternion.y = msg.y;
+  quaternion.z = msg.z;
 }
 
-template <typename Message, typename Quaternion> static inline void fromQuaternion(const Quaternion& vector, Message& msg)
+template <typename Message, typename Quaternion> static inline void fromQuaternion(const Quaternion& quaternion, Message& msg)
 {
-  msg.w = vector.w;
-  msg.x = vector.x;
-  msg.y = vector.y;
-  msg.z = vector.z;
+  msg.w = quaternion.w;
+  msg.x = quaternion.x;
+  msg.y = quaternion.y;
+  msg.z = quaternion.z;
 }
 
 static inline geometry_msgs::Vector3 operator+(const geometry_msgs::Vector3& a, const geometry_msgs::Vector3& b)

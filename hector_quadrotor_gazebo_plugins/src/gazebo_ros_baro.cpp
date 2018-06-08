@@ -30,6 +30,8 @@
 #include <gazebo/common/Events.hh>
 #include <gazebo/physics/physics.hh>
 
+#include <cmath>
+
 static const double DEFAULT_ELEVATION = 0.0;
 static const double DEFAULT_QNH       = 1013.25;
 
@@ -133,11 +135,20 @@ void GazeboRosBaro::Reset()
 // Update the controller
 void GazeboRosBaro::Update()
 {
+#if (GAZEBO_MAJOR_VERSION >= 8)
+  common::Time sim_time = world->SimTime();
+#else
   common::Time sim_time = world->GetSimTime();
+#endif
   double dt = updateTimer.getTimeSinceLastUpdate().Double();
 
+#if (GAZEBO_MAJOR_VERSION >= 8)
+  ignition::math::Pose3d pose = link->WorldPose();
+  double height = sensor_model_(pose.Pos().Z(), dt);
+#else
   math::Pose pose = link->GetWorldPose();
   double height = sensor_model_(pose.pos.z, dt);
+#endif
 
   if (height_publisher_) {
     height_.header.stamp = ros::Time(sim_time.sec, sim_time.nsec);
@@ -148,7 +159,7 @@ void GazeboRosBaro::Update()
   if (altimeter_publisher_) {
     altimeter_.header = height_.header;
     altimeter_.altitude = height + elevation_;
-    altimeter_.pressure = pow((1.0 - altimeter_.altitude / 44330.0), 5.263157) * qnh_;
+    altimeter_.pressure = std::pow((1.0 - altimeter_.altitude / 44330.0), 5.263157) * qnh_;
     altimeter_.qnh = qnh_;
     altimeter_publisher_.publish(altimeter_);
   }

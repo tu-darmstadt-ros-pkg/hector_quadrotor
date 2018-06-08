@@ -85,8 +85,13 @@ private:
   bool ShutdownCallback(std_srvs::Empty::Request&, std_srvs::Empty::Response&);
 
   ros::Time state_stamp;
+#if (GAZEBO_MAJOR_VERSION >= 8)
+  ignition::math::Pose3d pose;
+  ignition::math::Vector3d euler, velocity, acceleration, angular_velocity;
+#else
   math::Pose pose;
   math::Vector3 euler, velocity, acceleration, angular_velocity;
+#endif
 
   std::string link_name_;
   std::string namespace_;
@@ -129,10 +134,18 @@ private:
     PIDController velocity_z;
   } controllers_;
 
+#if (GAZEBO_MAJOR_VERSION >= 8)
+  ignition::math::Vector3d inertia;
+#else
   math::Vector3 inertia;
+#endif
   double mass;
 
+#if (GAZEBO_MAJOR_VERSION >= 8)
+  ignition::math::Vector3d force, torque;
+#else
   math::Vector3 force, torque;
+#endif
 
   UpdateTimer controlTimer;
   event::ConnectionPtr updateConnection;

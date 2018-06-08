@@ -2,15 +2,11 @@ cmake_minimum_required(VERSION 2.8.3)
 project(hector_quadrotor_controller_gazebo)
 
 find_package(catkin REQUIRED COMPONENTS
+  gazebo_dev
   gazebo_ros_control
   hector_quadrotor_interface
 )
 include_directories(include ${catkin_INCLUDE_DIRS})
-
-find_package(gazebo REQUIRED)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
-link_directories(${GAZEBO_LIBRARY_DIRS})
-include_directories(${GAZEBO_INCLUDE_DIRS})
 
 catkin_package(
   INCLUDE_DIRS include

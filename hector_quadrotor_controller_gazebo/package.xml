@@ -13,8 +13,10 @@
   <author email="meyer@fsr.tu-darmstadt.de">Johannes Meyer</author>
 
   <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>gazebo_dev</build_depend>
   <build_depend version_gte="2.3.4">gazebo_ros_control</build_depend>
   <build_depend>hector_quadrotor_interface</build_depend>
+  <run_depend>gazebo</run_depend>
   <run_depend version_gte="2.3.4">gazebo_ros_control</run_depend>
   <run_depend>hector_quadrotor_interface</run_depend>
 

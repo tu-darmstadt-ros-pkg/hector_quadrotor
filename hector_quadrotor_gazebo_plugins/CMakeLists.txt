@@ -4,14 +4,8 @@ project(hector_quadrotor_gazebo_plugins)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp hector_gazebo_plugins hector_quadrotor_model geometry_msgs hector_uav_msgs dynamic_reconfigure)
+find_package(catkin REQUIRED COMPONENTS roscpp gazebo_dev hector_gazebo_plugins hector_quadrotor_model geometry_msgs hector_uav_msgs dynamic_reconfigure)
 include_directories(include ${catkin_INCLUDE_DIRS})
-
-# Depend on system install of Gazebo
-find_package(gazebo REQUIRED)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
-link_directories(${GAZEBO_LIBRARY_DIRS})
-include_directories(${GAZEBO_INCLUDE_DIRS})
 
 ## Find hector_quadrotor_model optional libraries
 if(TARGET hector_quadrotor_propulsion)
@@ -48,7 +42,6 @@ catkin_package(
     INCLUDE_DIRS include
     LIBRARIES
     CATKIN_DEPENDS roscpp hector_gazebo_plugins hector_quadrotor_model geometry_msgs hector_uav_msgs dynamic_reconfigure
-    DEPENDS gazebo
 )
 
 ###########
