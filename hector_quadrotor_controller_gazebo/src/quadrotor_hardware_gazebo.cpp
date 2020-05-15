@@ -59,6 +59,7 @@ bool QuadrotorHardwareSim::initSim(
     std::vector<transmission_interface::TransmissionInfo> transmissions)
 {
   // store parent model pointer
+  gazebo_ros_control::DefaultRobotHWSim::initSim(robot_namespace,model_nh,parent_model,urdf_model,transmissions);
   model_ = parent_model;
   link_ = model_->GetLink();
 #if (GAZEBO_MAJOR_VERSION >= 8)
@@ -118,6 +119,7 @@ bool QuadrotorHardwareSim::initSim(
 void QuadrotorHardwareSim::readSim(ros::Time time, ros::Duration period)
 {
   // read state from Gazebo
+  gazebo_ros_control::DefaultRobotHWSim::readSim(time,period);
   const double acceleration_time_constant = 0.1;
 #if (GAZEBO_MAJOR_VERSION >= 8)
   gz_acceleration_ = ((link_->WorldLinearVel() - gz_velocity_) + acceleration_time_constant * gz_acceleration_) /
@@ -232,6 +234,7 @@ void QuadrotorHardwareSim::readSim(ros::Time time, ros::Duration period)
 
 void QuadrotorHardwareSim::writeSim(ros::Time time, ros::Duration period)
 {
+  gazebo_ros_control::DefaultRobotHWSim::writeSim(time,period);
   bool result_written = false;
 
   if (motor_output_->connected() && motor_output_->enabled()) {

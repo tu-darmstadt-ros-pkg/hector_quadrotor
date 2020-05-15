@@ -41,12 +41,14 @@
 #include <hector_uav_msgs/MotorStatus.h>
 #include <hector_uav_msgs/EnableMotors.h>
 
+#include <gazebo_ros_control/default_robot_hw_sim.h>
+
 namespace hector_quadrotor_controller_gazebo
 {
 
 using namespace hector_quadrotor_interface;
 
-class QuadrotorHardwareSim : public gazebo_ros_control::RobotHWSim
+class QuadrotorHardwareSim : public gazebo_ros_control::DefaultRobotHWSim
 {
 public:
   QuadrotorHardwareSim();
