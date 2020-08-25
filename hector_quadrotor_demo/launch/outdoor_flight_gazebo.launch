@@ -8,11 +8,6 @@
   <!-- Spawn simulated quadrotor uav -->
   <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor.launch" >
     <arg name="model" value="$(find hector_quadrotor_description)/urdf/quadrotor_hokuyo_utm30lx.gazebo.xacro"/>
-    <arg name="controllers" value="
-        controller/attitude
-        controller/velocity
-        controller/position
-        "/>
   </include>
 
   <!-- Start rviz visualization with preset config -->
