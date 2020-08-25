@@ -28,6 +28,21 @@
         </geometry>
       </collision>
     </link>
+    <!-- additional link for attaching camera -->
+    <link name="add_link">
+      <visual>
+        <geometry>
+          <cylinder length="0.6" radius="0.004"/>
+        </geometry>
+        <origin rpy="0 1.57075 0.785375" xyz="0 0 0"/>
+      </visual>
+    </link>
+   
+    <joint name="base_to_add_link" type="fixed">
+      <parent link="base_link"/>
+      <child link="add_link"/>
+      <origin xyz="0 0 0"/>
+    </joint>
 
     <!-- Sonar height sensor -->
     <xacro:sonar_sensor name="sonar" parent="base_link" ros_topic="sonar_height" update_rate="10" min_range="0.03" max_range="3.0" field_of_view="${40*pi/180}" ray_count="3">

@@ -3,6 +3,12 @@
 <launch>
    <arg name="model" default="$(find hector_quadrotor_description)/urdf/quadrotor.gazebo.xacro" />
 
+   <arg name="paused" default="false"/>
+   <arg name="use_sim_time" default="true"/>
+   <arg name="gui" default="true"/>
+   <arg name="headless" default="false"/>
+   <arg name="debug" default="false"/>
+
    <group ns="uav1">
      <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor.launch">
        <arg name="name" value="uav1" />
@@ -20,6 +26,14 @@
        <arg name="y" value="1.0" />
      </include>
    </group>
+
+   <include file="$(find gazebo_ros)/launch/empty_world.launch">
+     <arg name="paused" value="$(arg paused)"/>
+     <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+     <arg name="gui" value="$(arg gui)"/>
+     <arg name="headless" value="$(arg headless)"/>
+     <arg name="debug" value="$(arg debug)"/>
+   </include>
 
 </launch>
 
